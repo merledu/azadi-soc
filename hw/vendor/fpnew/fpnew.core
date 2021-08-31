@@ -1,0 +1,53 @@
+CAPI=2:
+
+name : pulp-platform.org::fpnew:1.0.0
+
+filesets:
+  files_rtl:
+    depend: 
+      - pulp-platform.org::fpnew_pkg
+      - pulp-platform.org::fpu_div_sqrt_mvp
+      - pulp-platform.org::common_cells
+      - pulp-platform.org::registers
+    files:
+      - src/fpnew_top.sv
+      - src/fpnew_rounding.sv
+      - src/fpnew_opgroup_fmt_slice.sv
+      - src/fpnew_opgroup_multifmt_slice.sv
+      - src/fpnew_opgroup_block.sv  
+      - src/fpnew_noncomp.sv
+      - src/fpnew_fma.sv
+      - src/fpnew_fma_multi.sv
+      - src/fpnew_divsqrt_multi.sv
+      - src/fpnew_classifier.sv
+      - src/fpnew_cast_multi.sv
+    file_type : systemVerilogSource
+
+targets:
+  default: &default_target
+    filesets : [files_rtl]
+    parameters :  
+      - "is_toplevel? (Features)"
+      - "is_toplevel? (Implementation)"
+    toplevel : fpnew_top
+
+  lint:
+    default_tool : verilator
+    filesets : [files_rtl]
+    tools:
+      verilator:
+        mode : lint-only
+        verilator_options:
+          - "-Wall"
+    toplevel : fpnew_top
+
+parameters:
+  Features:
+    datatype    : str 
+    default     : fpnew_pkg::RV32F
+    paramtype   : vlogparam
+  
+  Implementation:
+    datatype    : str
+    default     : fpnew_pkg::DEFAULT_NOREGS
+    paramtype   : vlogparam

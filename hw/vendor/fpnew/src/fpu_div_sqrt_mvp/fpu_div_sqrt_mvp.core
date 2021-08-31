@@ -1,0 +1,32 @@
+CAPI=2:
+
+name : pulp-platform.org::fpu_div_sqrt_mvp:1.0.0
+
+filesets:
+  files_rtl:
+    depend:
+      - pulp-platform.org::registers
+    files:
+      - hdl/defs_div_sqrt_mvp.sv
+      - hdl/iteration_div_sqrt_mvp.sv 
+      - hdl/control_mvp.sv
+      - hdl/div_sqrt_top_mvp.sv 
+      - hdl/norm_div_sqrt_mvp.sv
+      - hdl/nrbd_nrsc_mvp.sv
+      - hdl/preprocess_mvp.sv
+    file_type : systemVerilogSource
+
+targets:
+  default: &default_target
+    filesets : [files_rtl]
+    toplevel : div_sqrt_top_mvp
+
+  lint:
+    default_tool : verilator
+    filesets : [files_rtl]
+    tools:
+      verilator:
+        mode : lint-only
+        verilator_options:
+          - "-Wall"
+    toplevel : div_sqrt_top_mvp

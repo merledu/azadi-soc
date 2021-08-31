@@ -1,0 +1,17 @@
+CAPI=2:
+
+name : pulp-platform.org::common_cells:1.20.0
+
+filesets:
+  rtl:
+    depend:
+      - pulp-platform.org::registers
+    files:
+      - src/cf_math_pkg.sv
+      - src/rr_arb_tree.sv
+      - src/lzc.sv
+    file_type : systemVerilogSource
+
+targets:
+  default:
+    filesets : [rtl]
