@@ -1,3 +1,0 @@
-[submodule "hw/vendor/--branch"]
-	path = hw/vendor/--branch
-	url = https://github.com/pulp-platform/fpnew.git
