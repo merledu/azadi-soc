@@ -36,10 +36,6 @@ If you want to run a program build using GCC compiler, in the working directory.
 
 Locate the "$readmemh" function and swap the path of the custom hex file to the output hex file. 
 
-Ibex is added as a sub-module so you need to clone this repo with sub-modules. Run this command.
-
-    git clone --recurse-submodules -j8 https://github.com/merledu/azadi-new.git
-
 ##  Connecting with GDB
 1. For debugging programs make sure that your code is compiled with -g or -ggdb flag.
 2. program can only be debuged when it is running which means user should start simulation first
