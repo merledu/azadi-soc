@@ -1,0 +1,14 @@
+CAPI=2:
+name: pulp-platform.org::fpnew_pkg:1.0.0
+description: "Header package for fpnew"
+
+filesets:
+  files_rtl:
+    files:
+      - src/fpnew_pkg.sv
+    file_type: systemVerilogSource
+
+targets:
+  default:
+    filesets:
+      - files_rtl
