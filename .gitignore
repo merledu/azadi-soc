@@ -1,2 +1,3 @@
 build/
 *.vcd
+fusesoc.conf
