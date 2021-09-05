@@ -344,7 +344,6 @@ module ibex_id_stage #(
     assign result_wb = mv_instr ? fpu_op_a : result_ex_i;
   end else begin
     assign fpu_op_b = rf_rdata_b_fwd;
-    // assign unused_fpu_abc = &(fpu_a & fpu_b & fpu_c & fp_operands_o);
   end
   /* FPU Limits ENDS */
 
@@ -627,7 +626,8 @@ module ibex_id_stage #(
 
   ibex_controller #(
     .WritebackStage  ( WritebackStage  ),
-    .BranchPredictor ( BranchPredictor )
+    .BranchPredictor ( BranchPredictor ),
+    .RVF             ( RVF             )
   ) controller_i (
       .clk_i                          ( clk_i                   ),
       .rst_ni                         ( rst_ni                  ),
@@ -1022,8 +1022,7 @@ module ibex_id_stage #(
     assign rf_rdata_b_fwd = rf_rd_b_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_b_i;
     
     // forwarding for floating point unit
-    logic unused_fp_rf_rd_wb_match;
-    logic unused_fp_rf_wdata_fwd_wb;
+    logic unused_fpu_wires;
     if (RVF == RV32FSingle || RVF == RV32DDouble) begin
       assign fp_rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_o);
       assign fp_rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_o);
@@ -1033,9 +1032,12 @@ module ibex_id_stage #(
       assign fp_rf_rdata_b_fwd = (fp_rf_rd_b_wb_match & fp_rf_write_wb_i) ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_b_i;
       assign fp_rf_rdata_c_fwd = (fp_rf_rd_c_wb_match & fp_rf_write_wb_i) ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_c_i;
     end else begin
-      assign unused_fp_rf_wdata_fwd_wb = &(fp_rf_wdata_fwd_wb_i & fp_rf_rdata_a_i & fp_rf_rdata_a_i & fp_rf_rdata_a_i);
-      assign unused_fp_rf_rd_wb_match  = &(fp_rf_rd_a_wb_match & fp_rf_rd_b_wb_match & fp_rf_rd_c_wb_match &
-                                           fp_rf_rdata_a_fwd & fp_rf_rdata_b_fwd & fp_rf_rdata_c_fwd);
+      assign unused_fpu_wires  = &{1'b0,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_wdata_fwd_wb_i,
+                                   1'b0};
     end
 
     assign stall_ld_hz = outstanding_load_wb_i & (rf_rd_a_hz | rf_rd_b_hz | rf_rd_c_hz);
@@ -1075,14 +1077,18 @@ module ibex_id_stage #(
     assign rf_rdata_a_fwd = rf_rdata_a_i;
     assign rf_rdata_b_fwd = rf_rdata_b_i;
     
-    logic unused_fp_rf_rdata;
+    logic unused_fpu_wires;
     if (RVF == RV32FSingle || RVF == RV32DDouble) begin
       assign fp_rf_rdata_a_fwd = fp_rf_rdata_a_i;
       assign fp_rf_rdata_b_fwd = fp_rf_rdata_b_i;
       assign fp_rf_rdata_c_fwd = fp_rf_rdata_c_i;
     end else begin
-      assign unused_fp_rf_rdata = &(fp_rf_rdata_a_fwd & fp_rf_rdata_b_fwd & fp_rf_rdata_c_fwd &
-                                    fp_rf_rdata_a_i & fp_rf_rdata_b_i & fp_rf_rdata_c_i);
+      assign unused_fpu_wires  = &{1'b0,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_rdata_b_i,
+                                   fp_rf_rdata_c_i,
+                                   fp_rf_wdata_fwd_wb_i,
+                                   1'b0};
     end
 
     assign rf_rd_a_wb_match_o = 1'b0;
