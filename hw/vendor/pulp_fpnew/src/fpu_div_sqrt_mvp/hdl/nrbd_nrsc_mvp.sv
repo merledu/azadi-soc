@@ -31,9 +31,8 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-import defs_div_sqrt_mvp::*;
 
-module nrbd_nrsc_mvp
+module nrbd_nrsc_mvp import defs_div_sqrt_mvp::*;
 
   (//Input
    input logic                                 Clk_CI,

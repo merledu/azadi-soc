@@ -22,8 +22,7 @@ module ibex_core #(
     parameter ibex_pkg::rv32m_e   RV32M            = ibex_pkg::RV32MFast,
     parameter ibex_pkg::rv32b_e   RV32B            = ibex_pkg::RV32BNone,
     parameter ibex_pkg::regfile_e RegFile          = ibex_pkg::RegFileFF,
-    parameter ibex_pkg::rvfloat_e RVF              = ibex_pkg::RV32FSingle, // for floating point
-    parameter int unsigned        FloatingPoint    = 1'b1,
+    parameter ibex_pkg::rvfloat_e RVF              = ibex_pkg::RV32FSingle,
     parameter bit                 BranchTargetALU  = 1'b0,
     parameter bit                 WritebackStage   = 1'b1,
     parameter bit                 ICache           = 1'b0,
@@ -110,52 +109,8 @@ module ibex_core #(
 );
 
   import ibex_pkg::*;
-  
-  // floating point 
-  localparam int unsigned W = 32;
-  logic                   fp_flush;
-  logic                   in_ready_c2fpu;   // ready - from core to FPU 
-  logic                   in_valid_c2fpu;   // valid - from FPU to core 
-  logic                   out_ready_fpu2c;  // ready - from FPU to core
-  logic                   out_valid_fpu2c;  // valid - from core to FPU
-  logic                   valid_id_fpu;     // select which valid signal will go to dec
-  logic                   fp_rm_dynamic;
-  logic                   fp_alu_op_mod;  
-  logic [4:0]             fp_rf_raddr_a;
-  logic [4:0]             fp_rf_raddr_b;
-  logic [4:0]             fp_rf_raddr_c;
-  logic [W-1:0]           fp_rf_rdata_a;
-  logic [W-1:0]           fp_rf_rdata_b;
-  logic [W-1:0]           fp_rf_rdata_c;
-  logic                   fp_rf_wen_id;
-  logic                   is_fp_instr;
-  logic [2:0][W-1:0]      fp_operands;   // three operands in fpu   
-  logic                   fp_busy;
-  logic                   fpu_busy_idu;
-  logic [W-1:0]           fp_result;
-  logic [ 31:0]           data_wb;
-  logic [4:0]             fp_rf_waddr_id;
-  logic [4:0]             fp_rf_waddr_wb;
-  logic                   fp_rf_we;
-  logic                   fp_rf_wen_wb;
-  logic                   use_fp_rs1;
-  logic                   use_fp_rs2;
-  logic                   use_fp_rs3;
-  logic                   use_fp_rd;
-  logic                   fp_rf_write_wb;
-  logic [31:0]            rf_int_fp_lsu;
-  logic                   fp_swap_oprnds;
-  logic                   fpu_is_busy;
-  logic                   fp_load;
-  logic [31:0]            fp_rf_wdata_wb;
-  fpnew_pkg::status_t     fp_status;
-  fpnew_pkg::operation_e  fp_operation;
-  fpnew_pkg::roundmode_e  fp_rounding_mode;
-  fpnew_pkg::roundmode_e  fp_frm_csr;
-  fpnew_pkg::roundmode_e  fp_frm_fpnew;
-  fpnew_pkg::operation_e  fp_alu_operator;
-  fpnew_pkg::fp_format_e  fp_src_fmt;
-  fpnew_pkg::fp_format_e  fp_dst_fmt;
+
+  localparam FPU_WIDTH = fpu_width(RVF);
                  
   localparam int unsigned PMP_NUM_CHAN      = 2;
   localparam bit          DataIndTiming     = SecureIbex;
@@ -169,6 +124,52 @@ module ibex_core #(
   localparam bit          SpecBranch        = PMPEnable & (PMPNumRegions == 16);
   localparam bit          RegFileECC        = SecureIbex;
   localparam int unsigned RegFileDataWidth  = RegFileECC ? 32 + 7 : 32;
+
+  // FPU signals
+  logic                   fp_flush;
+  logic                   in_ready_c2fpu;   // ready - from core to FPU 
+  logic                   in_valid_c2fpu;   // valid - from FPU to core 
+  logic                   out_ready_fpu2c;  // ready - from FPU to core
+  logic                   out_valid_fpu2c;  // valid - from core to FPU
+  logic                   valid_id_fpu;     // select which valid signal will go to dec
+  logic                   fp_rm_dynamic;
+  logic                   fp_alu_op_mod;  
+  logic [4:0]             fp_rf_raddr_a;
+  logic [4:0]             fp_rf_raddr_b;
+  logic [4:0]             fp_rf_raddr_c;
+  logic [FPU_WIDTH-1:0]   fp_rf_rdata_a;
+  logic [FPU_WIDTH-1:0]   fp_rf_rdata_b;
+  logic [FPU_WIDTH-1:0]   fp_rf_rdata_c;
+  logic                   fp_rf_wen_id;
+  logic                   is_fp_instr;
+  logic [2:0][FPU_WIDTH-1:0] fp_operands;   // three operands in fpu   
+  logic                   fp_busy;
+  logic                   fpu_busy_idu;
+  logic [FPU_WIDTH-1:0]   fp_result;
+  logic [31:0]            data_wb;
+  logic [31:0]            rf_int_fp_lsu;
+  logic [4:0]             fp_rf_waddr_id;
+  logic [4:0]             fp_rf_waddr_wb;
+  logic                   fp_rf_we;
+  logic                   fp_rf_wen_wb;
+  logic                   use_fp_rs1;
+  logic                   use_fp_rs2;
+  logic                   use_fp_rs3;
+  logic                   use_fp_rd;
+  logic                   fp_rf_write_wb;
+  logic                   fp_swap_oprnds;
+  logic                   fpu_is_busy;
+  logic                   fp_load;
+  logic [FPU_WIDTH-1:0]   fp_rf_wdata_wb;
+  logic [FPU_WIDTH-1:0]   fp_rf_wdata_id;
+  fpnew_pkg::status_t     fp_status;
+  fpnew_pkg::operation_e  fp_operation;
+  fpnew_pkg::roundmode_e  fp_rounding_mode;
+  fpnew_pkg::roundmode_e  fp_frm_csr;
+  fpnew_pkg::roundmode_e  fp_frm_fpnew;
+  fpnew_pkg::operation_e  fp_alu_operator;
+  fpnew_pkg::fp_format_e  fp_src_fmt;
+  fpnew_pkg::fp_format_e  fp_dst_fmt;
 
   // IF/ID signals
   logic        dummy_instr_id;
@@ -407,10 +408,6 @@ module ibex_core #(
 
   logic        clock_en;
 
-  // Before going to sleep, wait for I- and D-side
-  // interfaces to finish ongoing operations.
-  assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fp_busy;
-
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       core_busy_q <= 1'b0;
@@ -530,6 +527,8 @@ module ibex_core #(
       .RV32E           ( RV32E           ),
       .RV32M           ( RV32M           ),
       .RV32B           ( RV32B           ),
+      .RVF             ( RVF             ),
+      .FPU_WIDTH       ( FPU_WIDTH       ),
       .BranchTargetALU ( BranchTargetALU ),
       .DataIndTiming   ( DataIndTiming   ),
       .SpecBranch      ( SpecBranch      ),
@@ -708,6 +707,7 @@ module ibex_core #(
       .fpu_busy_i                      ( fpu_busy_idu          ),
       .fp_rf_write_wb_i                ( fp_rf_write_wb        ),
       .fp_rf_wdata_fwd_wb_i            ( fp_rf_wdata_wb        ),
+      .fp_rf_wdata_id_o                ( fp_rf_wdata_id        ),
       .fp_operands_o                   ( fp_operands           ),
       .fp_load_o                       ( fp_load               )
   );
@@ -814,7 +814,8 @@ module ibex_core #(
   );
 
   ibex_wb_stage #(
-    .WritebackStage ( WritebackStage )
+    .WritebackStage ( WritebackStage ),
+    .FPU_WIDTH      ( FPU_WIDTH      )
   ) wb_stage_i (
     .clk_i                          ( clk                          ),
     .rst_ni                         ( rst_ni                       ),
@@ -851,6 +852,7 @@ module ibex_core #(
     .instr_done_wb_o                ( instr_done_wb                ),
 
     // floating point
+    .fp_rf_wdata_id_i               ( fp_rf_wdata_id               ),
     .fp_rf_write_wb_o               ( fp_rf_write_wb               ),
     .fp_rf_wen_wb_o                 ( fp_rf_wen_wb                 ),
     .fp_rf_waddr_wb_o               ( fp_rf_waddr_wb               ),
@@ -919,8 +921,6 @@ module ibex_core #(
     assign rf_ecc_err_comb         = 1'b0;
   end
 
-  assign rf_int_fp_lsu = (is_fp_instr & use_fp_rs2) ? fp_rf_rdata_b : rf_rdata_b;
-
   if (RegFile == RegFileFF) begin : gen_regfile_ff
     ibex_register_file_ff #(
         .RV32E             ( RV32E             ),
@@ -983,10 +983,36 @@ module ibex_core #(
     );
   end
 
-  if (FloatingPoint) begin : gen_fp_regfile
+  // FPU instance
+  if (RVF == RV32FSingle || RVF == RV32DDouble) begin
+    fpnew_top #(
+      .Features       ( fpnew_pkg::RV32F          ),
+      .Implementation ( fpnew_pkg::DEFAULT_NOREGS )
+    ) i_fpnew_top (
+      .clk_i          ( clk              ),
+      .rst_ni         ( rst_ni           ),
+      .operands_i     ( fp_operands      ),
+      .rnd_mode_i     ( fp_frm_fpnew     ),
+      .op_i           ( fp_alu_operator  ),
+      .op_mod_i       ( fp_alu_op_mod    ),
+      .src_fmt_i      ( fp_src_fmt       ),
+      .dst_fmt_i      ( fp_dst_fmt       ),
+      .int_fmt_i      ( fpnew_pkg::INT32 ),
+      .vectorial_op_i ( 1'b0             ),
+      .tag_i          ( 1'b1             ),
+      .in_valid_i     ( in_valid_c2fpu   ),
+      .in_ready_o     ( out_ready_fpu2c  ),
+      .flush_i        ( fp_flush         ),
+      .result_o       ( fp_result        ),
+      .status_o       ( fp_status        ),
+      .tag_o          (                  ),
+      .out_valid_o    ( out_valid_fpu2c  ),
+      .out_ready_i    ( in_ready_c2fpu   ),
+      .busy_o         ( fp_busy          )
+    );
+
     ibex_fp_register_file_ff #(
-      .RVF       ( RVF ),
-      .DataWidth ( W   )
+      .DataWidth ( FPU_WIDTH )
     ) fp_register_file (
       .clk_i     ( clk_i          ),
       .rst_ni    ( rst_ni         ),
@@ -1003,7 +1029,23 @@ module ibex_core #(
       .waddr_a_i ( fp_rf_waddr_wb ),
       .wdata_a_i ( fp_rf_wdata_wb ),
       .we_a_i    ( fp_rf_wen_wb   )
-);
+    );
+    assign rf_int_fp_lsu = (is_fp_instr & use_fp_rs2) ? fp_rf_rdata_b : rf_rdata_b;
+    assign fp_frm_fpnew   = fp_rm_dynamic ? fp_frm_csr : fp_rounding_mode;
+    assign in_ready_c2fpu = id_in_ready; //multdiv_ready_id;
+    assign in_valid_c2fpu = (instr_valid_id & is_fp_instr);
+    // assign ready_id_fpu = id_in_ready; // (is_fp_instr) ? out_ready_fpu2c : id_in_ready;
+    assign valid_id_fpu = (is_fp_instr) ? out_valid_fpu2c : ex_valid;
+    assign fpu_busy_idu = fp_busy & (~out_valid_fpu2c);
+    assign data_wb = is_fp_instr ? fp_result : result_ex;
+
+    // Before going to sleep, wait for I- and D-side
+    // interfaces to finish ongoing operations.
+    assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fp_busy;
+  end else begin
+    assign core_busy_d = ctrl_busy | if_busy | lsu_busy;
+    assign data_wb = result_ex;
+    assign rf_int_fp_lsu = rf_rdata_b;
   end
 
   ///////////////////
@@ -1089,7 +1131,8 @@ module ibex_core #(
       .PMPGranularity    ( PMPGranularity    ),
       .PMPNumRegions     ( PMPNumRegions     ),
       .RV32E             ( RV32E             ),
-      .RV32M             ( RV32M             )
+      .RV32M             ( RV32M             ),
+      .RVF               ( RVF               )
   ) cs_registers_i (
       .clk_i                   ( clk                          ),
       .rst_ni                  ( rst_ni                       ),
@@ -1180,42 +1223,6 @@ module ibex_core #(
       .fp_status_i             ( fp_status                    ),
       .is_fp_instr_i           ( is_fp_instr                  )
   );
-
-  assign fp_frm_fpnew   = fp_rm_dynamic ? fp_frm_csr : fp_rounding_mode;
-  assign in_ready_c2fpu = id_in_ready; //multdiv_ready_id;
-  assign in_valid_c2fpu = (instr_valid_id & is_fp_instr);
-  // assign ready_id_fpu = id_in_ready; // (is_fp_instr) ? out_ready_fpu2c : id_in_ready;
-  assign valid_id_fpu = (is_fp_instr) ? out_valid_fpu2c : ex_valid;
-  
-  // FPU instance
-  fpnew_top #(
-    .Features       ( fpnew_pkg::RV32F          ),
-    .Implementation ( fpnew_pkg::DEFAULT_NOREGS )
-  ) i_fpnew_top (
-    .clk_i          ( clk              ),
-    .rst_ni         ( rst_ni           ),
-    .operands_i     ( fp_operands      ),
-    .rnd_mode_i     ( fp_frm_fpnew     ),
-    .op_i           ( fp_alu_operator  ),
-    .op_mod_i       ( fp_alu_op_mod    ),
-    .src_fmt_i      ( fp_src_fmt       ),
-    .dst_fmt_i      ( fp_dst_fmt       ),
-    .int_fmt_i      ( fpnew_pkg::INT32 ),
-    .vectorial_op_i ( 1'b0             ),
-    .tag_i          ( 1                ),
-    .in_valid_i     ( in_valid_c2fpu   ),
-    .in_ready_o     ( out_ready_fpu2c  ),
-    .flush_i        ( fp_flush         ),
-    .result_o       ( fp_result        ),
-    .status_o       ( fp_status        ),
-    .tag_o          (                  ),
-    .out_valid_o    ( out_valid_fpu2c  ),
-    .out_ready_i    ( in_ready_c2fpu   ),
-    .busy_o         ( fp_busy          )
-  );
-
-  assign fpu_busy_idu = fp_busy & (~out_valid_fpu2c);
-  assign data_wb = is_fp_instr ? fp_result : result_ex;
 
   // These assertions are in top-level as instr_valid_id required as the enable term
   `ASSERT(IbexCsrOpValid, instr_valid_id |-> csr_op inside {

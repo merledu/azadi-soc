@@ -7,7 +7,7 @@ filesets:
     depend: 
       - pulp-platform.org::fpnew_pkg
       - pulp-platform.org::fpu_div_sqrt_mvp
-      - pulp-platform.org::common_cells
+      - pulp-platform.org::common_cells_new
       - pulp-platform.org::registers
     files:
       - src/fpnew_top.sv

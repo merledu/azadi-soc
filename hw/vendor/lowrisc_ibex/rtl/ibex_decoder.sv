@@ -17,7 +17,7 @@ module ibex_decoder #(
     parameter bit RV32E                = 0,
     parameter ibex_pkg::rv32m_e   RV32M = ibex_pkg::RV32MFast,
     parameter ibex_pkg::rv32b_e   RV32B = ibex_pkg::RV32BNone,
-    parameter ibex_pkg::rvfloat_e RVF   = ibex_pkg::RV64FDouble,
+    parameter ibex_pkg::rvfloat_e RVF   = ibex_pkg::RV32FSingle,
     parameter bit BranchTargetALU      = 0
 ) (
     input  logic                 clk_i,
@@ -48,12 +48,12 @@ module ibex_decoder #(
     output ibex_pkg::imm_b_sel_e  imm_b_mux_sel_o,       // immediate selection for operand b
     output ibex_pkg::op_a_sel_e   bt_a_mux_sel_o,        // branch target selection operand a
     output ibex_pkg::imm_b_sel_e  bt_b_mux_sel_o,        // branch target selection operand b
-    output logic [31:0]          imm_i_type_o,
-    output logic [31:0]          imm_s_type_o,
-    output logic [31:0]          imm_b_type_o,
-    output logic [31:0]          imm_u_type_o,
-    output logic [31:0]          imm_j_type_o,
-    output logic [31:0]          zimm_rs1_type_o,
+    output logic [31:0]           imm_i_type_o,
+    output logic [31:0]           imm_s_type_o,
+    output logic [31:0]           imm_b_type_o,
+    output logic [31:0]           imm_u_type_o,
+    output logic [31:0]           imm_j_type_o,
+    output logic [31:0]           zimm_rs1_type_o,
 
     // register file
     output ibex_pkg::rf_wd_sel_e rf_wdata_sel_o,   // RF write data selection
@@ -65,10 +65,10 @@ module ibex_decoder #(
     output logic                 rf_ren_b_o,          // Instruction reads from RF addr B
 
     // ALU
-    output ibex_pkg::alu_op_e     alu_operator_o,       // ALU operation selection
-    output ibex_pkg::op_a_sel_e   alu_op_a_mux_sel_o,   // operand a selection: reg value, PC,
+    output ibex_pkg::alu_op_e    alu_operator_o,       // ALU operation selection
+    output ibex_pkg::op_a_sel_e  alu_op_a_mux_sel_o,   // operand a selection: reg value, PC,
                                                        // immediate or zero
-    output ibex_pkg::op_b_sel_e   alu_op_b_mux_sel_o,   // operand b selection: reg value or
+    output ibex_pkg::op_b_sel_e  alu_op_b_mux_sel_o,   // operand b selection: reg value or
                                                        // immediate
     output logic                 alu_multicycle_o,     // ternary bitmanip instruction
 
@@ -78,12 +78,12 @@ module ibex_decoder #(
     output logic                 mult_sel_o,            // as above but static, for data muxes
     output logic                 div_sel_o,             // as above but static, for data muxes
 
-    output ibex_pkg::md_op_e      multdiv_operator_o,
+    output ibex_pkg::md_op_e     multdiv_operator_o,
     output logic [1:0]           multdiv_signed_mode_o,
 
     // CSRs
     output logic                 csr_access_o,          // access to CSR
-    output ibex_pkg::csr_op_e     csr_op_o,              // operation to perform on CSR
+    output ibex_pkg::csr_op_e    csr_op_o,              // operation to perform on CSR
 
     // LSU
     output logic                 data_req_o,            // start transaction to data memory
@@ -686,11 +686,11 @@ module ibex_decoder #(
 
         unique case(instr[14:12])
           3'b011: begin // FSD
-            illegal_insn = (RVF == RV64FDouble) ? 1'b0 : 1'b1;
+            illegal_insn = (RVF == RV32DDouble) ? 1'b0 : 1'b1;
             fp_src_fmt_o = FP64;
           end
           3'b010: begin // FSW
-            illegal_insn = (RVF == RV32FNone) ? 1'b1 : 1'b0;
+            illegal_insn = (RVF == RV32FDNone) ? 1'b1 : 1'b0;
             fp_src_fmt_o = FP32; 
           end
           default: illegal_insn = 1'b1;
@@ -706,11 +706,11 @@ module ibex_decoder #(
 
         unique case(instr[14:12])
           3'b011: begin // FLD
-            illegal_insn = (RVF == RV64FDouble) ? 1'b0 : 1'b1;
+            illegal_insn = (RVF == RV32DDouble) ? 1'b0 : 1'b1;
             fp_src_fmt_o = FP64;
           end
           3'b010: begin // FLW
-            illegal_insn = (RVF == RV32FNone) ? 1'b1 : 1'b0;
+            illegal_insn = (RVF == RV32FDNone) ? 1'b1 : 1'b0;
             fp_src_fmt_o = FP32; 
           end
           default: illegal_insn = 1'b1;
@@ -732,11 +732,11 @@ module ibex_decoder #(
         
         unique case (instr[26:25])
           01: begin
-            illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+            illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
             fp_src_fmt_o = FP64;
           end
           00: begin
-            illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+            illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
             fp_src_fmt_o = FP32;
           end
           default: illegal_insn = 1'b1;
@@ -755,7 +755,7 @@ module ibex_decoder #(
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             fp_swap_oprnds_o   = 1'b1;
-            illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+            illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
             fp_src_fmt_o = FP64;
           end
           7'b0001001,      // FMUL.D
@@ -764,7 +764,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
-            illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+            illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
             fp_src_fmt_o = FP64;
           end
           7'b0000000,       // FADD.S
@@ -774,7 +774,7 @@ module ibex_decoder #(
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             fp_swap_oprnds_o   = 1'b1;
-            illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+            illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
             fp_src_fmt_o = FP32;
           end
           7'b0001000, // FMUL.S
@@ -783,7 +783,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
-            illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+            illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
             fp_src_fmt_o = FP32;
           end
           7'b0101101: begin
@@ -791,7 +791,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~|instr[24:20]) begin //FSQRT.D
-              illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o = FP64;
             end
           end
@@ -800,7 +800,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~|instr[24:20]) begin
-              illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+              illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
             end
           end
@@ -810,7 +810,7 @@ module ibex_decoder #(
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~(instr[14] | (&instr[13:12]))) begin
-              illegal_insn  = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn  = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o  = FP64;
             end
           end
@@ -820,7 +820,7 @@ module ibex_decoder #(
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~(instr[14] | (&instr[13:12]))) begin
-              illegal_insn  = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+              illegal_insn  = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o  = FP32;
             end
           end
@@ -830,7 +830,7 @@ module ibex_decoder #(
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~|instr[14:13]) begin
-              illegal_insn  = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn  = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o  = FP64;
             end
           end
@@ -840,7 +840,7 @@ module ibex_decoder #(
             use_fp_rs2_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~|instr[14:13]) begin
-              illegal_insn  = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+              illegal_insn  = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o  = FP32;
             end
           end
@@ -849,7 +849,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~(|instr[24:21] | (~instr[20]))) begin
-              illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o = FP64;
             end
           end
@@ -857,7 +857,7 @@ module ibex_decoder #(
             rf_we            = 1'b1;  // write back in int_regfile
             use_fp_rs1_o     = 1'b1;
             if (~|instr[24:21]) begin
-              illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+              illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
             end
           end
@@ -866,7 +866,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             if (~|instr[24:20]) begin 
-              illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o = FP64;
             end
           end
@@ -875,13 +875,13 @@ module ibex_decoder #(
             unique case ({instr[24:20],instr[14:12]})
               {5'b00000,3'b000}: begin
                 use_fp_rs1_o   = 1'b1;
-                illegal_insn   = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+                illegal_insn   = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
                 fp_src_fmt_o   = FP32;
                 mv_instr_o     = 1'b1;
               end
               {5'b00000,3'b001}: begin
                 use_fp_rs1_o = 1'b1;
-                illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+                illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
                 fp_src_fmt_o = FP32;
               end
               default: begin
@@ -894,7 +894,7 @@ module ibex_decoder #(
             use_fp_rs1_o     = 1'b1;
             use_fp_rs2_o     = 1'b1;
             if (~(instr[14]) | (&instr[13:12])) begin
-              illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o = FP64;
             end
           end
@@ -903,7 +903,7 @@ module ibex_decoder #(
             use_fp_rs1_o     = 1'b1;
             use_fp_rs2_o     = 1'b1;
             if (~(instr[14]) | (&instr[13:12])) begin
-              illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+              illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
             end
           end
@@ -912,7 +912,7 @@ module ibex_decoder #(
             use_fp_rs1_o     = 1'b1;
             unique case ({instr[24:20],instr[14:12]}) 
               {5'b00000,3'b001}: begin  
-                illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+                illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
                 fp_src_fmt_o = FP64;
               end
               default: begin
@@ -924,7 +924,7 @@ module ibex_decoder #(
             rf_we            = 1'b1;  // write back in int_regfile
             use_fp_rs1_o     = 1'b1;
             if (~|instr[24:21]) begin
-              illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o = FP64;
             end
           end
@@ -932,7 +932,7 @@ module ibex_decoder #(
             fp_rf_we_o       = 1'b1;
             use_fp_rd_o      = 1'b1;
             if (~|instr[24:21]) begin
-              illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+              illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
             end
           end
@@ -940,7 +940,7 @@ module ibex_decoder #(
             rf_we            = 1'b1;  // write back in int_regfile
             use_fp_rd_o      = 1'b1;
             if (~|instr[24:21]) begin
-              illegal_insn = ((RVF == RV64FDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
+              illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o = FP64;
             end
           end
@@ -949,7 +949,7 @@ module ibex_decoder #(
             use_fp_rd_o       = 1'b1;
             mv_instr_o        = 1'b1;
             if (~(|instr[24:20]) | (|instr[14:12])) begin
-              illegal_insn = ((RVF == RV32FNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
+              illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
             end
           end

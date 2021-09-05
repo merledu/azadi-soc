@@ -13,7 +13,6 @@
  */
 
 module ibex_fp_register_file_ff #(
-    parameter ibex_pkg::rvfloat_e RVF       = ibex_pkg::RV32FSingle,
     parameter int unsigned       DataWidth = 32
     ) (
     // Clock and Reset
@@ -39,11 +38,8 @@ module ibex_fp_register_file_ff #(
     input  logic                 we_a_i
 
 );
-import ibex_pkg::rvfloat_e;
-
-  localparam int unsigned ADDR_WIDTH = (RVF==ibex_pkg::RV64FDouble) ? 6 : 5;
-  localparam int unsigned NUM_WORDS  = (RVF==ibex_pkg::RV64FDouble) ? 64 : 32;
-
+  localparam NUM_WORDS = 32;
+  
   logic [NUM_WORDS-1:0][DataWidth-1:0] rf_reg;
   logic [NUM_WORDS-1:0][DataWidth-1:0] rf_reg_q;
   logic [NUM_WORDS-1:0]                we_a_dec;
@@ -61,10 +57,6 @@ import ibex_pkg::rvfloat_e;
       end else if(we_a_dec[i]) begin
         rf_reg_q[i] <= wdata_a_i;
       end
-//      else begin
-//        rf_reg_q[5] <= 32'h41a00000;
-//        rf_reg_q[6] <= 32'h41200000;
-//      end
     end
   end
 

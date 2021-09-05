@@ -33,11 +33,20 @@ typedef enum integer {
 
 // floatig point
 typedef enum integer { 
-  RV32FNone     = 0,
-  RV32FSingle   = 1,
-  RV64FDouble   = 2
-  // RV32FQuad     = 3
+  RV32FDNone    = 0, 
+  RV32FSingle   = 1, // RV32 is base, F is extension for Single Precision
+  RV32DDouble   = 2  // RV32 is base, D is extension for Double Precision
+  // RV32QQuad     = 3
 } rvfloat_e;
+
+function automatic int unsigned fpu_width(rvfloat_e fpu_w);
+  unique case (fpu_w)
+    RV32FSingle : return 32;
+    RV32DDouble : return 64;
+    default:
+      return 32;
+  endcase
+endfunction
 
 /////////////
 // Opcodes //

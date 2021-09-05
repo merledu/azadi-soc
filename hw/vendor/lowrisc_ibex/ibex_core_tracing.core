@@ -101,6 +101,12 @@ parameters:
     paramtype: vlogparam
     description: "Number of PMP regions"
 
+  RVF:
+    datatype: str
+    default: ibex_pkg::RV32FSingle
+    paramtype: vlogdefine
+    description: "Used to enable the F or D extension with ibex, possible values: ibex_pkg::RV32FDNone, ibex_pkg::RV32FSingle, ibex_pkg::RV32DDouble"
+
 targets:
   default: &default_target
     filesets:
@@ -117,6 +123,7 @@ targets:
       - RV32E
       - RV32M
       - RV32B
+      - RVF
       - RegFile
       - ICache
       - ICacheECC
