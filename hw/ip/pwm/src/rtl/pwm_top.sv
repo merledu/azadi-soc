@@ -1,15 +1,17 @@
 
 module pwm_top (
 
-  input clk_i,
-  input rst_ni,
+  input logic clk_i,
+  input logic rst_ni,
 
   input  tlul_pkg::tl_h2d_t tl_i,
   output tlul_pkg::tl_d2h_t tl_o,
 
 
-  output        pwm_o,
-  output        pwm_o_2
+  output  logic      pwm_o,
+  output  logic      pwm_o_2,
+  output  logic      pwm1_oe,
+  output  logic      pwm2_oe
 
 );
 
@@ -28,7 +30,7 @@ logic         err;
 
 //assign err = '0;
 
-PWM pwm_core(
+pwm pwm_core(
 
 .clk_i      (clk_i),												
 .rst_ni     (rst_ni),												
@@ -39,13 +41,11 @@ PWM pwm_core(
 .wdata_i    (wdata),												
 .be_i       (be),										    
 .rdata_o    (rdata),												
-.error_o    (err),												
-
-.i_extclk   ('0),
-.i_DC       ('0),
-.i_valid_DC ('0),
+//.error_o    (err),												
 .o_pwm      (pwm_o),
-.o_pwm_2    (pwm_o_2)
+.o_pwm_2    (pwm_o_2),
+.oe_pwm1    (pwm1_oe),
+.oe_pwm2    (pwm2_oe)
 
 );
 
@@ -65,7 +65,7 @@ tlul_adapter_reg #(
   .wdata_o (wdata),
   .be_o    (be),
   .rdata_i (rdata),
-  .error_i (err)
+  .error_i (1'b0)
 );
 
 endmodule
