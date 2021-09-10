@@ -207,7 +207,6 @@ module ibex_decoder #(
                               (instr[14:12] == 3'b110) ? 1'b1 : 1'b0;
   assign fp_rm_dynamic_o    = (instr[14:12] == 3'b111) ? 1'b1 : 1'b0;
 
-  //assign fp_dst_fmt_o = FP32;
 
   ////////////////////
   // Register check //
