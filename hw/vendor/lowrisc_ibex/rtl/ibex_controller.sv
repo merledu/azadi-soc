@@ -11,7 +11,8 @@
 
 module ibex_controller #(
     parameter bit WritebackStage  = 0,
-    parameter bit BranchPredictor = 0
+    parameter bit BranchPredictor = 0,
+    parameter ibex_pkg::rvfloat_e RVF = ibex_pkg::RV32FSingle
  ) (
     input  logic                  clk_i,
     input  logic                  rst_ni,
@@ -797,7 +798,13 @@ module ibex_controller #(
   // If high current instruction cannot complete this cycle. Either because it needs more cycles to
   // finish (stall_id_i) or because the writeback stage cannot accept it yet (stall_wb_i). If there
   // is no writeback stage stall_wb_i is a constant 0.
-  assign stall = stall_id_i | stall_wb_i | fpu_busy_i;
+  if (RVF == RV32FSingle || RVF == RV32DDouble) begin
+    assign stall = stall_id_i | stall_wb_i | fpu_busy_i;
+  end else begin
+    logic unused_fpu_wires;
+    assign stall = stall_id_i | stall_wb_i;
+    assign unused_fpu_wires = &{1'b0,fpu_busy_i};
+  end
 
   // signal to IF stage that ID stage is ready for next instr
   assign id_in_ready_o = ~stall & ~halt_if & ~retain_id;

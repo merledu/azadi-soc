@@ -1,3 +1,6 @@
+*~
 build/
 *.vcd
 fusesoc.conf
+html
+Bender.lock

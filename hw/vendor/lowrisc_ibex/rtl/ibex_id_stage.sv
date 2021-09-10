@@ -20,7 +20,8 @@ module ibex_id_stage #(
     parameter bit               RV32E           = 0,
     parameter ibex_pkg::rv32m_e RV32M           = ibex_pkg::RV32MFast,
     parameter ibex_pkg::rv32b_e RV32B           = ibex_pkg::RV32BNone,
-    parameter ibex_pkg::rvfloat_e RVF           = ibex_pkg::RV64FDouble,
+    parameter ibex_pkg::rvfloat_e RVF           = ibex_pkg::RV32FSingle,
+    parameter                   FPU_WIDTH       = 32,
     parameter bit               DataIndTiming   = 1'b0,
     parameter bit               BranchTargetALU = 0,
     parameter bit               SpecBranch      = 0,
@@ -186,9 +187,9 @@ module ibex_id_stage #(
     // Floating point extensions IO
     output fpnew_pkg::roundmode_e     fp_rounding_mode_o,    // defines the rounding mode 
 
-    input  logic [31:0]               fp_rf_rdata_a_i,
-    input  logic [31:0]               fp_rf_rdata_b_i,
-    input  logic [31:0]               fp_rf_rdata_c_i,
+    input  logic [FPU_WIDTH-1:0]      fp_rf_rdata_a_i,
+    input  logic [FPU_WIDTH-1:0]      fp_rf_rdata_b_i,
+    input  logic [FPU_WIDTH-1:0]      fp_rf_rdata_c_i,
     output logic [4:0]                fp_rf_raddr_a_o,
     output logic [4:0]                fp_rf_raddr_b_o,
     output logic [4:0]                fp_rf_raddr_c_o,
@@ -208,8 +209,9 @@ module ibex_id_stage #(
     output logic                      use_fp_rd_o,
     input  logic                      fpu_busy_i,
     input  logic                      fp_rf_write_wb_i,
-    input  logic [31:0]               fp_rf_wdata_fwd_wb_i,
-    output logic [2:0][31:0]          fp_operands_o,
+    input  logic [FPU_WIDTH-1:0]      fp_rf_wdata_fwd_wb_i,
+    output logic [FPU_WIDTH-1:0]      fp_rf_wdata_id_o,
+    output logic [2:0][FPU_WIDTH-1:0] fp_operands_o,
     output logic                      fp_load_o
 );
 
@@ -306,17 +308,44 @@ module ibex_id_stage #(
   logic [31:0] alu_operand_a;
   logic [31:0] alu_operand_b;
 
-  // Floating point 
-  logic        fp_swap_oprnds;
-  logic [31:0] fp_rf_rdata_a_fwd;
-  logic [31:0] fp_rf_rdata_b_fwd;
-  logic [31:0] fp_rf_rdata_c_fwd;
-  logic [31:0] temp;
-  logic [31:0] fpu_op_a;
+  /* FPU Limits STARTS */ 
+  logic                 mv_instr;
+  logic                 fp_swap_oprnds;
+  logic [FPU_WIDTH-1:0] fp_rf_rdata_a_fwd;
+  logic [FPU_WIDTH-1:0] fp_rf_rdata_b_fwd;
+  logic [FPU_WIDTH-1:0] fp_rf_rdata_c_fwd;
+  logic [FPU_WIDTH-1:0] temp;
+  logic [FPU_WIDTH-1:0] fpu_op_a;
   logic [31:0] fpu_op_b;
-  logic [31:0] fpu_op_c;
-  logic        mv_instr;
-  logic [31:0] result_wb;
+  logic [FPU_WIDTH-1:0] fpu_op_c;
+  logic [FPU_WIDTH-1:0] result_wb;
+  logic [FPU_WIDTH-1:0] fpu_a;
+  logic [FPU_WIDTH-1:0] fpu_b;
+  logic [FPU_WIDTH-1:0] fpu_c;
+  
+  if (RVF == RV32FSingle || RVF == RV32DDouble) begin
+    assign fpu_a = use_fp_rs1_o ? fp_rf_rdata_a_fwd : rf_rdata_a_fwd;
+    assign fpu_b = use_fp_rs2_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
+    assign fpu_c = fp_rf_rdata_c_fwd;
+
+    /* Swap operands */
+    always_comb begin : swapping
+      if (fp_swap_oprnds) begin
+        temp     = fpu_c;
+        fpu_op_c = fpu_a;
+        fpu_op_a = temp;
+      end else begin
+        fpu_op_a = fpu_a;
+        fpu_op_b = fpu_b;
+        fpu_op_c = fpu_c;
+      end
+      fp_operands_o = {fpu_op_c , fpu_op_b , fpu_op_a};
+    end
+    assign result_wb = mv_instr ? fpu_op_a : result_ex_i;
+  end else begin
+    assign fpu_op_b = rf_rdata_b_fwd;
+  end
+  /* FPU Limits ENDS */
 
   /////////////
   // LSU Mux //
@@ -434,22 +463,6 @@ module ibex_id_stage #(
 
   assign imd_val_q_ex_o = imd_val_q;
 
-  // ///////////////////////
-  // // Register File MUX //
-  // ///////////////////////
-
-  // // Suppress register write if there is an illegal CSR access or instruction is not executing
-  // assign rf_we_id_o = rf_we_raw & instr_executing & ~illegal_csr_insn_i;
-
-  // // Register file write data mux
-  // always_comb begin : rf_wdata_id_mux
-  //   unique case (rf_wdata_sel)
-  //     RF_WD_EX:  rf_wdata_id_o = result_ex_i;
-  //     RF_WD_CSR: rf_wdata_id_o = csr_rdata_i;
-  //     default:   rf_wdata_id_o = result_ex_i;
-  //   endcase
-  // end
-
   /////////////
   // Decoder //
   /////////////
@@ -458,6 +471,7 @@ module ibex_id_stage #(
       .RV32E           ( RV32E           ),
       .RV32M           ( RV32M           ),
       .RV32B           ( RV32B           ),
+      .RVF             ( RVF             ),
       .BranchTargetALU ( BranchTargetALU )
   ) decoder_i (
       .clk_i                           ( clk_i                ),
@@ -552,30 +566,6 @@ module ibex_id_stage #(
       .fp_load_o                       ( fp_load_o             ),
       .mv_instr_o                      ( mv_instr              )
   );
-  
-  logic [31:0] fpu_a;
-  logic [31:0] fpu_b;
-  logic [31:0] fpu_c;
-
-  assign fpu_a = use_fp_rs1_o ? fp_rf_rdata_a_fwd : rf_rdata_a_fwd;
-  assign fpu_b = use_fp_rs2_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
-  assign fpu_c = fp_rf_rdata_c_fwd;
-  
-  /* Swap operands */
-  always_comb begin : swapping
-    if (fp_swap_oprnds) begin
-      temp     = fpu_c;
-      fpu_op_c = fpu_a;
-      fpu_op_a = temp;
-    end else begin
-      fpu_op_a = fpu_a;
-      fpu_op_b = fpu_b;
-      fpu_op_c = fpu_c;
-    end
-    fp_operands_o = {fpu_op_c , fpu_op_b , fpu_op_a};
-  end
-   
-  assign result_wb = mv_instr ? fpu_op_a : result_ex_i;
 
   ///////////////////////
   // Register File MUX //
@@ -587,9 +577,18 @@ module ibex_id_stage #(
   // Register file write data mux
   always_comb begin : rf_wdata_id_mux
     unique case (rf_wdata_sel)
-      RF_WD_EX:  rf_wdata_id_o = result_wb;
+      RF_WD_EX:  rf_wdata_id_o = result_ex_i;
       RF_WD_CSR: rf_wdata_id_o = csr_rdata_i;
-      default:   rf_wdata_id_o = result_wb;
+      default:   rf_wdata_id_o = result_ex_i;
+    endcase
+  end
+
+  // Register file write data mux
+  always_comb begin : fp_rf_wdata_id_mux
+    unique case (rf_wdata_sel)
+      RF_WD_EX:  fp_rf_wdata_id_o = result_wb;
+      RF_WD_CSR: fp_rf_wdata_id_o = csr_rdata_i;
+      default:   fp_rf_wdata_id_o = result_wb;
     endcase
   end
 
@@ -627,7 +626,8 @@ module ibex_id_stage #(
 
   ibex_controller #(
     .WritebackStage  ( WritebackStage  ),
-    .BranchPredictor ( BranchPredictor )
+    .BranchPredictor ( BranchPredictor ),
+    .RVF             ( RVF             )
   ) controller_i (
       .clk_i                          ( clk_i                   ),
       .rst_ni                         ( rst_ni                  ),
@@ -1006,10 +1006,6 @@ module ibex_id_stage #(
     assign rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_o) & |rf_raddr_a_o;
     assign rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_o) & |rf_raddr_b_o;
 
-    assign fp_rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_o);
-    assign fp_rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_o);
-    assign fp_rf_rd_c_wb_match = (rf_waddr_wb_i == fp_rf_raddr_c_o); 
-
     assign rf_rd_a_wb_match_o = rf_rd_a_wb_match;
     assign rf_rd_b_wb_match_o = rf_rd_b_wb_match;
 
@@ -1026,9 +1022,23 @@ module ibex_id_stage #(
     assign rf_rdata_b_fwd = rf_rd_b_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_b_i;
     
     // forwarding for floating point unit
-    assign fp_rf_rdata_a_fwd = fp_rf_rd_a_wb_match & fp_rf_write_wb_i ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_a_i;
-    assign fp_rf_rdata_b_fwd = fp_rf_rd_b_wb_match & fp_rf_write_wb_i ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_b_i;
-    assign fp_rf_rdata_c_fwd = fp_rf_rd_c_wb_match & fp_rf_write_wb_i ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_c_i; 
+    logic unused_fpu_wires;
+    if (RVF == RV32FSingle || RVF == RV32DDouble) begin
+      assign fp_rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_o);
+      assign fp_rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_o);
+      assign fp_rf_rd_c_wb_match = (rf_waddr_wb_i == fp_rf_raddr_c_o);
+
+      assign fp_rf_rdata_a_fwd = (fp_rf_rd_a_wb_match & fp_rf_write_wb_i) ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_a_i;
+      assign fp_rf_rdata_b_fwd = (fp_rf_rd_b_wb_match & fp_rf_write_wb_i) ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_b_i;
+      assign fp_rf_rdata_c_fwd = (fp_rf_rd_c_wb_match & fp_rf_write_wb_i) ? fp_rf_wdata_fwd_wb_i : fp_rf_rdata_c_i;
+    end else begin
+      assign unused_fpu_wires  = &{1'b0,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_wdata_fwd_wb_i,
+                                   1'b0};
+    end
 
     assign stall_ld_hz = outstanding_load_wb_i & (rf_rd_a_hz | rf_rd_b_hz | rf_rd_c_hz);
 
@@ -1066,10 +1076,20 @@ module ibex_id_stage #(
     // register file
     assign rf_rdata_a_fwd = rf_rdata_a_i;
     assign rf_rdata_b_fwd = rf_rdata_b_i;
-
-    assign fp_rf_rdata_a_fwd = fp_rf_rdata_a_i;
-    assign fp_rf_rdata_b_fwd = fp_rf_rdata_b_i;
-    assign fp_rf_rdata_c_fwd = fp_rf_rdata_c_i;
+    
+    logic unused_fpu_wires;
+    if (RVF == RV32FSingle || RVF == RV32DDouble) begin
+      assign fp_rf_rdata_a_fwd = fp_rf_rdata_a_i;
+      assign fp_rf_rdata_b_fwd = fp_rf_rdata_b_i;
+      assign fp_rf_rdata_c_fwd = fp_rf_rdata_c_i;
+    end else begin
+      assign unused_fpu_wires  = &{1'b0,
+                                   fp_rf_rdata_a_i,
+                                   fp_rf_rdata_b_i,
+                                   fp_rf_rdata_c_i,
+                                   fp_rf_wdata_fwd_wb_i,
+                                   1'b0};
+    end
 
     assign rf_rd_a_wb_match_o = 1'b0;
     assign rf_rd_b_wb_match_o = 1'b0;

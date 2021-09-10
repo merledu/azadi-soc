@@ -26,7 +26,7 @@ module ibex_cs_registers #(
     parameter int unsigned      PMPNumRegions     = 4,
     parameter bit               RV32E             = 0,
     parameter ibex_pkg::rv32m_e RV32M             = ibex_pkg::RV32MFast,
-    parameter ibex_pkg::rvfloat_e RVF             = ibex_pkg::RV64FDouble // for floating point
+    parameter ibex_pkg::rvfloat_e RVF             = ibex_pkg::RV32FSingle
 ) (
     // Clock and Reset
     input  logic                 clk_i,
@@ -131,7 +131,7 @@ module ibex_cs_registers #(
   localparam int unsigned PMPAddrWidth = (PMPGranularity > 0) ? 33 - PMPGranularity : 32;
 
   localparam int unsigned SinglePrecision = (RVF == RV32FSingle) ? 1 : 0;
-  localparam int unsigned DoublePrecision = (RVF == RV64FDouble) ? 1 : 0;
+  localparam int unsigned DoublePrecision = (RVF == RV32DDouble) ? 1 : 0;
 
   // misa
   localparam logic [31:0] MISA_VALUE =
