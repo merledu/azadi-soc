@@ -61,7 +61,7 @@ module ibex_wb_stage #(
   input  logic [4:0]               fp_rf_waddr_id_i,
   input  logic                     fp_rf_wen_id_i,
   output logic [FPU_WIDTH-1:0]     fp_rf_wdata_wb_o,
-  output logic                     fp_load_i
+  input  logic                     fp_load_i
 );
 
   import ibex_pkg::*;
