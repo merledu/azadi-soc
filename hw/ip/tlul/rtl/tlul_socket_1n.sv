@@ -1,7 +1,4 @@
-// Copyright lowRISC contributors.
-// Licensed under the Apache License, Version 2.0, see LICENSE for details.
-// SPDX-License-Identifier: Apache-2.0
-//
+
 // TL-UL socket 1:N module
 //
 // configuration settings
@@ -34,7 +31,6 @@
 //
 // The maximum value of N is 15
 
-`include "prim_assert.sv"
 
 module tlul_socket_1n #(
   parameter int unsigned  N         = 4,
@@ -48,16 +44,14 @@ module tlul_socket_1n #(
   parameter bit [N*4-1:0] DRspDepth = {N{4'h2}},
   localparam int unsigned NWD       = $clog2(N+1) // derived parameter
 ) (
-  input                     clk_i,
-  input                     rst_ni,
+  input  logic                   clk_i,
+  input  logic                   rst_ni,
   input  tlul_pkg::tl_h2d_t tl_h_i,
   output tlul_pkg::tl_d2h_t tl_h_o,
   output tlul_pkg::tl_h2d_t tl_d_o    [N],
   input  tlul_pkg::tl_d2h_t tl_d_i    [N],
-  input  [NWD-1:0]          dev_select_i
+  input  logic [NWD-1:0]          dev_select_i
 );
-
-  `ASSERT_INIT(maxN, N < 32)
 
   // Since our steering is done after potential FIFOing, we need to
   // shove our device select bits into spare bits of reqfifo
@@ -92,7 +86,7 @@ module tlul_socket_1n #(
   // We need to keep track of how many requests are outstanding,
   // and to which device. New requests are compared to this and
   // stall until that number is zero.
-  localparam int MaxOutstanding = 2**top_pkg::TL_AIW; // Up to 256 ounstanding
+  localparam int MaxOutstanding = 4**tlul_pkg::TL_AIW; // Up to 256 ounstanding
   localparam int OutstandingW = $clog2(MaxOutstanding+1);
   logic [OutstandingW-1:0] num_req_outstanding;
   logic [NWD-1:0]          dev_select_outstanding;
@@ -108,7 +102,6 @@ module tlul_socket_1n #(
       dev_select_outstanding <= '0;
     end else if (accept_t_req) begin
       if (!accept_t_rsp) begin
-        `ASSERT_I(NotOverflowed_A, num_req_outstanding <= MaxOutstanding)
         num_req_outstanding <= num_req_outstanding + 1'b1;
       end
       dev_select_outstanding <= dev_select_t;
@@ -138,7 +131,6 @@ module tlul_socket_1n #(
     assign tl_u_o[i].a_address = tl_t_o.a_address;
     assign tl_u_o[i].a_mask    = tl_t_o.a_mask;
     assign tl_u_o[i].a_data    = tl_t_o.a_data;
-    assign tl_u_o[i].a_user    = tl_t_o.a_user;
   end
 
   tlul_pkg::tl_d2h_t tl_t_p ;
@@ -170,7 +162,6 @@ module tlul_socket_1n #(
   assign tl_t_i.d_source = tl_t_p.d_source;
   assign tl_t_i.d_sink   = tl_t_p.d_sink  ;
   assign tl_t_i.d_data   = tl_t_p.d_data  ;
-  assign tl_t_i.d_user   = tl_t_p.d_user  ;
   assign tl_t_i.d_error  = tl_t_p.d_error ;
 
 
@@ -209,10 +200,9 @@ module tlul_socket_1n #(
   assign tl_u_o[N].a_address   = tl_t_o.a_address;
   assign tl_u_o[N].a_mask      = tl_t_o.a_mask;
   assign tl_u_o[N].a_data      = tl_t_o.a_data;
-  assign tl_u_o[N].a_user      = tl_t_o.a_user;
   tlul_err_resp err_resp (
-    .clk_i,
-    .rst_ni,
+    .clk_i      (clk_i),
+    .rst_ni     (rst_ni),
     .tl_h_i     (tl_u_o[N]),
     .tl_h_o     (tl_u_i[N]));
 
