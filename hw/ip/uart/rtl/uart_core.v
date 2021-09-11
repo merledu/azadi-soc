@@ -32,35 +32,35 @@ module uart_core (
     reg        rx_clr;
     wire       rx_done;
     
-    always @(posedge clk_i or negedge rst_ni) begin
-        if(~rst_ni) begin
-            control <= 16'b0;
-            tx      <= 8'b0;
-            rx_en   <= 1'b0;
-            tx_en   <= 1'b0;
-	    rx_clr  <= 1'b1;
-        end else begin
-          if(~ren & we) begin
-            if(addr == ADDR_CTRL) begin
-                control  <= wdata[15:0];
-            end else if (addr == ADDR_TX) begin
-                tx  <= wdata[7:0];
-            end else if (addr == RX_EN) begin
-                rx_en <= wdata[0];
-            end else if(addr == TX_EN) begin
-                tx_en <= wdata[0];
-            end else if(addr == RX_SC) begin
-	        rx_clr <= wdata[0];
-	    end else begin
-                control <= 16'b0;
-                tx      <= 8'b0;
-                rx_en   <= 1'b0;
-                tx_en   <= 1'b0;
+always @(posedge clk_i or negedge rst_ni) begin
+  if(~rst_ni) begin
+    control <= 16'b0;
+    tx      <= 8'b0;
+    rx_en   <= 1'b0;
+    tx_en   <= 1'b0;
+	rx_clr  <= 1'b1;
+  end else begin
+    if(~ren & we) begin
+      if(addr == ADDR_CTRL) begin
+        control  <= wdata[15:0];
+      end else if (addr == ADDR_TX) begin
+        tx  <= wdata[7:0];
+      end else if (addr == RX_EN) begin
+        rx_en <= wdata[0];
+      end else if(addr == TX_EN) begin
+        tx_en <= wdata[0];
+      end else if(addr == RX_SC) begin
+	    rx_clr <= wdata[0];
+      end else begin
+        control <= 16'b0;
+        tx      <= 8'b0;
+        rx_en   <= 1'b0;
+        tx_en   <= 1'b0;
 		rx_clr  <= 1'b1;
-            end
-        end 
-    end     
-  end
+      end
+    end 
+  end     
+end
     
     
 uart_tx u_tx (
@@ -83,18 +83,17 @@ uart_rx u_rx(
 );
 
 always @(posedge clk_i or negedge rst_ni) begin
-    if(!rst_ni) begin
-        rx_status <= 1'b0;
-	rx_reg    <= 8'b0;
-    end else begin
-        
-	if (rx_done) begin
-	   rx_reg  <= rx;
-	   rx_status <= 1'b1;	
-	end else if(!rx_clr) begin
-	   rx_status <= 1'b0;	
-	end
+  if(!rst_ni) begin
+     rx_status <= 1'b0;
+	 rx_reg    <= 8'b0;
+  end else begin        
+    if (rx_done) begin
+	  rx_reg  <= rx;
+	  rx_status <= 1'b1;	
+    end else if(!rx_clr) begin
+	  rx_status <= 1'b0;	
     end
+  end
 end
   
  assign rdata = (addr == 20)? rx_status : (addr == 8)? rx_reg : 0;   
