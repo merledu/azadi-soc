@@ -1,21 +1,10 @@
-// Copyright lowRISC contributors.
-// Licensed under the Apache License, Version 2.0, see LICENSE for details.
-// SPDX-License-Identifier: Apache-2.0
-
-`include "prim_assert.sv"
-
-/**
- * Tile-Link UL adapter for Register interface
- */
-
 module tlul_adapter_reg import tlul_pkg::*; #(
-  parameter  bit EnableDataIntgGen = 1'b0,
   parameter  int RegAw = 8,
   parameter  int RegDw = 32, // Shall be matched with TL_DW
   localparam int RegBw = RegDw/8
 ) (
-  input clk_i,
-  input rst_ni,
+  input logic clk_i,
+  input logic rst_ni,
 
   // TL-UL interface
   input  tl_h2d_t tl_i,
@@ -27,8 +16,8 @@ module tlul_adapter_reg import tlul_pkg::*; #(
   output logic [RegAw-1:0] addr_o,
   output logic [RegDw-1:0] wdata_o,
   output logic [RegBw-1:0] be_o,
-  input        [RegDw-1:0] rdata_i,
-  input                    error_i
+  input  logic      [RegDw-1:0] rdata_i,
+  input  logic                  error_i
 );
 
   localparam int IW  = $bits(tl_i.a_source);
@@ -41,12 +30,12 @@ module tlul_adapter_reg import tlul_pkg::*; #(
   logic             error, err_internal;
 
   logic addr_align_err;     // Size and alignment
-  logic malformed_meta_err; // User signal format error or unsupported
+//  logic malformed_meta_err; // User signal format error or unsupported
   logic tl_err;             // Common TL-UL error checker
 
   logic [IW-1:0]  reqid;
   logic [SZW-1:0] reqsz;
-  tl_d_op_e       rspop;
+  tlul_pkg::tl_d_m_op       rspop;
 
   logic rd_req, wr_req;
 
@@ -58,14 +47,9 @@ module tlul_adapter_reg import tlul_pkg::*; #(
 
   assign we_o    = wr_req & ~err_internal;
   assign re_o    = rd_req & ~err_internal;
+  assign addr_o  = {tl_i.a_address[RegAw-1:2], 2'b00}; // generate always word-align
   assign wdata_o = tl_i.a_data;
   assign be_o    = tl_i.a_mask;
-
-  if (RegAw <= 2) begin : gen_only_one_reg
-    assign addr_o  = '0;
-  end else begin : gen_more_regs
-    assign addr_o  = {tl_i.a_address[RegAw-1:2], 2'b00}; // generate always word-align
-  end
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni)    outstanding <= 1'b0;
@@ -91,21 +75,9 @@ module tlul_adapter_reg import tlul_pkg::*; #(
       rdata  <= '0;
       error <= 1'b0;
     end else if (a_ack) begin
-      rdata <= (error_i || err_internal || wr_req) ? '1 : rdata_i;
+      rdata <= (err_internal) ? '1 : rdata_i;
       error <= error_i | err_internal;
     end
-  end
-
-  logic [DataIntgWidth-1:0] data_intg;
-  if (EnableDataIntgGen) begin : gen_data_intg
-    logic [DataMaxWidth-1:0] unused_data;
-
-    prim_secded_64_57_enc u_data_gen (
-      .in(DataMaxWidth'(rdata)),
-      .out({data_intg, unused_data})
-    );
-  end else begin : gen_tieoff_data_intg
-    assign data_intg = '0;
   end
 
   assign tl_o = '{
@@ -117,17 +89,17 @@ module tlul_adapter_reg import tlul_pkg::*; #(
     d_source: reqid,
     d_sink:   '0,
     d_data:   rdata,
-    d_user:   '{default: '0, data_intg: data_intg},
-    d_error:  error
+    d_error: error
   };
 
   ////////////////////
   // Error Handling //
   ////////////////////
-  assign err_internal = addr_align_err | malformed_meta_err | tl_err ;
+  assign err_internal = addr_align_err | tl_err ;
 
-  // Don't allow unsupported values.
-  assign malformed_meta_err = tl_a_user_chk(tl_i.a_user);
+  // malformed_meta_err
+  //    Raised if not supported feature is turned on or user signal has malformed
+ // assign malformed_meta_err = (tl_i.a_user.parity_en == 1'b1);
 
   // addr_align_err
   //    Raised if addr isn't aligned with the size
@@ -144,13 +116,10 @@ module tlul_adapter_reg import tlul_pkg::*; #(
   end
 
   // tl_err : separate checker
-  tlul_err u_err (
-    .clk_i,
-    .rst_ni,
-    .tl_i,
+ tlul_err u_err (
+    .tl_i (tl_i),
     .err_o (tl_err)
   );
 
-  `ASSERT_INIT(MatchedWidthAssert, RegDw == top_pkg::TL_DW)
 
 endmodule

@@ -7,14 +7,14 @@
 module rv_plic_gateway #(
   parameter int N_SOURCE = 32
 ) (
-  input clk_i,
-  input rst_ni,
+  input logic clk_i,
+  input logic rst_ni,
 
-  input [N_SOURCE-1:0] src_i,
-  input [N_SOURCE-1:0] le_i,      // Level0 Edge1
+  input logic [N_SOURCE-1:0] src_i,
+  input logic [N_SOURCE-1:0] le_i,      // Level0 Edge1
 
-  input [N_SOURCE-1:0] claim_i, // $onehot0(claim_i)
-  input [N_SOURCE-1:0] complete_i, // $onehot0(complete_i)
+  input logic [N_SOURCE-1:0] claim_i, // $onehot0(claim_i)
+  input logic [N_SOURCE-1:0] complete_i, // $onehot0(complete_i)
 
   output logic [N_SOURCE-1:0] ip_o
 );

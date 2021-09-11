@@ -21,14 +21,14 @@ module rv_plic_target #(
   localparam int SrcWidth  = $clog2(N_SOURCE+1),  // derived parameter
   localparam int PrioWidth = $clog2(MAX_PRIO+1)   // derived parameter
 ) (
-  input clk_i,
-  input rst_ni,
+  input logic clk_i,
+  input logic rst_ni,
 
-  input [N_SOURCE-1:0]  ip_i,
-  input [N_SOURCE-1:0]  ie_i,
+  input logic [N_SOURCE-1:0]  ip_i,
+  input logic [N_SOURCE-1:0]  ie_i,
 
-  input [PrioWidth-1:0] prio_i [N_SOURCE],
-  input [PrioWidth-1:0] threshold_i,
+  input logic [PrioWidth-1:0] prio_i [N_SOURCE],
+  input logic [PrioWidth-1:0] threshold_i,
 
   output logic            irq_o,
   output logic [SrcWidth-1:0] irq_id_o
