@@ -28,7 +28,7 @@ parameter  adr_ctrl_2	=	16,
 
 
 
-reg [2:0] ctrl;
+	reg [2:0] ctrl;
 	reg [15:0] period;
 	reg [15:0] DC_1;
 	reg [15:0] divisor;
