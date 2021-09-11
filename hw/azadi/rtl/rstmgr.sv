@@ -18,44 +18,29 @@ module rstmgr(
     if(!rst_ni) begin
       rst_d = 1'b0;
     end else begin
-    /*if(!prog_reg) begin
-      rst_d = 1'b0;
-    end else */if(!prog_rst_ni) begin
-      rst_d = 1'b0;
-    end else begin
-      rst_d = 1'b1;
-    end 
+      if(!prog_rst_ni) begin
+        rst_d = 1'b0;
+      end else begin
+        rst_d = 1'b1;
+      end 
     end
   end
-  
 
- /* always_ff @(posedge clk_i or negedge rst_ni) begin
-  	if(!rst_ni) begin
-	  prog_reg <= 1'b0;		
-	end else begin 
-	if(!prog_rst_ni)begin
-	  prog_reg <= 1'b1;
-	end else begin
-	  prog_reg <= 1'b0;
-	end
-        end
-  end*/
   always_ff @(posedge clk_i or negedge rst_ni) begin
-	if(!rst_ni) begin
-	  rst_q <= 1'b0;
-	end else begin
-	  rst_q <= rst_d;
-	end
-    
+	  if(!rst_ni) begin
+	    rst_q <= 1'b0;
+	  end else begin
+	    rst_q <= rst_d;
+	  end 
   end
 
   assign rst_fd = rst_q;
   always_ff @(posedge clk_i or negedge rst_ni) begin
-    	if(!rst_ni) begin
-	  rst_fq <= 1'b0;
-	end else begin
-	  rst_fq <= rst_fd;
-	end
+    if(!rst_ni) begin
+	    rst_fq <= 1'b0;
+	  end else begin
+	    rst_fq <= rst_fd;
+  	end
   end
 
   assign sys_rst_ni = rst_fq;

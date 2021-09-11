@@ -37,7 +37,6 @@ module tl_xbar_main (
   import tlul_pkg::*;
   import tl_main_pkg::*;
 
-
 // host LSU
   tlul_pkg::tl_h2d_t brqlsu_to_s1n;
   tlul_pkg::tl_d2h_t s1n_to_brqlsu;
@@ -78,9 +77,7 @@ module tl_xbar_main (
 
 // host  socket
   always_comb begin 
-    
      device_sel = 3'd7;
-
     if ((brqlsu_to_s1n.a_address & ~(ADDR_MASK_DCCM)) == ADDR_SPACE_DCCM) begin
      device_sel = 3'd0; 
     end else if ((brqlsu_to_s1n.a_address & ~(ADDR_MASK_TIMER0))    == ADDR_SPACE_TIMER0) begin

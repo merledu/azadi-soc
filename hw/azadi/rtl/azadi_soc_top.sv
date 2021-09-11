@@ -45,8 +45,6 @@ module azadi_soc_top (
   logic         req_i;
   logic [31:0]  tlul_data;
 
-
-
  // instruction sram interface 
   logic        instr_csb;
   logic [11:0] instr_addr;
@@ -67,7 +65,6 @@ module azadi_soc_top (
   logic        iccm_ctrl_we;
   logic [11:0] iccm_ctrl_addr_o;
 
-        
   tlul_pkg::tl_h2d_t ifu_to_xbar;
   tlul_pkg::tl_d2h_t xbar_to_ifu;
   tlul_pkg::tl_h2d_t xbar_to_iccm;
@@ -222,22 +219,17 @@ rv_timer timer0(
 );
 
 // PWM module
-
 pwm_top u_pwm(
 
   .clk_i   (clk_i),
   .rst_ni  (system_rst_ni),
-
   .tl_i    (xbar_to_pwm),
   .tl_o    (pwm_to_xbar),
-
-
   .pwm_o   (pwm_o),
   .pwm_o_2 (pwm_o_2),
   .pwm1_oe (pwm1_oe),
   .pwm2_oe (pwm2_oe)
 );
-
 
 // spi module 
 spi_top u_spi_host(
@@ -247,7 +239,6 @@ spi_top u_spi_host(
 
   .tl_i        (xbar_to_spi),
   .tl_o        (spi_to_xbar),
-
   // SPI signals                  
   .intr_rx_o   (intr_srx),
   .intr_tx_o   (intr_stx),                   
@@ -267,7 +258,6 @@ gpio GPIO (
   // Below Regster interface can be changed
   .tl_i           (xbarp_to_gpio),
   .tl_o           (gpio_to_xbarp),
-
   .cio_gpio_i     (gpio_in),
   .cio_gpio_o     (gpio_out),
   .cio_gpio_en_o  (gpio_oe),
@@ -287,14 +277,11 @@ rstmgr reset_manager(
 rv_plic intr_controller (
   .clk_i(clk_i),
   .rst_ni(system_rst_ni),
-
   // Bus Interface (device)
   .tl_i (plic_req),
   .tl_o (plic_resp),
-
   // Interrupt Sources
   .intr_src_i (intr_vector),
-
   // Interrupt notification to targets
   .irq_o (intr_req),
   .msip_o()
@@ -304,10 +291,8 @@ rv_plic intr_controller (
 
     .clk_i  (clk_i),
     .rst_ni (system_rst_ni),
-    
     .tl_i   (xbar_to_uart),
     .tl_o   (uart_to_xbar),
-    
     .tx_o   (uart_tx),
     .rx_i   (uart_rx),
     
@@ -351,8 +336,7 @@ instr_mem_top iccm_adapter(
   .iccm_ctrl_wdata  (iccm_ctrl_data),
   .iccm_ctrl_we     (iccm_ctrl_we),
   .prog_rst_ni      (prog_rst_ni),
-    
-
+  
 // instruction sram interface 
   .csb              (instr_csb),
   .addr_o           (instr_addr),
@@ -365,24 +349,23 @@ instr_mem_top iccm_adapter(
 
 
 DFFRAM #(
-.USE_LATCH(0),
-.WSIZE(4)
+  .USE_LATCH(0),
+  .WSIZE(4)
 ) u_iccm(
 `ifdef USE_POWER_PINS
-.vccd1(vccd1),
-.vssd1(vssd1),
+  .vccd1(vccd1),
+  .vssd1(vssd1),
 `endif
-.CLK(clk_i),
-.WE (instr_we? instr_wmask: '0),
-.EN(instr_csb),
-.Di(instr_wdata),
-.Do(instr_rdata),
-.A(instr_addr[9:0])
+  .CLK(clk_i),
+  .WE (instr_we? instr_wmask: '0),
+  .EN(instr_csb),
+  .Di(instr_wdata),
+  .Do(instr_rdata),
+  .A(instr_addr[9:0])
 );
 
 
 // dummy data memory
-
 data_mem_top dccm_adapter(
   .clk_i    (clk_i),
   .rst_ni    (system_rst_ni),
@@ -402,18 +385,18 @@ data_mem_top dccm_adapter(
 
 
 DFFRAM #(
-.USE_LATCH(0),
-.WSIZE(4)
+  .USE_LATCH(0),
+  .WSIZE(4)
 ) u_dccm(
 `ifdef USE_POWER_PINS
-.vccd1(vccd1),
-.vssd1(vssd1),
+  .vccd1(vccd1),
+  .vssd1(vssd1),
 `endif
-    .CLK (clk_i),
-    .WE  (data_we? data_wmask: '0),
-    .EN  (data_csb),
-    .Di  (data_wdata),
-    .Do  (data_rdata),
-    .A   (data_addr[9:0])
+  .CLK (clk_i),
+  .WE  (data_we? data_wmask: '0),
+  .EN  (data_csb),
+  .Di  (data_wdata),
+  .Do  (data_rdata),
+  .A   (data_addr[9:0])
 );
 endmodule
