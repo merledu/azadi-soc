@@ -34,7 +34,7 @@ WAVES               := 1
 # Enable coverage dump
 COV                 := 0
 # RTL simulator
-SIMULATOR           := vcs
+SIMULATOR           := xlm
 # ISS (spike, ovpsim)
 ISS                 := spike
 # ISS runtime options
@@ -334,7 +334,8 @@ iss_sim: $(metadata)/instr_gen.iss.stamp
 # commands unless we need the compiled testbench.
 all-verilog = \
   $(shell find ../../../rtl -name '*.v' -o -name '*.sv' -o -name '*.svh') \
-  $(shell find ../.. -name '*.v' -o -name '*.sv' -o -name '*.svh')
+  $(shell find ../.. -name '*.v' -o -name '*.sv' -o -name '*.svh') \
+  $(shell find ../../../../pulp_fpnew/src -name '*.v' -o -name '*.sv' -o -name '*.svh')
 
 compile-var-deps := COMMON_OPTS SIMULATOR COV WAVES COMPILE_OPTS
 -include $(OUT-DIR)rtl_sim/.compile-vars.mk
