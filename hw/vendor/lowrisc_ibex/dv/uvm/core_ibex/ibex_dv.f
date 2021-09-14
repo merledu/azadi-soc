@@ -30,6 +30,13 @@ ${PRJ_DIR}/dv/uvm/core_ibex/common/prim/prim_clock_gating.sv
 
 // ibex CORE RTL files
 +incdir+${PRJ_DIR}/rtl
++incdir+${PRJ_DIR}/../pulp_fpnew/src
++incdir+${PRJ_DIR}/../pulp_fpnew/src/common_cells/src
++incdir+${PRJ_DIR}/../pulp_fpnew/src/common_cells/include
++incdir+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_pkg.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv
+${PRJ_DIR}/../pulp_fpnew/src/common_cells/src/cf_math_pkg.sv
 ${PRJ_DIR}/rtl/ibex_pkg.sv
 ${PRJ_DIR}/rtl/ibex_tracer_pkg.sv
 ${PRJ_DIR}/rtl/ibex_tracer.sv
@@ -58,6 +65,30 @@ ${PRJ_DIR}/rtl/ibex_register_file_latch.sv
 ${PRJ_DIR}/rtl/ibex_pmp.sv
 ${PRJ_DIR}/rtl/ibex_core.sv
 ${PRJ_DIR}/rtl/ibex_core_tracing.sv
+${PRJ_DIR}/rtl/ibex_fp_register_file_ff.sv
+
+// pulp_fpnew files
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_top.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_rounding.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_opgroup_fmt_slice.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_opgroup_multifmt_slice.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_opgroup_block.sv  
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_noncomp.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_fma.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_fma_multi.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_divsqrt_multi.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_classifier.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpnew_cast_multi.sv
+
+${PRJ_DIR}/../pulp_fpnew/src/common_cells/src/rr_arb_tree.sv
+${PRJ_DIR}/../pulp_fpnew/src/common_cells/src/lzc.sv
+
+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/iteration_div_sqrt_mvp.sv 
+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/control_mvp.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/div_sqrt_top_mvp.sv 
+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/norm_div_sqrt_mvp.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/nrbd_nrsc_mvp.sv
+${PRJ_DIR}/../pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/preprocess_mvp.sv
 
 // Core DV files
 ${PRJ_DIR}/vendor/google_riscv-dv/src/riscv_signature_pkg.sv
