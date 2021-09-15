@@ -124,7 +124,6 @@ experimental-floating-point:
   RV32E                    : 0
   RV32M                    : "ibex_pkg::RV32MFast"
   RV32B                    : "ibex_pkg::RV32BNone"
-  RVF                      : "ibex_pkg::RV32FSingle"
   RegFile                  : "ibex_pkg::RegFileFF"
   BranchTargetALU          : 0
   WritebackStage           : 1
