@@ -71,6 +71,41 @@ parameter logic [31:0] INSN_PMUH    = { 7'b0000001, 10'h?, 3'b001, 5'h?, {OPCODE
 parameter logic [31:0] INSN_PMULHSU = { 7'b0000001, 10'h?, 3'b010, 5'h?, {OPCODE_OP} };
 parameter logic [31:0] INSN_PMULHU  = { 7'b0000001, 10'h?, 3'b011, 5'h?, {OPCODE_OP} };
 
+// RV32F
+// Floating Load & Store
+parameter logic [31:0] INSN_FLOAD   = { 17'h?, 3'b010, 5'h?,       {OPCODE_LOAD_FP } };
+parameter logic [31:0] INSN_FSTORE  = { 17'h?, 3'b010, 5'h?,       {OPCODE_STORE_FP} };
+// Fused Multiply & Add Instructions
+parameter logic [31:0] INSN_FMADD   = { 5'h?, 2'b00, 18'h?,        {OPCODE_MADD_FP}  };
+parameter logic [31:0] INSN_FMSUB   = { 5'h?, 2'b00, 18'h?,        {OPCODE_MSUB_FP}  };
+parameter logic [31:0] INSN_FNMADD  = { 5'h?, 2'b00, 18'h?,        {OPCODE_NMADD_FP} };
+parameter logic [31:0] INSN_FNMSUB  = { 5'h?, 2'b00, 18'h?,        {OPCODE_NMSUB_FP} };
+// Arithmetic
+parameter logic [31:0] INSN_FADD    = { 7'b0000000, 18'h?,         {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FSUB    = { 7'b0000100, 18'h?,         {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FMUL    = { 7'b0001000, 18'h?,         {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FDIV    = { 7'b0001100, 18'h?,         {OPCODE_OP_FP} };
+// SQRT & Conversion
+parameter logic [31:0] INSN_FSQRT   = { 7'b0101100, 5'b00000, 13'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FCVTWS  = { 7'b1100000, 5'b00000, 13'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FCVTWUS = { 7'b1100000, 5'b00001, 13'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FCVTSW  = { 7'b1101000, 5'b00000, 13'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FCVTSWU = { 7'b1101000, 5'b00001, 13'h?, {OPCODE_OP_FP} };
+// Comparison
+parameter logic [31:0] INSN_FEQ     = { 7'b1010000, 10'h?, 3'b010, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FLT     = { 7'b1010000, 10'h?, 3'b001, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FLE     = { 7'b1010000, 10'h?, 3'b000, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FMIN    = { 7'b0010100, 10'h?, 3'b000, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FMAX    = { 7'b0010100, 10'h?, 3'b001, 5'h?, {OPCODE_OP_FP} };
+// Sign Injection
+parameter logic [31:0] INSN_FSGNJ   = { 7'b0010000, 10'h?, 3'b000, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FSGNJN  = { 7'b0010000, 10'h?, 3'b001, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FSGNJX  = { 7'b0010000, 10'h?, 3'b010, 5'h?, {OPCODE_OP_FP} };
+// Move & Class
+parameter logic [31:0] INSN_FMVXW   = { 7'b1110000, 5'b00000, 5'h?, 3'b000, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FMVWX   = { 7'b1111000, 5'b00000, 5'h?, 3'b000, 5'h?, {OPCODE_OP_FP} };
+parameter logic [31:0] INSN_FCLASS  = { 7'b1110000, 5'b00000, 5'h?, 3'b001, 5'h?, {OPCODE_OP_FP} };
+
 // RV32B
 // ZBB
 parameter logic [31:0] INSN_SLOI = { 5'b00100        , 12'h?, 3'b001, 5'h?, {OPCODE_OP_IMM} };

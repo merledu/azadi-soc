@@ -65,7 +65,15 @@ module ibex_tracer (
   input logic [ 3:0] rvfi_mem_rmask,
   input logic [ 3:0] rvfi_mem_wmask,
   input logic [31:0] rvfi_mem_rdata,
-  input logic [31:0] rvfi_mem_wdata
+  input logic [31:0] rvfi_mem_wdata,
+  input logic [ 4:0] rvfi_frs1_addr,
+  input logic [ 4:0] rvfi_frs2_addr,
+  input logic [ 4:0] rvfi_frs3_addr,
+  input logic [ 4:0] rvfi_frd_addr,
+  input logic [31:0] rvfi_frs1_rdata,
+  input logic [31:0] rvfi_frs2_rdata,
+  input logic [31:0] rvfi_frs3_rdata,
+  input logic [31:0] rvfi_frd_wdata
 );
 
   // These signals are part of RVFI, but not used in this module currently.
@@ -87,6 +95,7 @@ module ibex_tracer (
   int unsigned cycle;
   string       decoded_str;
   logic        insn_is_compressed;
+  logic        insn_is_float;
 
   // Data items accessed during this instruction
   localparam logic [4:0] RS1 = (1 << 0);
@@ -160,9 +169,15 @@ module ibex_tracer (
   // Format register address with "x" prefix, left-aligned to a fixed width of 3 characters.
   function automatic string reg_addr_to_str(input logic [4:0] addr);
     if (addr < 10) begin
-      return $sformatf(" x%0d", addr);
+      if (insn_is_float)
+        return $sformatf(" f%0d", addr);
+      else
+        return $sformatf(" x%0d", addr);
     end else begin
-      return $sformatf("x%0d", addr);
+      if (insn_is_float)
+        return $sformatf("f%0d", addr);
+      else
+        return $sformatf("x%0d", addr);
     end
   endfunction
 
@@ -727,6 +742,117 @@ module ibex_tracer (
     decoded_str = $sformatf("fence\t%s,%s", predecessor, successor);
   endfunction
 
+  function automatic void decode_fused_ma(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RS2 | RS3 | RD;
+    decoded_str = $sformatf("%s\tf%0d,f%0d,f%0d,f%0d", mnemonic, rvfi_frd_addr, rvfi_frs1_addr,
+        rvfi_frs2_addr, rvfi_frs2_addr);
+  endfunction
+
+  function automatic void decode_fr_insn(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RS2 | RD;
+    decoded_str = $sformatf("%s\tf%0d,f%0d,f%0d", mnemonic, rvfi_frd_addr, rvfi_frs1_addr,
+        rvfi_frs2_addr);
+  endfunction
+
+  function automatic void decode_fsqrt(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RD;
+    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
+  endfunction
+
+  function automatic void decode_fcvt_f2i(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RD;
+    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
+  endfunction
+
+  function automatic void decode_fcvt_i2f(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RD;
+    decoded_str = $sformatf("%s\tf%0d,x%0d", mnemonic, rvfi_frd_addr, rvfi_rs1_addr);
+  endfunction
+
+  function automatic void decode_fcomp(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS2 | RS1 | RD;
+    decoded_str = $sformatf("%s\tx%0d,f%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr,
+        rvfi_frs2_addr);
+  endfunction
+
+  function automatic void decode_fmin_max(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS2 | RS1 | RD;
+    decoded_str = $sformatf("%s\tf%0d,f%0d,f%0d", mnemonic, rvfi_frd_addr, rvfi_frs1_addr,
+        rvfi_frs2_addr);
+  endfunction
+
+  function automatic void decode_fsgnj(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS2 | RS1 | RD;
+    decoded_str = $sformatf("%s\tf%0d,f%0d,f%0d", mnemonic, rvfi_frd_addr, rvfi_frs1_addr,
+        rvfi_frs2_addr);
+  endfunction
+
+  function automatic void decode_fmv_xw(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RD;
+    decoded_str = $sformatf("%s\tf%0d,x%0d", mnemonic, rvfi_frd_addr, rvfi_rs1_addr);
+  endfunction
+
+  function automatic void decode_fmv_wx(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RD;
+    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
+  endfunction
+
+  function automatic void decode_fclass(input string mnemonic);
+    insn_is_float = 1'b1;
+    data_accessed = RS1 | RD;
+    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
+  endfunction
+
+  function automatic void decode_fload_insn();
+    string      mnemonic;
+    logic [2:0] size;
+    size = rvfi_insn[14:12];
+    insn_is_float = 1'b1;
+
+    if (size == 3'b010) begin
+      mnemonic = "flw";
+    end else begin
+      decode_mnemonic("INVALID");
+      return;
+    end
+
+    data_accessed = RD | RS1 | MEM;
+    decoded_str = $sformatf("%s\tf%0d,%0d(x%0d)", mnemonic, rvfi_frd_addr,
+                    $signed({{20 {rvfi_insn[31]}}, rvfi_insn[31:20]}), rvfi_rs1_addr);
+  endfunction
+
+  function automatic void decode_fstore_insn();
+    string    mnemonic;
+    insn_is_float = 1'b1;
+
+    unique case (rvfi_insn[13:12])
+      2'b10:  mnemonic = "fsw";
+      default: begin
+        decode_mnemonic("INVALID");
+        return;
+      end
+    endcase
+
+    if (!rvfi_insn[14]) begin
+      // floating point store
+      data_accessed = RS1 | RS2 | MEM;
+      decoded_str = $sformatf("%s\tf%0d,%0d(x%0d)", mnemonic, rvfi_frs2_addr,
+                      $signed({ {20 {rvfi_insn[31]}}, rvfi_insn[31:25], rvfi_insn[11:7] }), rvfi_rs1_addr);
+    end else begin
+      decode_mnemonic("INVALID");
+    end
+  endfunction
+
   // cycle counter
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
@@ -754,6 +880,7 @@ module ibex_tracer (
     decoded_str = "";
     data_accessed = 5'h0;
     insn_is_compressed = 0;
+    insn_is_float = 0;
 
     // Check for compressed instructions
     if (rvfi_insn[1:0] != 2'b11) begin
@@ -1041,6 +1168,53 @@ module ibex_tracer (
         INSN_CRC32C_B:   decode_r1_insn("crc32c.b");
         INSN_CRC32C_H:   decode_r1_insn("crc32c.h");
         INSN_CRC32C_W:   decode_r1_insn("crc32c.w");
+
+        // Single Precision Floating Point
+        // Floating Load & Store
+        INSN_FLOAD:     decode_fload_insn();
+        INSN_FSTORE:    decode_fstore_insn();
+
+        // Fused Multiply & Add Instructions
+        INSN_FMADD:     decode_fused_ma("fmadd.s");
+        INSN_FMSUB:     decode_fused_ma("fmsub.s");
+        INSN_FNMADD:    decode_fused_ma("fnmadd.s");
+        INSN_FNMSUB:    decode_fused_ma("fnmsub.s");
+
+        // Arithmetic
+        INSN_FADD:      decode_fr_insn("fadd.s");
+        INSN_FSUB:      decode_fr_insn("fsub.s");
+        INSN_FMUL:      decode_fr_insn("fmul.s");
+        INSN_FDIV:      decode_fr_insn("fdiv.s");
+
+        // Sqaure root
+        INSN_FSQRT:     decode_fsqrt("fsqrt.s");
+
+        // Conversion
+        INSN_FCVTWS:    decode_fcvt_f2i("fcvt.w.s");
+        INSN_FCVTWUS:   decode_fcvt_f2i("fcvt.wu.s");
+        INSN_FCVTSW:    decode_fcvt_i2f("fcvt.s.w");
+        INSN_FCVTSWU:   decode_fcvt_i2f("fcvt.s.wu");
+
+        // Comparison
+        INSN_FEQ:       decode_fcomp("feq.s");
+        INSN_FLT:       decode_fcomp("flt.s");
+        INSN_FLE:       decode_fcomp("fle.s");
+        
+        // Min & Max
+        INSN_FMIN:      decode_fmin_max("fmin.s");
+        INSN_FMAX:      decode_fmin_max("fmax.s");
+
+        // Sign Injection
+        INSN_FSGNJ:     decode_fsgnj("fsgnj.s");
+        INSN_FSGNJN:    decode_fsgnj("fsgnjn.s");
+        INSN_FSGNJX:    decode_fsgnj("fsgnjx.s");
+
+        // Move
+        INSN_FMVXW:     decode_fmv_xw("fmv.x.w");
+        INSN_FMVWX:     decode_fmv_wx("fmv.w.x");
+        
+        // Determine class of FP result
+        INSN_FCLASS:    decode_fclass("fclass.s");
 
         default:         decode_mnemonic("INVALID");
       endcase

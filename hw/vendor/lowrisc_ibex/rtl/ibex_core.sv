@@ -99,6 +99,22 @@ module ibex_core #(
     output logic [ 3:0] rvfi_mem_wmask,
     output logic [31:0] rvfi_mem_rdata,
     output logic [31:0] rvfi_mem_wdata,
+    output logic [ 4:0] rvfi_frs1_addr,
+    output logic [ 4:0] rvfi_frs2_addr,
+    output logic [ 4:0] rvfi_frs3_addr,
+    output logic [ 4:0] rvfi_frd_addr,
+    output logic [31:0] rvfi_frs1_rdata,
+    output logic [31:0] rvfi_frs2_rdata,
+    output logic [31:0] rvfi_frs3_rdata,
+    output logic [31:0] rvfi_frd_wdata,
+    // output logic        rvfi_frs1_rvalid,
+    // output logic        rvfi_frs2_rvalid,
+    // output logic        rvfi_frs3_rvalid,
+    // output logic        rvfi_frd_wvalid, 
+    // output logic [31:0] rvfi_csr_fcsr_rmask,
+    // output logic [31:0] rvfi_csr_fcsr_wmask,
+    // output logic [31:0] rvfi_csr_fcsr_rdata,
+    // output logic [31:0] rvfi_csr_fcsr_wdata,
 `endif
 
     // CPU Control Signals
@@ -133,7 +149,10 @@ module ibex_core #(
   logic                   out_valid_fpu2c;  // valid - from core to FPU
   logic                   valid_id_fpu;     // select which valid signal will go to dec
   logic                   fp_rm_dynamic;
-  logic                   fp_alu_op_mod;  
+  logic                   fp_alu_op_mod;
+  logic                   fp_rf_ren_a;
+  logic                   fp_rf_ren_b;
+  logic                   fp_rf_ren_c;  
   logic [4:0]             fp_rf_raddr_a;
   logic [4:0]             fp_rf_raddr_b;
   logic [4:0]             fp_rf_raddr_c;
@@ -398,6 +417,13 @@ module ibex_core #(
   logic [31:0] rvfi_mem_wdata_q;
   logic [31:0] rvfi_mem_addr_d;
   logic [31:0] rvfi_mem_addr_q;
+  logic [ 4:0] rvfi_frd_addr_wb;
+  logic [31:0] rvfi_frd_wdata_wb;
+  logic        rvfi_frd_we_wb;
+  logic [31:0] rvfi_frd_wdata_d;
+  logic [31:0] rvfi_frd_wdata_q;
+  logic [ 4:0] rvfi_frd_addr_d;
+  logic [ 4:0] rvfi_frd_addr_q;
 `endif
 
   //////////////////////
@@ -691,6 +717,9 @@ module ibex_core #(
       .fp_rf_raddr_a_o                 ( fp_rf_raddr_a         ),
       .fp_rf_raddr_b_o                 ( fp_rf_raddr_b         ),
       .fp_rf_raddr_c_o                 ( fp_rf_raddr_c         ),
+      .fp_rf_ren_a_o                   ( fp_rf_ren_a           ),
+      .fp_rf_ren_b_o                   ( fp_rf_ren_b           ),
+      .fp_rf_ren_c_o                   ( fp_rf_ren_c           ),
       .fp_rf_waddr_o                   ( fp_rf_waddr_id        ),
       .fp_rf_we_o                      ( fp_rf_wen_id          ),
       .fp_alu_operator_o               ( fp_alu_operator       ),
@@ -1109,6 +1138,10 @@ module ibex_core #(
   assign rvfi_rd_addr_wb  = rf_waddr_wb;
   assign rvfi_rd_wdata_wb = rf_we_wb ? rf_wdata_wb : rf_wdata_lsu;
   assign rvfi_rd_we_wb    = rf_we_wb | rf_we_lsu;
+
+  assign rvfi_frd_addr_wb  = fp_rf_waddr_wb;
+  assign rvfi_frd_wdata_wb = fp_rf_wen_wb ? fp_rf_wdata_wb : rf_wdata_lsu;
+  assign rvfi_frd_we_wb    = fp_rf_wen_wb | rf_we_lsu;
 `endif
 
 
@@ -1310,6 +1343,19 @@ module ibex_core #(
   logic [31:0] rvfi_stage_mem_rdata [RVFI_STAGES];
   logic [31:0] rvfi_stage_mem_wdata [RVFI_STAGES];
 
+  logic        rvfi_stage_frs1_rvalid [RVFI_STAGES];
+  logic        rvfi_stage_frs2_rvalid [RVFI_STAGES];
+  logic        rvfi_stage_frs3_rvalid [RVFI_STAGES];
+  logic        rvfi_stage_frd_wvalid  [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frs1_addr   [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frs2_addr   [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frs3_addr   [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frs1_rdata  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frs2_rdata  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frs3_rdata  [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frd_addr    [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frd_wdata   [RVFI_STAGES];
+
   logic        rvfi_stage_valid_d   [RVFI_STAGES];
 
   assign rvfi_valid     = rvfi_stage_valid    [RVFI_STAGES-1];
@@ -1335,6 +1381,15 @@ module ibex_core #(
   assign rvfi_mem_wmask = rvfi_stage_mem_wmask[RVFI_STAGES-1];
   assign rvfi_mem_rdata = rvfi_stage_mem_rdata[RVFI_STAGES-1];
   assign rvfi_mem_wdata = rvfi_stage_mem_wdata[RVFI_STAGES-1];
+
+  assign rvfi_frs1_addr  = rvfi_stage_frs1_addr [RVFI_STAGES-1];
+  assign rvfi_frs2_addr  = rvfi_stage_frs2_addr [RVFI_STAGES-1];
+  assign rvfi_frs3_addr  = rvfi_stage_frs3_addr [RVFI_STAGES-1];
+  assign rvfi_frs1_rdata = rvfi_stage_frs1_rdata[RVFI_STAGES-1];
+  assign rvfi_frs2_rdata = rvfi_stage_frs2_rdata[RVFI_STAGES-1];
+  assign rvfi_frs3_rdata = rvfi_stage_frs3_rdata[RVFI_STAGES-1];
+  assign rvfi_frd_addr   = rvfi_stage_frd_addr  [RVFI_STAGES-1];
+  assign rvfi_frd_wdata  = rvfi_stage_frd_wdata [RVFI_STAGES-1];
 
   if (WritebackStage) begin : gen_rvfi_wb_stage
     logic unused_instr_new_id;
@@ -1398,6 +1453,15 @@ module ibex_core #(
         rvfi_stage_mem_rdata[i] <= '0;
         rvfi_stage_mem_wdata[i] <= '0;
         rvfi_stage_mem_addr[i]  <= '0;
+
+        rvfi_stage_frs1_addr[i]  <= '0;
+        rvfi_stage_frs2_addr[i]  <= '0;
+        rvfi_stage_frs3_addr[i]  <= '0;
+        rvfi_stage_frs1_rdata[i] <= '0;
+        rvfi_stage_frs2_rdata[i] <= '0;
+        rvfi_stage_frs3_rdata[i] <= '0;
+        rvfi_stage_frd_addr[i]   <= '0;
+        rvfi_stage_frd_wdata[i]  <= '0;
       end else begin
         rvfi_stage_valid[i] <= rvfi_stage_valid_d[i];
 
@@ -1425,6 +1489,15 @@ module ibex_core #(
             rvfi_stage_mem_rdata[i] <= rvfi_mem_rdata_d;
             rvfi_stage_mem_wdata[i] <= rvfi_mem_wdata_d;
             rvfi_stage_mem_addr[i]  <= rvfi_mem_addr_d;
+
+            rvfi_stage_frs1_addr[i]  <= fp_rf_ren_a ? fp_rf_raddr_a : '0;
+            rvfi_stage_frs2_addr[i]  <= fp_rf_ren_b ? fp_rf_raddr_b : '0;
+            rvfi_stage_frs3_addr[i]  <= fp_rf_ren_c ? fp_rf_raddr_c : '0;
+            rvfi_stage_frs1_rdata[i] <= fp_rf_ren_a ? fp_operands[0]: '0;
+            rvfi_stage_frs2_rdata[i] <= fp_rf_ren_b ? fp_operands[1]: '0;
+            rvfi_stage_frs3_rdata[i] <= fp_rf_ren_c ? fp_operands[2]: '0;
+            rvfi_stage_frd_addr[i]   <= rvfi_frd_addr_d;
+            rvfi_stage_frd_wdata[i]  <= rvfi_frd_wdata_d;
           end
         end else begin
           if(instr_done_wb) begin
@@ -1448,12 +1521,21 @@ module ibex_core #(
             rvfi_stage_mem_wdata[i] <= rvfi_stage_mem_wdata[i-1];
             rvfi_stage_mem_addr[i]  <= rvfi_stage_mem_addr[i-1];
 
+            rvfi_stage_frs1_addr[i]  <= rvfi_stage_frs1_addr[i-1];
+            rvfi_stage_frs2_addr[i]  <= rvfi_stage_frs2_addr[i-1];
+            rvfi_stage_frs3_addr[i]  <= rvfi_stage_frs3_addr[i-1];
+            rvfi_stage_frs1_rdata[i] <= rvfi_stage_frs1_rdata[i-1];
+            rvfi_stage_frs2_rdata[i] <= rvfi_stage_frs2_rdata[i-1];
+            rvfi_stage_frs3_rdata[i] <= rvfi_stage_frs3_rdata[i-1];
+
             // For 2 RVFI_STAGES/Writeback Stage ignore first stage flops for rd_addr, rd_wdata and
             // mem_rdata. For RF write addr/data actual write happens in writeback so capture
             // address/data there. For mem_rdata that is only available from the writeback stage.
             // Previous stage flops still exist in RTL as they are used by the non writeback config
             rvfi_stage_rd_addr[i]   <= rvfi_rd_addr_d;
             rvfi_stage_rd_wdata[i]  <= rvfi_rd_wdata_d;
+            rvfi_stage_frd_addr[i]  <= rvfi_frd_addr_d;
+            rvfi_stage_frd_wdata[i] <= rvfi_frd_wdata_d;
             rvfi_stage_mem_rdata[i] <= rvfi_mem_rdata_d;
           end
         end
@@ -1546,9 +1628,11 @@ module ibex_core #(
   end
 
   always_comb begin
-    if(rvfi_rd_we_wb) begin
+    if(rvfi_rd_we_wb | rvfi_frd_we_wb) begin
       // Capture address/data of write to register file
       rvfi_rd_addr_d  = rvfi_rd_addr_wb;
+      rvfi_frd_addr_d = rvfi_frd_addr_wb;
+      rvfi_frd_wdata_d = rvfi_frd_wdata_wb; // f0 is not zero
       // If writing to x0 zero write data as required by RVFI specification
       if(rvfi_rd_addr_wb == 5'b0) begin
         rvfi_rd_wdata_d = '0;
@@ -1560,10 +1644,14 @@ module ibex_core #(
       // stage present) then zero RF write address/data as required by RVFI specification
       rvfi_rd_addr_d  = '0;
       rvfi_rd_wdata_d = '0;
+      rvfi_frd_addr_d  = '0;
+      rvfi_frd_wdata_d = '0;
     end else begin
       // Otherwise maintain previous value
       rvfi_rd_addr_d  = rvfi_rd_addr_q;
       rvfi_rd_wdata_d = rvfi_rd_wdata_q;
+      rvfi_frd_addr_d  = rvfi_frd_addr_q;
+      rvfi_frd_wdata_d = rvfi_frd_wdata_q;
     end
   end
 
@@ -1573,9 +1661,13 @@ module ibex_core #(
     if (!rst_ni) begin
       rvfi_rd_addr_q    <= '0;
       rvfi_rd_wdata_q   <= '0;
+      rvfi_frd_addr_q   <= '0;
+      rvfi_frd_wdata_q  <= '0;
     end else begin
       rvfi_rd_addr_q    <= rvfi_rd_addr_d;
       rvfi_rd_wdata_q   <= rvfi_rd_wdata_d;
+      rvfi_frd_addr_q   <= rvfi_frd_addr_d;
+      rvfi_frd_wdata_q  <= rvfi_frd_wdata_d;
     end
   end
 
