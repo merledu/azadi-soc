@@ -4,3 +4,4 @@ build/
 fusesoc.conf
 html
 Bender.lock
+.vscode/
