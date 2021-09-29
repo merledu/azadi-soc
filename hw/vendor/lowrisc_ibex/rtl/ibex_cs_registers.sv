@@ -305,14 +305,14 @@ module ibex_cs_registers #(
   
   // Floating point
   always_comb begin
-    unique case (frm_q)
-      000,
-      001,
-      010,
-      011,
-      100: illegal_dyn_mod =  1'b0;
-      default: illegal_dyn_mod =  1'b1;
-    endcase 
+    if (frm_d == 3'b111) begin
+      unique case (frm_q)
+        101,
+        110,
+        111: illegal_dyn_mod = 1'b1;
+        default: illegal_dyn_mod =  1'b0;
+      endcase
+    end
     fp_frm_o = frm_q;
   end
   
