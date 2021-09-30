@@ -122,7 +122,7 @@ module azadi_soc_top (
   };
 
 
-brq_core_top #(
+ibex_core_top #(
     .PMPEnable        (1'b0),
     .PMPGranularity   (0), 
     .PMPNumRegions    (4), 
