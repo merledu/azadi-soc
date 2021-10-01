@@ -798,13 +798,13 @@ module ibex_tracer (
   function automatic void decode_fmv_xw(input string mnemonic);
     insn_is_float = 1'b1;
     data_accessed = RS1 | RD;
-    decoded_str = $sformatf("%s\tf%0d,x%0d", mnemonic, rvfi_frd_addr, rvfi_rs1_addr);
+    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_frd_addr, rvfi_rs1_addr);
   endfunction
 
   function automatic void decode_fmv_wx(input string mnemonic);
     insn_is_float = 1'b1;
     data_accessed = RS1 | RD;
-    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
+    decoded_str = $sformatf("%s\tf%0d,x%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
   endfunction
 
   function automatic void decode_fclass(input string mnemonic);
