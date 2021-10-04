@@ -96,6 +96,9 @@ module ibex_tracer (
   string       decoded_str;
   logic        insn_is_compressed;
   logic        insn_is_float;
+  logic        float_wx;
+  logic        float_xw;
+  logic        float_lw;
 
   // Data items accessed during this instruction
   localparam logic [4:0] RS1 = (1 << 0);
@@ -139,17 +142,38 @@ module ibex_tracer (
 
     $fwrite(file_handle, "%15t\t%d\t%h\t%s\t%s\t", $time, cycle, rvfi_pc_rdata, rvfi_insn_str, decoded_str);
 
-    if ((data_accessed & RS1) != 0) begin
-      $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs1_addr), rvfi_rs1_rdata);
-    end
-    if ((data_accessed & RS2) != 0) begin
-      $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs2_addr), rvfi_rs2_rdata);
-    end
-    if ((data_accessed & RS3) != 0) begin
-      $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs3_addr), rvfi_rs3_rdata);
-    end
-    if ((data_accessed & RD) != 0) begin
-      $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str(rvfi_rd_addr), rvfi_rd_wdata);
+    if (insn_is_float) begin
+      if ((data_accessed & RS1) != 0) begin
+        if (float_wx)
+          $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs1_addr), rvfi_rs1_rdata);
+        else 
+          $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs1_addr), rvfi_frs1_rdata);
+      end
+      if ((data_accessed & RS2)) begin
+        $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs2_addr), rvfi_frs2_rdata);
+      end
+      if ((data_accessed & RS3)) begin
+        $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs3_addr), rvfi_frs3_rdata);
+      end
+      if ((data_accessed & RD) != 0) begin
+        if (float_xw)
+          $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_rd_addr), rvfi_rd_wdata);
+        else
+          $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_frd_addr), rvfi_frd_wdata);
+      end
+    end else begin
+      if ((data_accessed & RS1) != 0) begin
+        $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs1_addr), rvfi_rs1_rdata);
+      end
+      if ((data_accessed & RS2) != 0) begin
+        $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs2_addr), rvfi_rs2_rdata);
+      end
+      if ((data_accessed & RS3) != 0) begin
+        $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs3_addr), rvfi_rs3_rdata);
+      end
+      if ((data_accessed & RD) != 0) begin
+        $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str(rvfi_rd_addr), rvfi_rd_wdata);
+      end
     end
     if ((data_accessed & MEM) != 0) begin
       $fwrite(file_handle, " PA:0x%08x", rvfi_mem_addr);
@@ -165,19 +189,49 @@ module ibex_tracer (
     $fwrite(file_handle, "\n");
   endfunction
 
-
-  // Format register address with "x" prefix, left-aligned to a fixed width of 3 characters.
+  // Format register address with "x" or "f" prefix, left-aligned to a fixed width of 3 characters.
   function automatic string reg_addr_to_str(input logic [4:0] addr);
     if (addr < 10) begin
-      if (insn_is_float)
-        return $sformatf(" f%0d", addr);
-      else
+      if (insn_is_float) begin
+        if (float_wx | float_lw)
+          return $sformatf(" x%0d", addr);
+        else
+          return $sformatf(" f%0d", addr);
+      end else begin
         return $sformatf(" x%0d", addr);
+      end
     end else begin
-      if (insn_is_float)
-        return $sformatf("f%0d", addr);
-      else
+      if (insn_is_float) begin        
+        if (float_wx | float_lw)
+          return $sformatf("x%0d", addr);
+        else
+          return $sformatf("f%0d", addr);
+      end else begin
         return $sformatf("x%0d", addr);
+      end
+    end
+  endfunction
+
+  // Format register address with "x" or "f" prefix, left-aligned to a fixed width of 3 characters.
+  function automatic string reg_addr_to_str_rd(input logic [4:0] addr);
+    if (addr < 10) begin
+      if (insn_is_float) begin
+        if (float_xw)
+          return $sformatf(" x%0d", addr);
+        else
+          return $sformatf(" f%0d", addr);
+      end else begin
+        return $sformatf(" x%0d", addr);
+      end
+    end else begin
+      if (insn_is_float) begin
+        if (float_xw)
+          return $sformatf("x%0d", addr);
+        else
+          return $sformatf("f%0d", addr);
+      end else begin
+        return $sformatf("x%0d", addr);
+      end
     end
   endfunction
 
@@ -764,12 +818,14 @@ module ibex_tracer (
 
   function automatic void decode_fcvt_f2i(input string mnemonic);
     insn_is_float = 1'b1;
+    float_xw = 1;
     data_accessed = RS1 | RD;
     decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
   endfunction
 
   function automatic void decode_fcvt_i2f(input string mnemonic);
     insn_is_float = 1'b1;
+    float_wx = 1;
     data_accessed = RS1 | RD;
     decoded_str = $sformatf("%s\tf%0d,x%0d", mnemonic, rvfi_frd_addr, rvfi_rs1_addr);
   endfunction
@@ -797,14 +853,16 @@ module ibex_tracer (
 
   function automatic void decode_fmv_xw(input string mnemonic);
     insn_is_float = 1'b1;
+    float_xw = 1'b1;
     data_accessed = RS1 | RD;
-    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_frd_addr, rvfi_rs1_addr);
+    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
   endfunction
 
   function automatic void decode_fmv_wx(input string mnemonic);
     insn_is_float = 1'b1;
+    float_wx =  1'b1;
     data_accessed = RS1 | RD;
-    decoded_str = $sformatf("%s\tf%0d,x%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
+    decoded_str = $sformatf("%s\tf%0d,x%0d", mnemonic, rvfi_frd_addr, rvfi_rs1_addr);
   endfunction
 
   function automatic void decode_fclass(input string mnemonic);
@@ -816,6 +874,7 @@ module ibex_tracer (
   function automatic void decode_fload_insn();
     string      mnemonic;
     logic [2:0] size;
+    float_lw = 1;
     size = rvfi_insn[14:12];
     insn_is_float = 1'b1;
 
@@ -881,6 +940,9 @@ module ibex_tracer (
     data_accessed = 5'h0;
     insn_is_compressed = 0;
     insn_is_float = 0;
+    float_wx = 0;
+    float_xw = 0;
+    float_lw = 0;
 
     // Check for compressed instructions
     if (rvfi_insn[1:0] != 2'b11) begin
