@@ -990,6 +990,7 @@ module ibex_decoder #(
             use_fp_rd_o       = 1'b1;
             mv_instr_o        = 1'b1;
             fp_rf_ren_a_o     = 1'b1;
+            rf_ren_a_o        = 1'b1;
             if (~(|instr[24:20]) | (|instr[14:12])) begin
               illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
@@ -1737,11 +1738,11 @@ module ibex_decoder #(
                 fp_alu_op_mod_o     = 1'b1;
             end
           end
-          // 7'b1111000: begin // FMV.W.X
-          //   if ((|instr[24:20]) | (|instr[14:12])) begin
-          //     fp_alu_operator_o     = FMADD;  // to be decided
-          //   end
-          // end
+          7'b1111000: begin // FMV.W.X
+            if (~(|instr[24:20]) | (|instr[14:12])) begin
+              fp_alu_operator_o     = I2F;
+            end
+          end
           default: ;
         endcase
       end

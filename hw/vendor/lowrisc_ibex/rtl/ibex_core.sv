@@ -738,7 +738,8 @@ module ibex_core #(
       .fp_rf_wdata_fwd_wb_i            ( fp_rf_wdata_wb        ),
       .fp_rf_wdata_id_o                ( fp_rf_wdata_id        ),
       .fp_operands_o                   ( fp_operands           ),
-      .fp_load_o                       ( fp_load               )
+      .fp_load_o                       ( fp_load               ),
+      .fp_swap_oprnds_o                ( fp_swap_oprnds        )
   );
 
   // for RVFI only
@@ -1493,8 +1494,10 @@ module ibex_core #(
             rvfi_stage_frs1_addr[i]  <= fp_rf_ren_a ? fp_rf_raddr_a : '0;
             rvfi_stage_frs2_addr[i]  <= fp_rf_ren_b ? fp_rf_raddr_b : '0;
             rvfi_stage_frs3_addr[i]  <= fp_rf_ren_c ? fp_rf_raddr_c : '0;
-            rvfi_stage_frs1_rdata[i] <= fp_rf_ren_a ? fp_operands[0]: '0;
-            rvfi_stage_frs2_rdata[i] <= fp_rf_ren_b ? fp_operands[1]: '0;
+            rvfi_stage_frs1_rdata[i] <= fp_rf_ren_a ? fp_swap_oprnds ? 
+                                                      fp_operands[1]: fp_operands[0]: '0;
+            rvfi_stage_frs2_rdata[i] <= fp_rf_ren_b ? fp_swap_oprnds ? 
+                                                      fp_operands[2]: fp_operands[1]: '0;
             rvfi_stage_frs3_rdata[i] <= fp_rf_ren_c ? fp_operands[2]: '0;
             rvfi_stage_frd_addr[i]   <= rvfi_frd_addr_d;
             rvfi_stage_frd_wdata[i]  <= rvfi_frd_wdata_d;
