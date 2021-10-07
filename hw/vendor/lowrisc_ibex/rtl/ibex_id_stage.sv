@@ -215,7 +215,8 @@ module ibex_id_stage #(
     input  logic [FPU_WIDTH-1:0]      fp_rf_wdata_fwd_wb_i,
     output logic [FPU_WIDTH-1:0]      fp_rf_wdata_id_o,
     output logic [2:0][FPU_WIDTH-1:0] fp_operands_o,
-    output logic                      fp_load_o
+    output logic                      fp_load_o,
+    output logic                      fp_swap_oprnds_o
 );
 
   import ibex_pkg::*;
@@ -313,37 +314,24 @@ module ibex_id_stage #(
 
   /* FPU Limits STARTS */ 
   logic                 mv_instr;
-  logic                 fp_swap_oprnds;
   logic [FPU_WIDTH-1:0] fp_rf_rdata_a_fwd;
   logic [FPU_WIDTH-1:0] fp_rf_rdata_b_fwd;
   logic [FPU_WIDTH-1:0] fp_rf_rdata_c_fwd;
   logic [FPU_WIDTH-1:0] temp;
   logic [FPU_WIDTH-1:0] fpu_op_a;
-  logic [31:0] fpu_op_b;
+  logic [FPU_WIDTH:0] fpu_op_b;
   logic [FPU_WIDTH-1:0] fpu_op_c;
   logic [FPU_WIDTH-1:0] result_wb;
-  logic [FPU_WIDTH-1:0] fpu_a;
-  logic [FPU_WIDTH-1:0] fpu_b;
-  logic [FPU_WIDTH-1:0] fpu_c;
   
   if (RVF == RV32FSingle || RVF == RV32DDouble) begin
-    assign fpu_a = use_fp_rs1_o ? fp_rf_rdata_a_fwd : rf_rdata_a_fwd;
-    assign fpu_b = use_fp_rs2_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
-    assign fpu_c = fp_rf_rdata_c_fwd;
+    assign fpu_op_a = use_fp_rs1_o ? fp_rf_rdata_a_fwd : rf_rdata_a_fwd;
+    assign fpu_op_b = use_fp_rs2_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
+    assign fpu_op_c = fp_rf_rdata_c_fwd;
 
-    /* Swap operands */
-    always_comb begin : swapping
-      if (fp_swap_oprnds) begin
-        temp     = fpu_c;
-        fpu_op_c = fpu_a;
-        fpu_op_a = temp;
-      end else begin
-        fpu_op_a = fpu_a;
-        fpu_op_b = fpu_b;
-        fpu_op_c = fpu_c;
-      end
-      fp_operands_o = {fpu_op_c , fpu_op_b , fpu_op_a};
-    end
+    /* Swap operands for FADD/FSUB */
+    assign fp_operands_o = fp_swap_oprnds_o ? {fpu_op_b, fpu_op_a, fpu_op_c} : 
+                                              {fpu_op_c, fpu_op_b, fpu_op_a};
+
     assign result_wb = mv_instr ? fpu_op_a : result_ex_i;
   end else begin
     assign fpu_op_b = rf_rdata_b_fwd;
@@ -568,7 +556,7 @@ module ibex_id_stage #(
       .use_fp_rs2_o                    ( use_fp_rs2_o          ),
       .use_fp_rs3_o                    ( use_fp_rs3_o          ),
       .use_fp_rd_o                     ( use_fp_rd_o           ),
-      .fp_swap_oprnds_o                ( fp_swap_oprnds        ),
+      .fp_swap_oprnds_o                ( fp_swap_oprnds_o      ),
       .fp_load_o                       ( fp_load_o             ),
       .mv_instr_o                      ( mv_instr              )
   );
