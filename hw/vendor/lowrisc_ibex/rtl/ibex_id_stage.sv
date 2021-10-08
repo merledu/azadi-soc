@@ -319,7 +319,7 @@ module ibex_id_stage #(
   logic [FPU_WIDTH-1:0] fp_rf_rdata_c_fwd;
   logic [FPU_WIDTH-1:0] temp;
   logic [FPU_WIDTH-1:0] fpu_op_a;
-  logic [FPU_WIDTH:0] fpu_op_b;
+  logic [FPU_WIDTH-1:0] fpu_op_b;
   logic [FPU_WIDTH-1:0] fpu_op_c;
   logic [FPU_WIDTH-1:0] result_wb;
   
