@@ -688,7 +688,8 @@ module ibex_decoder #(
         data_req_o         = 1'b1;
         data_we_o          = 1'b1;
         data_type_o        = 2'b00;
-        fp_rf_ren_a_o      = 1'b1;
+        rf_ren_a_o         = 1'b1;
+        fp_rf_ren_b_o      = 1'b1;
 
         use_fp_rs2_o       = 1'b1;
 
@@ -709,7 +710,7 @@ module ibex_decoder #(
         data_req_o         = 1'b1;
         data_type_o        = 2'b00;
         fp_load_o          = 1'b1;
-        fp_rf_ren_a_o      = 1'b1;
+        rf_ren_a_o         = 1'b1;
         fp_rf_ren_b_o      = 1'b1;
 
         use_fp_rd_o        = 1'b1; 

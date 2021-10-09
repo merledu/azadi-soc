@@ -164,7 +164,6 @@ module ibex_core #(
   logic [2:0][FPU_WIDTH-1:0] fp_operands;   // three operands in fpu   
   logic                   fp_busy;
   logic                   fpu_busy_idu;
-  logic [FPU_WIDTH-1:0]   fp_result;
   logic [4:0]             fp_rf_waddr_id;
   logic [4:0]             fp_rf_waddr_wb;
   logic                   fp_rf_we;
@@ -1032,7 +1031,7 @@ module ibex_core #(
       .in_valid_i     ( in_valid_c2fpu   ),
       .in_ready_o     ( out_ready_fpu2c  ),
       .flush_i        ( fp_flush         ),
-      .result_o       ( fp_result        ),
+      .result_o       ( fp_result_ex     ),
       .status_o       ( fp_status        ),
       .tag_o          (                  ),
       .out_valid_o    ( out_valid_fpu2c  ),
