@@ -165,8 +165,6 @@ module ibex_core #(
   logic                   fp_busy;
   logic                   fpu_busy_idu;
   logic [FPU_WIDTH-1:0]   fp_result;
-  logic [31:0]            data_wb;
-  logic [31:0]            rf_int_fp_lsu;
   logic [4:0]             fp_rf_waddr_id;
   logic [4:0]             fp_rf_waddr_wb;
   logic                   fp_rf_we;
@@ -181,6 +179,7 @@ module ibex_core #(
   logic                   fp_load;
   logic [FPU_WIDTH-1:0]   fp_rf_wdata_wb;
   logic [FPU_WIDTH-1:0]   fp_rf_wdata_id;
+  logic [FPU_WIDTH-1:0]   fp_result_ex;
   fpnew_pkg::status_t     fp_status;
   fpnew_pkg::operation_e  fp_operation;
   fpnew_pkg::roundmode_e  fp_rounding_mode;
@@ -673,14 +672,13 @@ module ibex_core #(
       .trigger_match_i              ( trigger_match            ),
 
       // write data to commit in the register file
-      .result_ex_i                  ( data_wb                  ), // changed by zeeshan from result_ex
-                                                                  // to data_wb for FVCT, FMV.WX ins
+      .result_ex_i                  ( result_ex                ),
       .csr_rdata_i                  ( csr_rdata                ),
 
       .rf_raddr_a_o                 ( rf_raddr_a               ),
       .rf_rdata_a_i                 ( rf_rdata_a               ),
       .rf_raddr_b_o                 ( rf_raddr_b               ),
-      .rf_rdata_b_i                 ( rf_int_fp_lsu            ),
+      .rf_rdata_b_i                 ( rf_rdata_b               ),
       .rf_ren_a_o                   ( rf_ren_a                 ),
       .rf_ren_b_o                   ( rf_ren_b                 ),
       .rf_waddr_id_o                ( rf_waddr_id              ),
@@ -738,6 +736,7 @@ module ibex_core #(
       .fp_rf_wdata_fwd_wb_i            ( fp_rf_wdata_wb        ),
       .fp_rf_wdata_id_o                ( fp_rf_wdata_id        ),
       .fp_operands_o                   ( fp_operands           ),
+      .fp_result_ex_i                  ( fp_result_ex          ),
       .fp_load_o                       ( fp_load               ),
       .fp_swap_oprnds_o                ( fp_swap_oprnds        )
   );
@@ -1060,23 +1059,18 @@ module ibex_core #(
       .wdata_a_i ( fp_rf_wdata_wb ),
       .we_a_i    ( fp_rf_wen_wb   )
     );
-    assign rf_int_fp_lsu  = (is_fp_instr & use_fp_rs2) ? fp_rf_rdata_b : rf_rdata_b;
     assign fp_frm_fpnew   = fp_rm_dynamic ? fp_frm_csr : fp_rounding_mode;
-    assign in_ready_c2fpu = id_in_ready; //multdiv_ready_id;
+    assign in_ready_c2fpu = id_in_ready;
     assign in_valid_c2fpu = (instr_valid_id & is_fp_instr);
-    // assign ready_id_fpu = id_in_ready; // (is_fp_instr) ? out_ready_fpu2c : id_in_ready;
     assign valid_id_fpu = (is_fp_instr) ? out_valid_fpu2c : ex_valid;
     assign fpu_busy_idu = fp_busy & (~out_valid_fpu2c);
-    assign data_wb      = is_fp_instr ? fp_result : result_ex;
 
     assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fp_busy;
   end else begin
     // Before going to sleep, wait for I- and D-side
     // interfaces to finish ongoing operations.
     assign core_busy_d   = ctrl_busy | if_busy | lsu_busy;
-    assign data_wb       = result_ex;
     assign valid_id_fpu  = ex_valid;
-    assign rf_int_fp_lsu = rf_rdata_b;
   end
 
   ///////////////////

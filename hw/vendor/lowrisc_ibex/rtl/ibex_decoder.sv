@@ -122,7 +122,8 @@ module ibex_decoder #(
     output logic                  use_fp_rd_o,
     output logic                  fp_swap_oprnds_o,
     output logic                  fp_load_o,
-    output logic                  mv_instr_o
+    output logic                  mv_instn_xw_o,
+    output logic                  mv_instn_wx_o
 );
 
   import ibex_pkg::*;
@@ -281,7 +282,8 @@ module ibex_decoder #(
     fp_src_fmt_o          = FP32; 
     fp_dst_fmt_o          = FP32;
     fp_swap_oprnds_o      = 1'b0;
-    mv_instr_o            = 1'b0;
+    mv_instn_xw_o         = 1'b0;
+    mv_instn_wx_o         = 1'b0;
     fp_rf_ren_a_o         = 1'b0;
     fp_rf_ren_b_o         = 1'b0;
     fp_rf_ren_c_o         = 1'b0;
@@ -910,7 +912,7 @@ module ibex_decoder #(
                 use_fp_rs1_o   = 1'b1;
                 illegal_insn   = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
                 fp_src_fmt_o   = FP32;
-                mv_instr_o     = 1'b1;
+                mv_instn_xw_o  = 1'b1;
               end
               {5'b00000,3'b001}: begin
                 use_fp_rs1_o = 1'b1;
@@ -988,7 +990,7 @@ module ibex_decoder #(
           7'b1111000: begin // FMV.W.X
             fp_rf_we_o        = 1'b1;
             use_fp_rd_o       = 1'b1;
-            mv_instr_o        = 1'b1;
+            mv_instn_wx_o     = 1'b1;
             fp_rf_ren_a_o     = 1'b1;
             rf_ren_a_o        = 1'b1;
             if (~(|instr[24:20]) | (|instr[14:12])) begin
@@ -1687,9 +1689,9 @@ module ibex_decoder #(
           end
           7'b1110000: begin // FMV.X.W , FCLASS.S
             unique case ({instr[24:20],instr[14:12]})
-              // {3'b0000000,3'b000}: begin
-              //   fp_alu_operator_o     = ADD;   // to be decided YET
-              // end
+              {3'b0000000,3'b000}: begin
+                fp_alu_operator_o     = ADD; // we want move, so the result is not relavent
+              end
               {3'b000,3'b001}: begin
                 fp_alu_operator_o     = CLASSIFY;
               end
@@ -1740,7 +1742,7 @@ module ibex_decoder #(
           end
           7'b1111000: begin // FMV.W.X
             if (~(|instr[24:20]) | (|instr[14:12])) begin
-              fp_alu_operator_o     = I2F;
+              fp_alu_operator_o     = ADD; // we want move, so the result is not relavent
             end
           end
           default: ;
