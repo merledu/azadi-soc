@@ -165,16 +165,6 @@ module ibex_tracer (
         else
           $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_frd_addr), rvfi_frd_wdata);
       end
-      if ((data_accessed & MEM) != 0) begin
-      $fwrite(file_handle, " PA:0x%08x", rvfi_mem_addr);
-
-      if (rvfi_mem_rmask != 4'b0000) begin
-        $fwrite(file_handle, " store:0x%08x", rvfi_mem_wdata);
-      end
-      if (rvfi_mem_wmask != 4'b0000) begin
-        $fwrite(file_handle, " load:0x%08x", rvfi_mem_rdata);
-      end
-    end
     end else begin
       if ((data_accessed & RS1) != 0) begin
         $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs1_addr), rvfi_rs1_rdata);
@@ -188,7 +178,9 @@ module ibex_tracer (
       if ((data_accessed & RD) != 0) begin
         $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str(rvfi_rd_addr), rvfi_rd_wdata);
       end
-      if ((data_accessed & MEM) != 0) begin
+    end
+
+    if ((data_accessed & MEM) != 0) begin
       $fwrite(file_handle, " PA:0x%08x", rvfi_mem_addr);
 
       if (rvfi_mem_rmask != 4'b0000) begin
@@ -197,7 +189,6 @@ module ibex_tracer (
       if (rvfi_mem_wmask != 4'b0000) begin
         $fwrite(file_handle, " load:0x%08x", rvfi_mem_rdata);
       end
-    end
     end
 
     $fwrite(file_handle, "\n");
