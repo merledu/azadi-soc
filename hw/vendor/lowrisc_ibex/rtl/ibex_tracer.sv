@@ -99,6 +99,7 @@ module ibex_tracer (
   logic        float_wx;
   logic        float_xw;
   logic        float_lw;
+  logic        float_sw;
 
   // Data items accessed during this instruction
   localparam logic [4:0] RS1 = (1 << 0);
@@ -144,13 +145,16 @@ module ibex_tracer (
 
     if (insn_is_float) begin
       if ((data_accessed & RS1) != 0) begin
-        if (float_wx)
+        if (float_wx | float_sw)
           $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs1_addr), rvfi_rs1_rdata);
         else 
           $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs1_addr), rvfi_frs1_rdata);
       end
       if ((data_accessed & RS2)) begin
-        $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs2_addr), rvfi_frs2_rdata);
+        if (float_sw)
+          $fwrite(file_handle, " %s:0x%08x", $sformatf("f%0d", rvfi_frs2_addr), rvfi_frs2_rdata);
+        else
+          $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs2_addr), rvfi_frs2_rdata);
       end
       if ((data_accessed & RS3)) begin
         $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs3_addr), rvfi_frs3_rdata);
@@ -161,6 +165,16 @@ module ibex_tracer (
         else
           $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_frd_addr), rvfi_frd_wdata);
       end
+      if ((data_accessed & MEM) != 0) begin
+      $fwrite(file_handle, " PA:0x%08x", rvfi_mem_addr);
+
+      if (rvfi_mem_rmask != 4'b0000) begin
+        $fwrite(file_handle, " store:0x%08x", rvfi_mem_wdata);
+      end
+      if (rvfi_mem_wmask != 4'b0000) begin
+        $fwrite(file_handle, " load:0x%08x", rvfi_mem_rdata);
+      end
+    end
     end else begin
       if ((data_accessed & RS1) != 0) begin
         $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_rs1_addr), rvfi_rs1_rdata);
@@ -174,8 +188,7 @@ module ibex_tracer (
       if ((data_accessed & RD) != 0) begin
         $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str(rvfi_rd_addr), rvfi_rd_wdata);
       end
-    end
-    if ((data_accessed & MEM) != 0) begin
+      if ((data_accessed & MEM) != 0) begin
       $fwrite(file_handle, " PA:0x%08x", rvfi_mem_addr);
 
       if (rvfi_mem_rmask != 4'b0000) begin
@@ -185,6 +198,7 @@ module ibex_tracer (
         $fwrite(file_handle, " load:0x%08x", rvfi_mem_rdata);
       end
     end
+    end
 
     $fwrite(file_handle, "\n");
   endfunction
@@ -193,7 +207,7 @@ module ibex_tracer (
   function automatic string reg_addr_to_str(input logic [4:0] addr);
     if (addr < 10) begin
       if (insn_is_float) begin
-        if (float_wx | float_lw)
+        if (float_wx | float_lw | float_sw)
           return $sformatf(" x%0d", addr);
         else
           return $sformatf(" f%0d", addr);
@@ -904,6 +918,7 @@ module ibex_tracer (
 
     if (!rvfi_insn[14]) begin
       // floating point store
+      float_sw = 1;
       data_accessed = RS1 | RS2 | MEM;
       decoded_str = $sformatf("%s\tf%0d,%0d(x%0d)", mnemonic, rvfi_frs2_addr,
                       $signed({ {20 {rvfi_insn[31]}}, rvfi_insn[31:25], rvfi_insn[11:7] }), rvfi_rs1_addr);
@@ -943,6 +958,7 @@ module ibex_tracer (
     float_wx = 0;
     float_xw = 0;
     float_lw = 0;
+    float_sw = 0;
 
     // Check for compressed instructions
     if (rvfi_insn[1:0] != 2'b11) begin
