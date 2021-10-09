@@ -56,6 +56,12 @@ module ibex_compressed_decoder (
                        2'b00, 2'b01, instr_i[9:7], 3'b010, 2'b01, instr_i[4:2], {OPCODE_LOAD}};
           end
 
+          3'b011: begin
+            // c.flw -> flw frd`, imm(rs1)
+            instr_o = {5'b0, instr_i[5], instr_i[12:10], instr_i[6],
+                       2'b00, 2'b01, instr_i[9:7], 3'b010, 2'b01, instr_i[4:2], {OPCODE_LOAD_FP}};
+          end
+
           3'b110: begin
             // c.sw -> sw rs2', imm(rs1')
             instr_o = {5'b0, instr_i[5], instr_i[12], 2'b01, instr_i[4:2],
@@ -63,11 +69,16 @@ module ibex_compressed_decoder (
                        2'b00, {OPCODE_STORE}};
           end
 
-          3'b001,
-          3'b011,
-          3'b100,
-          3'b101,
           3'b111: begin
+            // c.fsw -> fsw frs2`, imm(rs1`)
+            instr_o = {5'b0, instr_i[5], instr_i[12], 2'b01, instr_i[4:2],
+                       2'b01, instr_i[9:7], 3'b010, instr_i[11:10], instr_i[6],
+                       2'b00, {OPCODE_STORE_FP}};
+          end
+
+          3'b001,
+          3'b100,
+          3'b101: begin
             illegal_instr_o = 1'b1;
           end
 
@@ -220,6 +231,12 @@ module ibex_compressed_decoder (
             if (instr_i[11:7] == 5'b0)  illegal_instr_o = 1'b1;
           end
 
+          3'b011: begin
+            // c.flwsp -> flw frd, imm(x2)
+            instr_o = {4'b0, instr_i[3:2], instr_i[12], instr_i[6:4], 2'b00, 5'h02,
+                       3'b010, instr_i[11:7], OPCODE_LOAD_FP};
+          end
+
           3'b100: begin
             if (instr_i[12] == 1'b0) begin
               if (instr_i[6:2] != 5'b0) begin
@@ -254,10 +271,14 @@ module ibex_compressed_decoder (
                        instr_i[11:9], 2'b00, {OPCODE_STORE}};
           end
 
-          3'b001,
-          3'b011,
-          3'b101,
           3'b111: begin
+            // c.fswsp -> fsw frs2, imm(x2)
+            instr_o = {4'b0, instr_i[8:7], instr_i[12], instr_i[6:2], 5'h02, 3'b010,
+                       instr_i[11:9], 2'b00, {OPCODE_STORE_FP}};
+          end
+
+          3'b001,
+          3'b101: begin
             illegal_instr_o = 1'b1;
           end
 
