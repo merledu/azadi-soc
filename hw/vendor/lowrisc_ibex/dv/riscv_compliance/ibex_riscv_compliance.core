@@ -145,3 +145,4 @@ targets:
           - '-Wno-INCABSPATH'
           - "-Wno-IMPERFECTSCH"
           - "-Wno-LITENDIAN"
+          - "-Wno-LATCH"

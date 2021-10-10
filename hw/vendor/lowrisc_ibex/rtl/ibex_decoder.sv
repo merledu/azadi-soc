@@ -690,6 +690,7 @@ module ibex_decoder #(
         data_type_o        = 2'b00;
         rf_ren_a_o         = 1'b1;
         fp_rf_ren_b_o      = 1'b1;
+        is_fp_instr_o      = 1'b1;
 
         use_fp_rs2_o       = 1'b1;
 
