@@ -913,6 +913,7 @@ module ibex_decoder #(
           7'b1110000: begin // FMV.X.W , FCLASS.S
             rf_we            = 1'b1;  // write back in int_regfile
             fp_rf_ren_a_o    = 1'b1;
+            fpu_to_int_rf_o  = 1'b1;
             unique case ({instr[24:20],instr[14:12]})
               {5'b00000,3'b000}: begin
                 use_fp_rs1_o   = 1'b1;
@@ -924,7 +925,6 @@ module ibex_decoder #(
                 use_fp_rs1_o = 1'b1;
                 illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
                 fp_src_fmt_o = FP32;
-                fpu_to_int_rf_o = 1'b1;
               end
               default: begin
                 illegal_insn =1'b1;
