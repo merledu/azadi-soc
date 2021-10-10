@@ -315,6 +315,7 @@ module ibex_id_stage #(
   logic [31:0] alu_operand_b;
 
   /* FPU limit start */ 
+  logic                 fpu_to_int_rf;
   logic                 mv_instn_xw;
   logic                 mv_instn_wx;
   logic [FPU_WIDTH-1:0] fp_rf_rdata_a_fwd;
@@ -335,7 +336,11 @@ module ibex_id_stage #(
     assign fp_operands_o = fp_swap_oprnds_o ? {fpu_op_b, fpu_op_a, fpu_op_c} : 
                                               {fpu_op_c, fpu_op_b, fpu_op_a};
 
-    assign result_wb    = mv_instn_xw ? fpu_op_a : result_ex_i;
+    logic [FPU_WIDTH-1:0] fpu_wb_rf_int;
+
+    assign fpu_wb_rf_int = mv_instn_xw ? fpu_op_a : fp_result_ex_i;
+
+    assign result_wb    = fpu_to_int_rf ? fpu_wb_rf_int : result_ex_i;
     assign fp_result_wb = mv_instn_wx ? rf_rdata_a_fwd : fp_result_ex_i;
   end else begin
     logic unused_fp_result_ex;
@@ -564,7 +569,8 @@ module ibex_id_stage #(
       .fp_swap_oprnds_o                ( fp_swap_oprnds_o      ),
       .fp_load_o                       ( fp_load_o             ),
       .mv_instn_xw_o                   ( mv_instn_xw           ),
-      .mv_instn_wx_o                   ( mv_instn_wx           )
+      .mv_instn_wx_o                   ( mv_instn_wx           ),
+      .fpu_to_int_rf_o                 ( fpu_to_int_rf          )
   );
 
   ///////////////////////

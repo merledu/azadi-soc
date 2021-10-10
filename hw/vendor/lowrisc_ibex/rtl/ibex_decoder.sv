@@ -123,7 +123,8 @@ module ibex_decoder #(
     output logic                  fp_swap_oprnds_o,
     output logic                  fp_load_o,
     output logic                  mv_instn_xw_o,
-    output logic                  mv_instn_wx_o
+    output logic                  mv_instn_wx_o,
+    output logic                  fpu_to_int_rf_o
 );
 
   import ibex_pkg::*;
@@ -284,6 +285,7 @@ module ibex_decoder #(
     fp_swap_oprnds_o      = 1'b0;
     mv_instn_xw_o         = 1'b0;
     mv_instn_wx_o         = 1'b0;
+    fpu_to_int_rf_o       = 1'b0;
     fp_rf_ren_a_o         = 1'b0;
     fp_rf_ren_b_o         = 1'b0;
     fp_rf_ren_c_o         = 1'b0;
@@ -824,6 +826,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             fp_rf_ren_a_o      = 1'b1;
+            fpu_to_int_rf_o    = 1'b1;
             if (~|instr[24:20]) begin
               illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
@@ -890,7 +893,8 @@ module ibex_decoder #(
           7'b1100000: begin // FCVT.W.S, FCVT.WU.S
             rf_we            = 1'b1;  // write back in int_regfile
             use_fp_rs1_o     = 1'b1;
-            fp_rf_ren_a_o      = 1'b1;
+            fp_rf_ren_a_o    = 1'b1;
+            fpu_to_int_rf_o  = 1'b1;
             if (~|instr[24:21]) begin
               illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
@@ -920,6 +924,7 @@ module ibex_decoder #(
                 use_fp_rs1_o = 1'b1;
                 illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
                 fp_src_fmt_o = FP32;
+                fpu_to_int_rf_o = 1'b1;
               end
               default: begin
                 illegal_insn =1'b1;
@@ -943,6 +948,7 @@ module ibex_decoder #(
             use_fp_rs2_o     = 1'b1;
             fp_rf_ren_a_o    = 1'b1;
             fp_rf_ren_b_o    = 1'b1;
+            fpu_to_int_rf_o  = 1'b1;
             if (~(instr[14]) | (&instr[13:12])) begin
               illegal_insn = ((RVF == RV32FDNone) & (~fp_invalid_rm)) ? 1'b1 : 1'b0;
               fp_src_fmt_o = FP32;
