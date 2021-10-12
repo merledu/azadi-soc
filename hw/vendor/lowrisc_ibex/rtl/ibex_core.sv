@@ -1064,7 +1064,7 @@ module ibex_core #(
     assign valid_id_fpu = (is_fp_instr) ? out_valid_fpu2c : ex_valid;
     assign fpu_busy_idu = fp_busy & (~out_valid_fpu2c);
 
-    assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fp_busy;
+    assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fpu_busy_idu;
   end else begin
     // Before going to sleep, wait for I- and D-side
     // interfaces to finish ongoing operations.
