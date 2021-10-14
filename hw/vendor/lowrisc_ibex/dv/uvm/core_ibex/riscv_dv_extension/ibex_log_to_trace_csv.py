@@ -32,7 +32,7 @@ finally:
 INSTR_RE = \
     re.compile(r"^\s*(?P<time>\d+)\s+(?P<cycle>\d+)\s+(?P<pc>[0-9a-f]+)\s+"
                r"(?P<bin>[0-9a-f]+)\s+(?P<instr>\S+\s+\S+)\s*")
-RD_RE = re.compile(r"(x(?P<rd>[1-9]\d*)=0x(?P<rd_val>[0-9a-f]+))")
+RD_RE = re.compile(r"((x|f)(?P<rd>[0-9]\d*)=0x(?P<rd_val>[0-9a-f]+))")
 ADDR_RE = re.compile(r"(?P<rd>[a-z0-9]+?),"
                      r"(?P<imm>[\-0-9]+?)"
                      r"\((?P<rs1>[a-z0-9]+)\)")
@@ -77,7 +77,10 @@ def _process_ibex_sim_log_fd(log_fd, csv_fd, full_trace=True):
 
         c = RD_RE.search(line)
         if c:
-            abi_name = gpr_to_abi("x{}".format(c.group("rd")))
+            #abi_name = gpr_to_abi("x{}".format(c.group("rd")))
+            s=str(c.group(0))
+            l=s.split('=')
+            abi_name = gpr_to_abi(l[0])
             gpr_entry = "{}:{}".format(abi_name, c.group("rd_val"))
             trace_entry.gpr.append(gpr_entry)
 
