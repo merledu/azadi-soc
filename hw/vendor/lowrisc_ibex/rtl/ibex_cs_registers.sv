@@ -323,14 +323,14 @@ module ibex_cs_registers #(
 
     unique case (csr_addr_i)
       // fcsr: floating-point control and status register (frm+fflags)
-      CSR_FCSR: csr_rdata_int = {24'b0 , frm_q, fflags_q};
+      CSR_FCSR: csr_rdata_int = {24'b0 , frm_d, fflags_d};
       
       // fflags: floating-point accrued exception
-      CSR_FFLAG: csr_rdata_int = {27'b0 , fflags_q};
+      CSR_FFLAG: csr_rdata_int = {27'b0 , fflags_d};
       
       // frm: floating-point dynamic rounding mode
       CSR_FRM: begin
-        csr_rdata_int = {29'b0 , frm_q};
+        csr_rdata_int = {29'b0 , frm_d};
       end
 
       // mhartid: unique hardware thread id
