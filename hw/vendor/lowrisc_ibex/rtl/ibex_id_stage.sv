@@ -217,7 +217,8 @@ module ibex_id_stage #(
     output logic [2:0][FPU_WIDTH-1:0] fp_operands_o,
     input  logic [FPU_WIDTH-1:0]      fp_result_ex_i,
     output logic                      fp_load_o,
-    output logic                      fp_swap_oprnds_o
+    output logic                      fp_swap_oprnds_o,
+    output logic                      fflags_en_id_o
 );
 
   import ibex_pkg::*;
@@ -570,7 +571,8 @@ module ibex_id_stage #(
       .fp_load_o                       ( fp_load_o             ),
       .mv_instn_xw_o                   ( mv_instn_xw           ),
       .mv_instn_wx_o                   ( mv_instn_wx           ),
-      .fpu_to_int_rf_o                 ( fpu_to_int_rf          )
+      .fpu_to_int_rf_o                 ( fpu_to_int_rf         ),
+      .fflags_en_id_o                  ( fflags_en_id_o        )
   );
 
   ///////////////////////

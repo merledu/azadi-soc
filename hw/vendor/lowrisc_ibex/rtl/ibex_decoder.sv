@@ -124,7 +124,8 @@ module ibex_decoder #(
     output logic                  fp_load_o,
     output logic                  mv_instn_xw_o,
     output logic                  mv_instn_wx_o,
-    output logic                  fpu_to_int_rf_o
+    output logic                  fpu_to_int_rf_o,
+    output logic                  fflags_en_id_o
 );
 
   import ibex_pkg::*;
@@ -289,6 +290,7 @@ module ibex_decoder #(
     fp_rf_ren_a_o         = 1'b0;
     fp_rf_ren_b_o         = 1'b0;
     fp_rf_ren_c_o         = 1'b0;
+    fflags_en_id_o        = 1'b0;
 
     opcode                = opcode_e'(instr[6:0]);
 
@@ -746,6 +748,7 @@ module ibex_decoder #(
         use_fp_rs2_o       = 1'b1;
         use_fp_rs3_o       = 1'b1;
         use_fp_rd_o        = 1'b1; 
+        fflags_en_id_o     = 1'b1;
         
         unique case (instr[26:25])
           01: begin
@@ -763,6 +766,7 @@ module ibex_decoder #(
       OPCODE_OP_FP: begin
         fp_src_fmt_o       = FP32;
         is_fp_instr_o      = 1'b1;
+        fflags_en_id_o     = 1'b0;
 
         unique case (instr[31:25]) 
           7'b0000001,       // FADD.D

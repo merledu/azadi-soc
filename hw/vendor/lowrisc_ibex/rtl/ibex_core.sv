@@ -176,6 +176,7 @@ module ibex_core #(
   logic                   fp_swap_oprnds;
   logic                   fpu_is_busy;
   logic                   fp_load;
+  logic                   fflags_en_id;
   logic [FPU_WIDTH-1:0]   fp_rf_wdata_wb;
   logic [FPU_WIDTH-1:0]   fp_rf_wdata_id;
   logic [FPU_WIDTH-1:0]   fp_result_ex;
@@ -737,7 +738,8 @@ module ibex_core #(
       .fp_operands_o                   ( fp_operands           ),
       .fp_result_ex_i                  ( fp_result_ex          ),
       .fp_load_o                       ( fp_load               ),
-      .fp_swap_oprnds_o                ( fp_swap_oprnds        )
+      .fp_swap_oprnds_o                ( fp_swap_oprnds        ),
+      .fflags_en_id_o                  ( fflags_en_id          )
   );
 
   // for RVFI only
@@ -1249,7 +1251,7 @@ module ibex_core #(
       .fp_rm_dynamic_i         ( fp_rm_dynamic                ),
       .fp_frm_o                ( fp_frm_csr                   ),
       .fp_status_i             ( fp_status                    ),
-      .is_fp_instr_i           ( is_fp_instr                  )
+      .fflags_en_id_i          ( fflags_en_id                 )
   );
 
   // These assertions are in top-level as instr_valid_id required as the enable term
