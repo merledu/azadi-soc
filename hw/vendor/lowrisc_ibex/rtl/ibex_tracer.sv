@@ -100,6 +100,7 @@ module ibex_tracer (
   logic        float_xw;
   logic        float_lw;
   logic        float_sw;
+  logic        float_sqrt;
 
   // Data items accessed during this instruction
   localparam logic [4:0] RS1 = (1 << 0);
@@ -160,7 +161,7 @@ module ibex_tracer (
         $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs3_addr), rvfi_frs3_rdata);
       end
       if ((data_accessed & RD) != 0) begin
-        if (float_xw)
+        if (float_xw | float_sqrt)
           $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_rd_addr), rvfi_rd_wdata);
         else
           $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_frd_addr), rvfi_frd_wdata);
@@ -221,7 +222,7 @@ module ibex_tracer (
   function automatic string reg_addr_to_str_rd(input logic [4:0] addr);
     if (addr < 10) begin
       if (insn_is_float) begin
-        if (float_xw)
+        if (float_xw | float_sqrt)
           return $sformatf(" x%0d", addr);
         else
           return $sformatf(" f%0d", addr);
@@ -230,7 +231,7 @@ module ibex_tracer (
       end
     end else begin
       if (insn_is_float) begin
-        if (float_xw)
+        if (float_xw | float_sqrt)
           return $sformatf("x%0d", addr);
         else
           return $sformatf("f%0d", addr);
@@ -817,6 +818,7 @@ module ibex_tracer (
 
   function automatic void decode_fsqrt(input string mnemonic);
     insn_is_float = 1'b1;
+    float_sqrt    = 1'b1;
     data_accessed = RS1 | RD;
     decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
   endfunction
@@ -946,10 +948,11 @@ module ibex_tracer (
     data_accessed = 5'h0;
     insn_is_compressed = 0;
     insn_is_float = 0;
-    float_wx = 0;
-    float_xw = 0;
-    float_lw = 0;
-    float_sw = 0;
+    float_wx   = 0;
+    float_xw   = 0;
+    float_lw   = 0;
+    float_sw   = 0;
+    float_sqrt = 0;
 
     // Check for compressed instructions
     if (rvfi_insn[1:0] != 2'b11) begin
