@@ -305,7 +305,7 @@ module ibex_cs_registers #(
   
   // Floating point
   always_comb begin
-    if (fflags_en_id_i & frm_d == 3'b111) begin
+    if (frm_d == 3'b111) begin
       unique case (frm_q)
         101,
         110,
