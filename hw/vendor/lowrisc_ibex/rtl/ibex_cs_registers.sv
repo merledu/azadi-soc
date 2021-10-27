@@ -305,6 +305,7 @@ module ibex_cs_registers #(
   
   // Floating point
   always_comb begin
+    illegal_dyn_mod =  1'b0;
     if (frm_d == 3'b111) begin
       unique case (frm_q)
         101,
