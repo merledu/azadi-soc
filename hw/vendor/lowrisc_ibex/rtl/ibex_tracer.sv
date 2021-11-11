@@ -100,6 +100,8 @@ module ibex_tracer (
   logic        float_xw;
   logic        float_lw;
   logic        float_sw;
+  logic        float_class;
+  logic        float_comp;
   logic        float_sqrt;
 
   // Data items accessed during this instruction
@@ -161,7 +163,7 @@ module ibex_tracer (
         $fwrite(file_handle, " %s:0x%08x", reg_addr_to_str(rvfi_frs3_addr), rvfi_frs3_rdata);
       end
       if ((data_accessed & RD) != 0) begin
-        if (float_xw | float_sqrt)
+        if (float_xw | float_sqrt | float_class | float_comp)
           $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_rd_addr), rvfi_rd_wdata);
         else
           $fwrite(file_handle, " %s=0x%08x", reg_addr_to_str_rd(rvfi_frd_addr), rvfi_frd_wdata);
@@ -208,7 +210,7 @@ module ibex_tracer (
       end
     end else begin
       if (insn_is_float) begin        
-        if (float_wx | float_lw)
+        if (float_wx | float_lw | float_sw)
           return $sformatf("x%0d", addr);
         else
           return $sformatf("f%0d", addr);
@@ -222,7 +224,7 @@ module ibex_tracer (
   function automatic string reg_addr_to_str_rd(input logic [4:0] addr);
     if (addr < 10) begin
       if (insn_is_float) begin
-        if (float_xw | float_sqrt)
+        if (float_xw | float_sqrt | float_sw | float_class | float_comp)
           return $sformatf(" x%0d", addr);
         else
           return $sformatf(" f%0d", addr);
@@ -231,7 +233,7 @@ module ibex_tracer (
       end
     end else begin
       if (insn_is_float) begin
-        if (float_xw | float_sqrt)
+        if (float_xw | float_sqrt | float_sw | float_class | float_comp)
           return $sformatf("x%0d", addr);
         else
           return $sformatf("f%0d", addr);
@@ -839,6 +841,7 @@ module ibex_tracer (
 
   function automatic void decode_fcomp(input string mnemonic);
     insn_is_float = 1'b1;
+    float_comp    = 1'b1;
     data_accessed = RS2 | RS1 | RD;
     decoded_str = $sformatf("%s\tx%0d,f%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr,
         rvfi_frs2_addr);
@@ -874,6 +877,7 @@ module ibex_tracer (
 
   function automatic void decode_fclass(input string mnemonic);
     insn_is_float = 1'b1;
+    float_class   = 1'b1;
     data_accessed = RS1 | RD;
     decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
   endfunction
@@ -953,6 +957,8 @@ module ibex_tracer (
     float_lw   = 0;
     float_sw   = 0;
     float_sqrt = 0;
+    float_comp = 0;
+    float_class = 0;
 
     // Check for compressed instructions
     if (rvfi_insn[1:0] != 2'b11) begin
