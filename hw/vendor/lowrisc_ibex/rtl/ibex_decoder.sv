@@ -816,7 +816,7 @@ module ibex_decoder #(
             fp_src_fmt_o = FP32;
           end
           7'b0101101: begin
-            rf_we              = 1'b1;
+            fp_rf_we_o         = 1'b1;
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             fp_rf_ren_a_o      = 1'b1;
@@ -826,7 +826,7 @@ module ibex_decoder #(
             end
           end
           7'b0101100: begin // FSQRT.S
-            rf_we              = 1'b1;
+            fp_rf_we_o         = 1'b1;
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             fp_rf_ren_a_o      = 1'b1;
