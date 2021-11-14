@@ -198,11 +198,11 @@ module fpnew_divsqrt_multi #(
           out_valid = 1'b1; // try to commit result downstream
           // If downstream accepts our result
           if (out_ready) begin
-            state_d = IDLE; // we anticipate going back to idling..
             if (in_valid_q && unit_ready) begin // ..unless new work comes in
               in_ready = 1'b1; // we acknowledge the instruction
               state_d  = BUSY; // and stay busy with it
             end
+            state_d = IDLE; // we anticipate going back to idling..
           // Otherwise if downstream is not ready for the result
           end else begin
             hold_result = 1'b1; // activate the hold register
