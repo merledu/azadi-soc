@@ -150,19 +150,21 @@ module ibex_wb_stage #(
     // floating point
     if (RVF == RV32FSingle || RVF == RV32DDouble) begin
       logic [FPU_WIDTH-1:0] fp_rf_wdata_wb_q;
+      logic           [4:0] fp_rf_waddr_wb_q;
       logic                 fp_rf_we_wb_q;
       logic                 fp_load_q;
 
       always_ff @(posedge clk_i) begin
         if(en_wb_i) begin
           fp_rf_we_wb_q    <= fp_rf_wen_id_i;
+          fp_rf_waddr_wb_q <= fp_rf_waddr_id_i;
           fp_rf_wdata_wb_q <= fp_rf_wdata_id_i;
           fp_load_q        <= fp_load_i;
         end
       end
 
-      assign fp_rf_waddr_wb_o         = rf_waddr_wb_q; // no seperate datapath for rd address
-      assign fp_rf_wdata_wb_mux[0]    = rf_wdata_wb_q; // no seperate datapath for data bus
+      assign fp_rf_waddr_wb_o         = fp_rf_waddr_wb_q;
+      assign fp_rf_wdata_wb_mux[0]    = fp_rf_wdata_wb_q;
       assign fp_rf_wdata_wb_mux_we[0] = fp_rf_we_wb_q & wb_valid_q;
       
       // Instruction in writeback will be writing to register file if either rf_we is set or writeback
@@ -177,6 +179,7 @@ module ibex_wb_stage #(
       assign rf_wdata_wb_mux_we[1]  = rf_we_lsu_i;
       assign unused_fpu_wires       = &{1'b0,
                                         fp_rf_wen_id_i,
+                                        fp_rf_waddr_id_i,
                                         fp_rf_wdata_id_i,
                                         fp_load_i,
                                         1'b0};

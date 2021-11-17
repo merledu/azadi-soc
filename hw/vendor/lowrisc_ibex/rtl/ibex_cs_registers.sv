@@ -121,7 +121,7 @@ module ibex_cs_registers #(
     input  logic                  fp_rm_dynamic_i,
     output fpnew_pkg::roundmode_e fp_frm_o,
     input  fpnew_pkg::status_t    fp_status_i,
-    input  logic                  is_fp_instr_i
+    input  logic                  fflags_en_id_i
 );
 
   import ibex_pkg::*;
@@ -305,14 +305,15 @@ module ibex_cs_registers #(
   
   // Floating point
   always_comb begin
-    unique case (frm_q)
-      000,
-      001,
-      010,
-      011,
-      100: illegal_dyn_mod =  1'b0;
-      default: illegal_dyn_mod =  1'b1;
-    endcase 
+    illegal_dyn_mod =  1'b0;
+    if (frm_d == 3'b111) begin
+      unique case (frm_q)
+        101,
+        110,
+        111: illegal_dyn_mod = 1'b1;
+        default: illegal_dyn_mod =  1'b0;
+      endcase
+    end
     fp_frm_o = frm_q;
   end
   
@@ -510,11 +511,10 @@ module ibex_cs_registers #(
     exception_pc = pc_id_i;
 
     // Floating point
-    fflags_d    = fflags_q;
-    fflags_en   = 1'b0;
-
-    frm_d  = frm_q;
-    frm_en = 1'b0;
+    fflags_en    = 1'b0;
+    fflags_d     = fflags_q;
+    frm_en       = 1'b0;
+    frm_d        = frm_q;
 
     priv_lvl_d   = priv_lvl_q;
     mstatus_en   = 1'b0;
@@ -558,7 +558,7 @@ module ibex_cs_registers #(
           fflags_en = 1'b1;
           frm_en    = 1'b1;
           fflags_d  = csr_wdata_int[4:0];
-          frm_d     = csr_wdata_int[7:5];  
+          frm_d     = csr_wdata_int[7:5];
         end
 
         CSR_FFLAG : begin
@@ -821,7 +821,7 @@ module ibex_cs_registers #(
     .rd_error_o (mstatus_err)
   );
 
-  assign fflag_wdata = is_fp_instr_i ? fp_status_i : fflags_d;
+  assign fflag_wdata = fflags_en_id_i ? fp_status_i : fflags_d;
   // FFLAGS
   ibex_csr #(
     .Width      (5),
@@ -831,7 +831,7 @@ module ibex_cs_registers #(
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .wr_data_i  (fflag_wdata),
-    .wr_en_i    (fflags_en | is_fp_instr_i),
+    .wr_en_i    (fflags_en | fflags_en_id_i),
     .rd_data_o  (fflags_q),
     .rd_error_o ()
   );

@@ -193,6 +193,9 @@ module ibex_id_stage #(
     output logic [4:0]                fp_rf_raddr_a_o,
     output logic [4:0]                fp_rf_raddr_b_o,
     output logic [4:0]                fp_rf_raddr_c_o,
+    output logic                      fp_rf_ren_a_o,
+    output logic                      fp_rf_ren_b_o,
+    output logic                      fp_rf_ren_c_o,
     output logic [4:0]                fp_rf_waddr_o,
     output logic                      fp_rf_we_o,
 
@@ -212,7 +215,10 @@ module ibex_id_stage #(
     input  logic [FPU_WIDTH-1:0]      fp_rf_wdata_fwd_wb_i,
     output logic [FPU_WIDTH-1:0]      fp_rf_wdata_id_o,
     output logic [2:0][FPU_WIDTH-1:0] fp_operands_o,
-    output logic                      fp_load_o
+    input  logic [FPU_WIDTH-1:0]      fp_result_ex_i,
+    output logic                      fp_load_o,
+    output logic                      fp_swap_oprnds_o,
+    output logic                      fflags_en_id_o
 );
 
   import ibex_pkg::*;
@@ -272,6 +278,7 @@ module ibex_id_stage #(
 
   logic [31:0] rf_rdata_a_fwd;
   logic [31:0] rf_rdata_b_fwd;
+  logic [31:0] result_wb;
 
   // ALU Control
   alu_op_e     alu_operator;
@@ -308,44 +315,39 @@ module ibex_id_stage #(
   logic [31:0] alu_operand_a;
   logic [31:0] alu_operand_b;
 
-  /* FPU Limits STARTS */ 
-  logic                 mv_instr;
-  logic                 fp_swap_oprnds;
+  /* FPU limit start */ 
+  logic                 fpu_to_int_rf;
+  logic                 mv_instn_xw;
+  logic                 mv_instn_wx;
   logic [FPU_WIDTH-1:0] fp_rf_rdata_a_fwd;
   logic [FPU_WIDTH-1:0] fp_rf_rdata_b_fwd;
   logic [FPU_WIDTH-1:0] fp_rf_rdata_c_fwd;
   logic [FPU_WIDTH-1:0] temp;
   logic [FPU_WIDTH-1:0] fpu_op_a;
-  logic [31:0] fpu_op_b;
+  logic [FPU_WIDTH-1:0] fpu_op_b;
   logic [FPU_WIDTH-1:0] fpu_op_c;
-  logic [FPU_WIDTH-1:0] result_wb;
-  logic [FPU_WIDTH-1:0] fpu_a;
-  logic [FPU_WIDTH-1:0] fpu_b;
-  logic [FPU_WIDTH-1:0] fpu_c;
+  logic [FPU_WIDTH-1:0] fp_result_wb;
   
   if (RVF == RV32FSingle || RVF == RV32DDouble) begin
-    assign fpu_a = use_fp_rs1_o ? fp_rf_rdata_a_fwd : rf_rdata_a_fwd;
-    assign fpu_b = use_fp_rs2_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
-    assign fpu_c = fp_rf_rdata_c_fwd;
+    assign fpu_op_a = use_fp_rs1_o ? fp_rf_rdata_a_fwd : rf_rdata_a_fwd;
+    assign fpu_op_b = use_fp_rs2_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
+    assign fpu_op_c = fp_rf_rdata_c_fwd;
 
-    /* Swap operands */
-    always_comb begin : swapping
-      if (fp_swap_oprnds) begin
-        temp     = fpu_c;
-        fpu_op_c = fpu_a;
-        fpu_op_a = temp;
-      end else begin
-        fpu_op_a = fpu_a;
-        fpu_op_b = fpu_b;
-        fpu_op_c = fpu_c;
-      end
-      fp_operands_o = {fpu_op_c , fpu_op_b , fpu_op_a};
-    end
-    assign result_wb = mv_instr ? fpu_op_a : result_ex_i;
+    /* Swap operands for FADD/FSUB */
+    assign fp_operands_o = fp_swap_oprnds_o ? {fpu_op_b, fpu_op_a, fpu_op_c} : 
+                                              {fpu_op_c, fpu_op_b, fpu_op_a};
+
+    logic [FPU_WIDTH-1:0] fpu_wb_rf_int;
+
+    assign fpu_wb_rf_int = mv_instn_xw ? fpu_op_a : fp_result_ex_i;
+
+    assign result_wb    = fpu_to_int_rf ? fpu_wb_rf_int : result_ex_i;
+    assign fp_result_wb = mv_instn_wx ? rf_rdata_a_fwd : fp_result_ex_i;
   end else begin
-    assign fpu_op_b = rf_rdata_b_fwd;
+    logic unused_fp_result_ex;
+    assign unused_fp_result_ex = &{ 1'b0, fp_result_ex_i, 1'b0};
   end
-  /* FPU Limits ENDS */
+  /* FPU limit end */
 
   /////////////
   // LSU Mux //
@@ -550,6 +552,9 @@ module ibex_id_stage #(
       .fp_rf_raddr_a_o                 ( fp_rf_raddr_a_o       ),
       .fp_rf_raddr_b_o                 ( fp_rf_raddr_b_o       ),
       .fp_rf_raddr_c_o                 ( fp_rf_raddr_c_o       ),
+      .fp_rf_ren_a_o                   ( fp_rf_ren_a_o         ),
+      .fp_rf_ren_b_o                   ( fp_rf_ren_b_o         ),
+      .fp_rf_ren_c_o                   ( fp_rf_ren_c_o         ),
       .fp_rf_waddr_o                   ( fp_rf_waddr_o         ),
       .fp_rf_we_o                      ( fp_rf_we_o            ),
       .fp_alu_operator_o               ( fp_alu_operator_o     ),
@@ -562,9 +567,12 @@ module ibex_id_stage #(
       .use_fp_rs2_o                    ( use_fp_rs2_o          ),
       .use_fp_rs3_o                    ( use_fp_rs3_o          ),
       .use_fp_rd_o                     ( use_fp_rd_o           ),
-      .fp_swap_oprnds_o                ( fp_swap_oprnds        ),
+      .fp_swap_oprnds_o                ( fp_swap_oprnds_o      ),
       .fp_load_o                       ( fp_load_o             ),
-      .mv_instr_o                      ( mv_instr              )
+      .mv_instn_xw_o                   ( mv_instn_xw           ),
+      .mv_instn_wx_o                   ( mv_instn_wx           ),
+      .fpu_to_int_rf_o                 ( fpu_to_int_rf         ),
+      .fflags_en_id_o                  ( fflags_en_id_o        )
   );
 
   ///////////////////////
@@ -577,18 +585,18 @@ module ibex_id_stage #(
   // Register file write data mux
   always_comb begin : rf_wdata_id_mux
     unique case (rf_wdata_sel)
-      RF_WD_EX:  rf_wdata_id_o = result_ex_i;
+      RF_WD_EX:  rf_wdata_id_o = result_wb;
       RF_WD_CSR: rf_wdata_id_o = csr_rdata_i;
-      default:   rf_wdata_id_o = result_ex_i;
+      default:   rf_wdata_id_o = result_wb;
     endcase
   end
 
-  // Register file write data mux
+  // Floating point register file write data mux
   always_comb begin : fp_rf_wdata_id_mux
     unique case (rf_wdata_sel)
-      RF_WD_EX:  fp_rf_wdata_id_o = result_wb;
+      RF_WD_EX:  fp_rf_wdata_id_o = fp_result_wb;
       RF_WD_CSR: fp_rf_wdata_id_o = csr_rdata_i;
-      default:   fp_rf_wdata_id_o = result_wb;
+      default:   fp_rf_wdata_id_o = fp_result_wb;
     endcase
   end
 
@@ -729,7 +737,7 @@ module ibex_id_stage #(
   assign lsu_we_o                = lsu_we;
   assign lsu_type_o              = lsu_type;
   assign lsu_sign_ext_o          = lsu_sign_ext;
-  assign lsu_wdata_o             = fpu_op_b; //rf_rdata_b_fwd;
+  assign lsu_wdata_o             = is_fp_instr_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
   // csr_op_en_o is set when CSR access should actually happen.
   // csv_access_o is set when CSR access instruction is present and is used to compute whether a CSR
   // access is illegal. A combinational loop would be created if csr_op_en_o was used along (as

@@ -69,7 +69,7 @@ parameters:
   WritebackStage:
     datatype: int
     paramtype: vlogparam
-    default: 0
+    default: 1
     description: "Enables third pipeline stage (EXPERIMENTAL)"
 
   BranchPredictor:
@@ -145,3 +145,4 @@ targets:
           - '-Wno-INCABSPATH'
           - "-Wno-IMPERFECTSCH"
           - "-Wno-LITENDIAN"
+          - "-Wno-LATCH"

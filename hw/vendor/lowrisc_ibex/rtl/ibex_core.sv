@@ -99,6 +99,22 @@ module ibex_core #(
     output logic [ 3:0] rvfi_mem_wmask,
     output logic [31:0] rvfi_mem_rdata,
     output logic [31:0] rvfi_mem_wdata,
+    output logic [ 4:0] rvfi_frs1_addr,
+    output logic [ 4:0] rvfi_frs2_addr,
+    output logic [ 4:0] rvfi_frs3_addr,
+    output logic [ 4:0] rvfi_frd_addr,
+    output logic [31:0] rvfi_frs1_rdata,
+    output logic [31:0] rvfi_frs2_rdata,
+    output logic [31:0] rvfi_frs3_rdata,
+    output logic [31:0] rvfi_frd_wdata,
+    // output logic        rvfi_frs1_rvalid,
+    // output logic        rvfi_frs2_rvalid,
+    // output logic        rvfi_frs3_rvalid,
+    // output logic        rvfi_frd_wvalid, 
+    // output logic [31:0] rvfi_csr_fcsr_rmask,
+    // output logic [31:0] rvfi_csr_fcsr_wmask,
+    // output logic [31:0] rvfi_csr_fcsr_rdata,
+    // output logic [31:0] rvfi_csr_fcsr_wdata,
 `endif
 
     // CPU Control Signals
@@ -133,7 +149,10 @@ module ibex_core #(
   logic                   out_valid_fpu2c;  // valid - from core to FPU
   logic                   valid_id_fpu;     // select which valid signal will go to dec
   logic                   fp_rm_dynamic;
-  logic                   fp_alu_op_mod;  
+  logic                   fp_alu_op_mod;
+  logic                   fp_rf_ren_a;
+  logic                   fp_rf_ren_b;
+  logic                   fp_rf_ren_c;  
   logic [4:0]             fp_rf_raddr_a;
   logic [4:0]             fp_rf_raddr_b;
   logic [4:0]             fp_rf_raddr_c;
@@ -145,9 +164,6 @@ module ibex_core #(
   logic [2:0][FPU_WIDTH-1:0] fp_operands;   // three operands in fpu   
   logic                   fp_busy;
   logic                   fpu_busy_idu;
-  logic [FPU_WIDTH-1:0]   fp_result;
-  logic [31:0]            data_wb;
-  logic [31:0]            rf_int_fp_lsu;
   logic [4:0]             fp_rf_waddr_id;
   logic [4:0]             fp_rf_waddr_wb;
   logic                   fp_rf_we;
@@ -160,8 +176,10 @@ module ibex_core #(
   logic                   fp_swap_oprnds;
   logic                   fpu_is_busy;
   logic                   fp_load;
+  logic                   fflags_en_id;
   logic [FPU_WIDTH-1:0]   fp_rf_wdata_wb;
   logic [FPU_WIDTH-1:0]   fp_rf_wdata_id;
+  logic [FPU_WIDTH-1:0]   fp_result_ex;
   fpnew_pkg::status_t     fp_status;
   fpnew_pkg::operation_e  fp_operation;
   fpnew_pkg::roundmode_e  fp_rounding_mode;
@@ -398,6 +416,13 @@ module ibex_core #(
   logic [31:0] rvfi_mem_wdata_q;
   logic [31:0] rvfi_mem_addr_d;
   logic [31:0] rvfi_mem_addr_q;
+  logic [ 4:0] rvfi_frd_addr_wb;
+  logic [31:0] rvfi_frd_wdata_wb;
+  logic        rvfi_frd_we_wb;
+  logic [31:0] rvfi_frd_wdata_d;
+  logic [31:0] rvfi_frd_wdata_q;
+  logic [ 4:0] rvfi_frd_addr_d;
+  logic [ 4:0] rvfi_frd_addr_q;
 `endif
 
   //////////////////////
@@ -647,14 +672,13 @@ module ibex_core #(
       .trigger_match_i              ( trigger_match            ),
 
       // write data to commit in the register file
-      .result_ex_i                  ( data_wb                  ), // changed by zeeshan from result_ex
-                                                                  // to data_wb for FVCT, FMV.WX ins
+      .result_ex_i                  ( result_ex                ),
       .csr_rdata_i                  ( csr_rdata                ),
 
       .rf_raddr_a_o                 ( rf_raddr_a               ),
       .rf_rdata_a_i                 ( rf_rdata_a               ),
       .rf_raddr_b_o                 ( rf_raddr_b               ),
-      .rf_rdata_b_i                 ( rf_int_fp_lsu            ),
+      .rf_rdata_b_i                 ( rf_rdata_b               ),
       .rf_ren_a_o                   ( rf_ren_a                 ),
       .rf_ren_b_o                   ( rf_ren_b                 ),
       .rf_waddr_id_o                ( rf_waddr_id              ),
@@ -691,6 +715,9 @@ module ibex_core #(
       .fp_rf_raddr_a_o                 ( fp_rf_raddr_a         ),
       .fp_rf_raddr_b_o                 ( fp_rf_raddr_b         ),
       .fp_rf_raddr_c_o                 ( fp_rf_raddr_c         ),
+      .fp_rf_ren_a_o                   ( fp_rf_ren_a           ),
+      .fp_rf_ren_b_o                   ( fp_rf_ren_b           ),
+      .fp_rf_ren_c_o                   ( fp_rf_ren_c           ),
       .fp_rf_waddr_o                   ( fp_rf_waddr_id        ),
       .fp_rf_we_o                      ( fp_rf_wen_id          ),
       .fp_alu_operator_o               ( fp_alu_operator       ),
@@ -709,7 +736,10 @@ module ibex_core #(
       .fp_rf_wdata_fwd_wb_i            ( fp_rf_wdata_wb        ),
       .fp_rf_wdata_id_o                ( fp_rf_wdata_id        ),
       .fp_operands_o                   ( fp_operands           ),
-      .fp_load_o                       ( fp_load               )
+      .fp_result_ex_i                  ( fp_result_ex          ),
+      .fp_load_o                       ( fp_load               ),
+      .fp_swap_oprnds_o                ( fp_swap_oprnds        ),
+      .fflags_en_id_o                  ( fflags_en_id          )
   );
 
   // for RVFI only
@@ -1003,7 +1033,7 @@ module ibex_core #(
       .in_valid_i     ( in_valid_c2fpu   ),
       .in_ready_o     ( out_ready_fpu2c  ),
       .flush_i        ( fp_flush         ),
-      .result_o       ( fp_result        ),
+      .result_o       ( fp_result_ex     ),
       .status_o       ( fp_status        ),
       .tag_o          (                  ),
       .out_valid_o    ( out_valid_fpu2c  ),
@@ -1030,23 +1060,18 @@ module ibex_core #(
       .wdata_a_i ( fp_rf_wdata_wb ),
       .we_a_i    ( fp_rf_wen_wb   )
     );
-    assign rf_int_fp_lsu  = (is_fp_instr & use_fp_rs2) ? fp_rf_rdata_b : rf_rdata_b;
     assign fp_frm_fpnew   = fp_rm_dynamic ? fp_frm_csr : fp_rounding_mode;
-    assign in_ready_c2fpu = id_in_ready; //multdiv_ready_id;
+    assign in_ready_c2fpu = id_in_ready;
     assign in_valid_c2fpu = (instr_valid_id & is_fp_instr);
-    // assign ready_id_fpu = id_in_ready; // (is_fp_instr) ? out_ready_fpu2c : id_in_ready;
     assign valid_id_fpu = (is_fp_instr) ? out_valid_fpu2c : ex_valid;
     assign fpu_busy_idu = fp_busy & (~out_valid_fpu2c);
-    assign data_wb      = is_fp_instr ? fp_result : result_ex;
 
-    assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fp_busy;
+    assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fpu_busy_idu;
   end else begin
     // Before going to sleep, wait for I- and D-side
     // interfaces to finish ongoing operations.
     assign core_busy_d   = ctrl_busy | if_busy | lsu_busy;
-    assign data_wb       = result_ex;
     assign valid_id_fpu  = ex_valid;
-    assign rf_int_fp_lsu = rf_rdata_b;
   end
 
   ///////////////////
@@ -1109,6 +1134,10 @@ module ibex_core #(
   assign rvfi_rd_addr_wb  = rf_waddr_wb;
   assign rvfi_rd_wdata_wb = rf_we_wb ? rf_wdata_wb : rf_wdata_lsu;
   assign rvfi_rd_we_wb    = rf_we_wb | rf_we_lsu;
+
+  assign rvfi_frd_addr_wb  = fp_rf_waddr_wb;
+  assign rvfi_frd_wdata_wb = fp_rf_wen_wb ? fp_rf_wdata_wb : rf_wdata_lsu;
+  assign rvfi_frd_we_wb    = fp_rf_wen_wb | rf_we_lsu;
 `endif
 
 
@@ -1222,7 +1251,7 @@ module ibex_core #(
       .fp_rm_dynamic_i         ( fp_rm_dynamic                ),
       .fp_frm_o                ( fp_frm_csr                   ),
       .fp_status_i             ( fp_status                    ),
-      .is_fp_instr_i           ( is_fp_instr                  )
+      .fflags_en_id_i          ( fflags_en_id                 )
   );
 
   // These assertions are in top-level as instr_valid_id required as the enable term
@@ -1310,6 +1339,19 @@ module ibex_core #(
   logic [31:0] rvfi_stage_mem_rdata [RVFI_STAGES];
   logic [31:0] rvfi_stage_mem_wdata [RVFI_STAGES];
 
+  logic        rvfi_stage_frs1_rvalid [RVFI_STAGES];
+  logic        rvfi_stage_frs2_rvalid [RVFI_STAGES];
+  logic        rvfi_stage_frs3_rvalid [RVFI_STAGES];
+  logic        rvfi_stage_frd_wvalid  [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frs1_addr   [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frs2_addr   [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frs3_addr   [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frs1_rdata  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frs2_rdata  [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frs3_rdata  [RVFI_STAGES];
+  logic [ 4:0] rvfi_stage_frd_addr    [RVFI_STAGES];
+  logic [31:0] rvfi_stage_frd_wdata   [RVFI_STAGES];
+
   logic        rvfi_stage_valid_d   [RVFI_STAGES];
 
   assign rvfi_valid     = rvfi_stage_valid    [RVFI_STAGES-1];
@@ -1335,6 +1377,15 @@ module ibex_core #(
   assign rvfi_mem_wmask = rvfi_stage_mem_wmask[RVFI_STAGES-1];
   assign rvfi_mem_rdata = rvfi_stage_mem_rdata[RVFI_STAGES-1];
   assign rvfi_mem_wdata = rvfi_stage_mem_wdata[RVFI_STAGES-1];
+
+  assign rvfi_frs1_addr  = rvfi_stage_frs1_addr [RVFI_STAGES-1];
+  assign rvfi_frs2_addr  = rvfi_stage_frs2_addr [RVFI_STAGES-1];
+  assign rvfi_frs3_addr  = rvfi_stage_frs3_addr [RVFI_STAGES-1];
+  assign rvfi_frs1_rdata = rvfi_stage_frs1_rdata[RVFI_STAGES-1];
+  assign rvfi_frs2_rdata = rvfi_stage_frs2_rdata[RVFI_STAGES-1];
+  assign rvfi_frs3_rdata = rvfi_stage_frs3_rdata[RVFI_STAGES-1];
+  assign rvfi_frd_addr   = rvfi_stage_frd_addr  [RVFI_STAGES-1];
+  assign rvfi_frd_wdata  = rvfi_stage_frd_wdata [RVFI_STAGES-1];
 
   if (WritebackStage) begin : gen_rvfi_wb_stage
     logic unused_instr_new_id;
@@ -1398,6 +1449,15 @@ module ibex_core #(
         rvfi_stage_mem_rdata[i] <= '0;
         rvfi_stage_mem_wdata[i] <= '0;
         rvfi_stage_mem_addr[i]  <= '0;
+
+        rvfi_stage_frs1_addr[i]  <= '0;
+        rvfi_stage_frs2_addr[i]  <= '0;
+        rvfi_stage_frs3_addr[i]  <= '0;
+        rvfi_stage_frs1_rdata[i] <= '0;
+        rvfi_stage_frs2_rdata[i] <= '0;
+        rvfi_stage_frs3_rdata[i] <= '0;
+        rvfi_stage_frd_addr[i]   <= '0;
+        rvfi_stage_frd_wdata[i]  <= '0;
       end else begin
         rvfi_stage_valid[i] <= rvfi_stage_valid_d[i];
 
@@ -1425,6 +1485,17 @@ module ibex_core #(
             rvfi_stage_mem_rdata[i] <= rvfi_mem_rdata_d;
             rvfi_stage_mem_wdata[i] <= rvfi_mem_wdata_d;
             rvfi_stage_mem_addr[i]  <= rvfi_mem_addr_d;
+
+            rvfi_stage_frs1_addr[i]  <= fp_rf_ren_a ? fp_rf_raddr_a : '0;
+            rvfi_stage_frs2_addr[i]  <= fp_rf_ren_b ? fp_rf_raddr_b : '0;
+            rvfi_stage_frs3_addr[i]  <= fp_rf_ren_c ? fp_rf_raddr_c : '0;
+            rvfi_stage_frs1_rdata[i] <= fp_rf_ren_a ? fp_swap_oprnds ? 
+                                                      fp_operands[1]: fp_operands[0]: '0;
+            rvfi_stage_frs2_rdata[i] <= fp_rf_ren_b ? fp_swap_oprnds ? 
+                                                      fp_operands[2]: fp_operands[1]: '0;
+            rvfi_stage_frs3_rdata[i] <= fp_rf_ren_c ? fp_operands[2]: '0;
+            rvfi_stage_frd_addr[i]   <= rvfi_frd_addr_d;
+            rvfi_stage_frd_wdata[i]  <= rvfi_frd_wdata_d;
           end
         end else begin
           if(instr_done_wb) begin
@@ -1448,12 +1519,21 @@ module ibex_core #(
             rvfi_stage_mem_wdata[i] <= rvfi_stage_mem_wdata[i-1];
             rvfi_stage_mem_addr[i]  <= rvfi_stage_mem_addr[i-1];
 
+            rvfi_stage_frs1_addr[i]  <= rvfi_stage_frs1_addr[i-1];
+            rvfi_stage_frs2_addr[i]  <= rvfi_stage_frs2_addr[i-1];
+            rvfi_stage_frs3_addr[i]  <= rvfi_stage_frs3_addr[i-1];
+            rvfi_stage_frs1_rdata[i] <= rvfi_stage_frs1_rdata[i-1];
+            rvfi_stage_frs2_rdata[i] <= rvfi_stage_frs2_rdata[i-1];
+            rvfi_stage_frs3_rdata[i] <= rvfi_stage_frs3_rdata[i-1];
+
             // For 2 RVFI_STAGES/Writeback Stage ignore first stage flops for rd_addr, rd_wdata and
             // mem_rdata. For RF write addr/data actual write happens in writeback so capture
             // address/data there. For mem_rdata that is only available from the writeback stage.
             // Previous stage flops still exist in RTL as they are used by the non writeback config
             rvfi_stage_rd_addr[i]   <= rvfi_rd_addr_d;
             rvfi_stage_rd_wdata[i]  <= rvfi_rd_wdata_d;
+            rvfi_stage_frd_addr[i]  <= rvfi_frd_addr_d;
+            rvfi_stage_frd_wdata[i] <= rvfi_frd_wdata_d;
             rvfi_stage_mem_rdata[i] <= rvfi_mem_rdata_d;
           end
         end
@@ -1546,9 +1626,11 @@ module ibex_core #(
   end
 
   always_comb begin
-    if(rvfi_rd_we_wb) begin
+    if(rvfi_rd_we_wb | rvfi_frd_we_wb) begin
       // Capture address/data of write to register file
       rvfi_rd_addr_d  = rvfi_rd_addr_wb;
+      rvfi_frd_addr_d = rvfi_frd_addr_wb;
+      rvfi_frd_wdata_d = rvfi_frd_wdata_wb; // f0 is not zero
       // If writing to x0 zero write data as required by RVFI specification
       if(rvfi_rd_addr_wb == 5'b0) begin
         rvfi_rd_wdata_d = '0;
@@ -1560,10 +1642,14 @@ module ibex_core #(
       // stage present) then zero RF write address/data as required by RVFI specification
       rvfi_rd_addr_d  = '0;
       rvfi_rd_wdata_d = '0;
+      rvfi_frd_addr_d  = '0;
+      rvfi_frd_wdata_d = '0;
     end else begin
       // Otherwise maintain previous value
       rvfi_rd_addr_d  = rvfi_rd_addr_q;
       rvfi_rd_wdata_d = rvfi_rd_wdata_q;
+      rvfi_frd_addr_d  = rvfi_frd_addr_q;
+      rvfi_frd_wdata_d = rvfi_frd_wdata_q;
     end
   end
 
@@ -1573,9 +1659,13 @@ module ibex_core #(
     if (!rst_ni) begin
       rvfi_rd_addr_q    <= '0;
       rvfi_rd_wdata_q   <= '0;
+      rvfi_frd_addr_q   <= '0;
+      rvfi_frd_wdata_q  <= '0;
     end else begin
       rvfi_rd_addr_q    <= rvfi_rd_addr_d;
       rvfi_rd_wdata_q   <= rvfi_rd_wdata_d;
+      rvfi_frd_addr_q   <= rvfi_frd_addr_d;
+      rvfi_frd_wdata_q  <= rvfi_frd_wdata_d;
     end
   end
 

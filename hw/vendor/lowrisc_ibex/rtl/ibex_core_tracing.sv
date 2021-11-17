@@ -104,6 +104,14 @@ module ibex_core_tracing #(
   logic [ 3:0] rvfi_mem_wmask;
   logic [31:0] rvfi_mem_rdata;
   logic [31:0] rvfi_mem_wdata;
+  logic [ 4:0] rvfi_frs1_addr;
+  logic [ 4:0] rvfi_frs2_addr;
+  logic [ 4:0] rvfi_frs3_addr;
+  logic [ 4:0] rvfi_frd_addr;
+  logic [31:0] rvfi_frs1_rdata;
+  logic [31:0] rvfi_frs2_rdata;
+  logic [31:0] rvfi_frs3_rdata;
+  logic [31:0] rvfi_frd_wdata;
 
   ibex_core #(
     .PMPEnable        ( PMPEnable        ),
@@ -183,6 +191,14 @@ module ibex_core_tracing #(
     .rvfi_mem_wmask,
     .rvfi_mem_rdata,
     .rvfi_mem_wdata,
+    .rvfi_frs1_addr,
+    .rvfi_frs2_addr,
+    .rvfi_frs3_addr,
+    .rvfi_frd_addr,
+    .rvfi_frs1_rdata,
+    .rvfi_frs2_rdata,
+    .rvfi_frs3_rdata,
+    .rvfi_frd_wdata,
 
     .fetch_enable_i,
     .alert_minor_o,
@@ -219,7 +235,15 @@ module ibex_core_tracing #(
     .rvfi_mem_rmask,
     .rvfi_mem_wmask,
     .rvfi_mem_rdata,
-    .rvfi_mem_wdata
+    .rvfi_mem_wdata,
+    .rvfi_frs1_addr,
+    .rvfi_frs2_addr,
+    .rvfi_frs3_addr,
+    .rvfi_frd_addr,
+    .rvfi_frs1_rdata,
+    .rvfi_frs2_rdata,
+    .rvfi_frs3_rdata,
+    .rvfi_frd_wdata
   );
 
 endmodule
