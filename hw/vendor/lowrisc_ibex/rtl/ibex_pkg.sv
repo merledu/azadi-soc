@@ -8,6 +8,25 @@
  */
 package ibex_pkg;
 
+  ////////////////
+  // IO Structs //
+  ////////////////
+
+  typedef struct packed {
+    logic [31:0] current_pc;
+    logic [31:0] next_pc;
+    logic [31:0] last_data_addr;
+    logic [31:0] exception_addr;
+  } crash_dump_t;
+
+  typedef struct packed {
+    logic        dummy_instr_id;
+    logic [4:0]  raddr_a;
+    logic [4:0]  waddr_a;
+    logic        we_a;
+    logic [4:0]  raddr_b;
+  } core2rf_t;
+
 /////////////////////
 // Parameter Enums //
 /////////////////////
@@ -335,6 +354,25 @@ typedef enum logic [2:0] {
 parameter int unsigned PMP_MAX_REGIONS      = 16;
 parameter int unsigned PMP_CFG_W            = 8;
 
+  // ICache constants
+  parameter int unsigned ADDR_W          = 32;
+  parameter int unsigned BUS_SIZE        = 32;
+  parameter int unsigned BUS_BYTES       = BUS_SIZE/8;
+  parameter int unsigned BUS_W           = $clog2(BUS_BYTES);
+  parameter int unsigned IC_SIZE_BYTES   = 4096;
+  parameter int unsigned IC_NUM_WAYS     = 2;
+  parameter int unsigned IC_LINE_SIZE    = 64;
+  parameter int unsigned IC_LINE_BYTES   = IC_LINE_SIZE/8;
+  parameter int unsigned IC_LINE_W       = $clog2(IC_LINE_BYTES);
+  parameter int unsigned IC_NUM_LINES    = IC_SIZE_BYTES / IC_NUM_WAYS / IC_LINE_BYTES;
+  parameter int unsigned IC_LINE_BEATS   = IC_LINE_BYTES / BUS_BYTES;
+  parameter int unsigned IC_LINE_BEATS_W = $clog2(IC_LINE_BEATS);
+  parameter int unsigned IC_INDEX_W      = $clog2(IC_NUM_LINES);
+  parameter int unsigned IC_INDEX_HI     = IC_INDEX_W + IC_LINE_W - 1;
+  parameter int unsigned IC_TAG_SIZE     = ADDR_W - IC_INDEX_W - IC_LINE_W + 1; // 1 valid bit
+  parameter int unsigned IC_OUTPUT_BEATS = (BUS_BYTES / 2); // number of halfwords
+
+
 // PMP acces type
 parameter int unsigned PMP_I = 0;
 parameter int unsigned PMP_D = 1;
@@ -361,17 +399,27 @@ typedef struct packed {
   logic          read;
 } pmp_cfg_t;
 
+// Machine Security Configuration (ePMP)
+  typedef struct packed {
+    logic rlb;  // Rule Locking Bypass
+    logic mmwp; // Machine Mode Whitelist Policy
+    logic mml;  // Machine Mode Lockdown
+  } pmp_mseccfg_t;
+
 // CSRs
 typedef enum logic[11:0] {
   // Machine information
-  CSR_MHARTID   = 12'hF14,
+    CSR_MVENDORID = 12'hF11,
+    CSR_MARCHID   = 12'hF12,
+    CSR_MIMPID    = 12'hF13,
+    CSR_MHARTID   = 12'hF14,
 
   // Machine trap setup
   CSR_MSTATUS   = 12'h300,
   CSR_MISA      = 12'h301,
   CSR_MIE       = 12'h304,
   CSR_MTVEC     = 12'h305,
-
+  CSR_MCOUNTEREN= 12'h306,
   // Machine trap handling
   CSR_MSCRATCH  = 12'h340,
   CSR_MEPC      = 12'h341,
@@ -400,6 +448,10 @@ typedef enum logic[11:0] {
   CSR_PMPADDR13 = 12'h3BD,
   CSR_PMPADDR14 = 12'h3BE,
   CSR_PMPADDR15 = 12'h3BF,
+
+// ePMP control
+    CSR_MSECCFG   = 12'h747,
+    CSR_MSECCFGH  = 12'h757,
 
   // Debug trigger
   CSR_TSELECT   = 12'h7A0,
@@ -540,5 +592,37 @@ parameter int unsigned CSR_MTIX_BIT      = 7;
 parameter int unsigned CSR_MEIX_BIT      = 11;
 parameter int unsigned CSR_MFIX_BIT_LOW  = 16;
 parameter int unsigned CSR_MFIX_BIT_HIGH = 30;
+
+  // CSR Machine Security Configuration bits
+  parameter int unsigned CSR_MSECCFG_MML_BIT  = 0;
+  parameter int unsigned CSR_MSECCFG_MMWP_BIT = 1;
+  parameter int unsigned CSR_MSECCFG_RLB_BIT  = 2;
+
+  // Vendor ID
+  // No JEDEC ID has been allocated to lowRISC so the value is 0 to indicate the field is not
+  // implemented
+  localparam logic [31:0] CSR_MVENDORID_VALUE  = 32'b0;
+
+  // Architecture ID
+  // Top bit is unset to indicate an open source project. The lower bits are an ID allocated by the
+  // RISC-V Foundation. Note this is allocated specifically to Ibex, should significant changes be
+  // made a different architecture ID should be supplied.
+  localparam logic [31:0] CSR_MARCHID_VALUE = {1'b0, 31'd22};
+
+  // Implementation ID
+  // 0 indicates this field is not implemeted. Ibex implementors may wish to indicate an RTL/netlist
+  // version here using their own unique encoding (e.g. 32 bits of the git hash of the implemented
+  // commit).
+  localparam logic [31:0] CSR_MIMPID_VALUE = 32'b0;
+
+  // These LFSR parameters have been generated with
+  // $ opentitan/util/design/gen-lfsr-seed.py --width 32 --seed 2480124384 --prefix ""
+  parameter int LfsrWidth = 32;
+  typedef logic [LfsrWidth-1:0] lfsr_seed_t;
+  typedef logic [LfsrWidth-1:0][$clog2(LfsrWidth)-1:0] lfsr_perm_t;
+  parameter lfsr_seed_t RndCnstLfsrSeedDefault = 32'hac533bf4;
+  parameter lfsr_perm_t RndCnstLfsrPermDefault = {
+    160'h1e35ecba467fd1b12e958152c04fa43878a8daed
+  };
 
 endpackage
