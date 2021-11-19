@@ -935,7 +935,7 @@ module ibex_id_stage #(
 
   // Stall ID/EX stage for reason that relates to instruction in ID/EX
   assign stall_id = stall_ld_hz | stall_mem | stall_multdiv | stall_jump | stall_branch |
-                      stall_alu;
+                      stall_alu | fpu_busy_i;
 
   assign instr_done = ~stall_id & ~flush_id & instr_executing;
 
