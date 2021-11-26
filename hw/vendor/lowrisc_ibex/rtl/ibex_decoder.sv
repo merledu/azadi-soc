@@ -1802,12 +1802,19 @@ module ibex_decoder #(
     MUL_DIV_OPERATIONS: coverpoint multdiv_operator_o;
   endgroup : mul_div_cg
 
+  // Covergroup to capture floating point operations
+  covergroup fpu_cg ()@(fp_alu_operator_o); 
+    FPU_OPERATIONS: coverpoint fp_alu_operator_o;
+  endgroup : fpu_cg
+
   alu_cg     alu_cg_h    ;
   mul_div_cg mul_div_cg_h;
+  fpu_cg     fpu_cg_h    ;
 
   initial begin
     alu_cg_h     = new();     // Instance of a alu covergroup
     mul_div_cg_h = new();     // Instance of a mul/div covergroup
+    fpu_cg_h     = new();     // Instance of a fpu covergroup
     
     //alu_cg_h.set_inst_name("ALU OPERATIONS COVERAGES");
     //mul_div_cg_h.set_inst_name("MUL/DIV OPERATIONS COVERAGES");
