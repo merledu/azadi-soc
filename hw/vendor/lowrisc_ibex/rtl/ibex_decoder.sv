@@ -1787,4 +1787,22 @@ module ibex_decoder #(
   // Selectors must be known/valid.
   `ASSERT(IbexRegImmAluOpKnown, (opcode == OPCODE_OP_IMM) |->
       !$isunknown(instr[14:12]))
+
+  ////////////////////////
+  //Functional coverages//
+  ////////////////////////
+
+  // Covergroup to capture ALU operations 
+  covergroup alu_cg ()@(alu_operator_o); 
+    ALU_OPERATIONS: coverpoint alu_operator_o;
+  endgroup : alu_cg
+
+  alu_cg alu_cg_h;
+
+  initial begin
+    alu_cg_h     = new();     // Creating an instance of a covergroup
+    //alu_cg_h.set_inst_name("ALU OPERATIONS COVERAGES");
+  end
+
 endmodule // controller
+
