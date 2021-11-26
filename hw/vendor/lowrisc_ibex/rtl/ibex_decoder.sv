@@ -1797,11 +1797,20 @@ module ibex_decoder #(
     ALU_OPERATIONS: coverpoint alu_operator_o;
   endgroup : alu_cg
 
-  alu_cg alu_cg_h;
+  // Covergroup to capture Multiplier/divider operations
+  covergroup mul_div_cg ()@(multdiv_operator_o); 
+    MUL_DIV_OPERATIONS: coverpoint multdiv_operator_o;
+  endgroup : mul_div_cg
+
+  alu_cg     alu_cg_h    ;
+  mul_div_cg mul_div_cg_h;
 
   initial begin
-    alu_cg_h     = new();     // Creating an instance of a covergroup
+    alu_cg_h     = new();     // Instance of a alu covergroup
+    mul_div_cg_h = new();     // Instance of a mul/div covergroup
+    
     //alu_cg_h.set_inst_name("ALU OPERATIONS COVERAGES");
+    //mul_div_cg_h.set_inst_name("MUL/DIV OPERATIONS COVERAGES");
   end
 
 endmodule // controller
