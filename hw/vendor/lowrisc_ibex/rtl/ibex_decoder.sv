@@ -1791,7 +1791,8 @@ module ibex_decoder #(
   ////////////////////////
   //Functional coverages//
   ////////////////////////
-
+  
+  `ifdef AZADI_FC
   // Covergroup to capture ALU operations 
   covergroup alu_cg ()@(alu_operator_o); 
     ALU_OPERATIONS: coverpoint alu_operator_o;
@@ -1814,11 +1815,12 @@ module ibex_decoder #(
   initial begin
     alu_cg_h     = new();     // Instance of a alu covergroup
     mul_div_cg_h = new();     // Instance of a mul/div covergroup
-    fpu_cg_h     = new();     // Instance of a fpu covergroup
-    
+    fpu_cg_h     = new();     // Instance of a fpu covergroup  
     //alu_cg_h.set_inst_name("ALU OPERATIONS COVERAGES");
     //mul_div_cg_h.set_inst_name("MUL/DIV OPERATIONS COVERAGES");
   end
+  
+  `endif  // AZADI_FC
 
 endmodule // controller
 
