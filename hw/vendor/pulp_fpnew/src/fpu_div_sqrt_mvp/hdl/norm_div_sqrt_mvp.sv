@@ -365,7 +365,6 @@ module norm_div_sqrt_mvp import defs_div_sqrt_mvp::*;
    logic [C_MANT_FP64+1:0]                 Mant_upperRounded_D;
    logic                                   Mant_roundUp_S;
    logic                                   Mant_rounded_S;
-  //  logic [22:0] mantissa_res_norm_D;
 
   always_comb //determine which bits for Mant_lower_D and Mant_sticky_bit_D
     begin
@@ -373,7 +372,6 @@ module norm_div_sqrt_mvp import defs_div_sqrt_mvp::*;
         begin
           Mant_upper_D = {Mant_res_norm_D[C_MANT_FP64:C_MANT_FP64-C_MANT_FP32], {(C_MANT_FP64-C_MANT_FP32){1'b0}} };
           Mant_lower_D = Mant_res_norm_D[C_MANT_FP64-C_MANT_FP32-1:C_MANT_FP64-C_MANT_FP32-2]; //[28:27]
-          // mantissa_res_norm_D = Mant_res_norm_D[C_MANT_FP64-1:C_MANT_FP64-C_MANT_FP32];
           Mant_sticky_bit_D = | Mant_res_norm_D[C_MANT_FP64-C_MANT_FP32-3:0];
         end
       else if(FP64_SI)
@@ -414,7 +412,7 @@ module norm_div_sqrt_mvp import defs_div_sqrt_mvp::*;
           C_RM_MINUSINF:
             Mant_roundUp_S = Mant_rounded_S & ~Sign_in_DI;
           C_RM_NEAREST_RMM:
-            Mant_roundUp_S = 0;  //Need to change this...
+            Mant_roundUp_S = & Mant_lower_D;
           default          :
             Mant_roundUp_S = 0;
         endcase // case (RM_DI)
