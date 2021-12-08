@@ -820,7 +820,7 @@ module ibex_tracer (
   function automatic void decode_fsqrt(input string mnemonic);
     insn_is_float = 1'b1;
     data_accessed = RS1 | RD;
-    decoded_str = $sformatf("%s\tx%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
+    decoded_str = $sformatf("%s\tf%0d,f%0d", mnemonic, rvfi_rd_addr, rvfi_frs1_addr);
   endfunction
 
   function automatic void decode_fcvt_f2i(input string mnemonic);

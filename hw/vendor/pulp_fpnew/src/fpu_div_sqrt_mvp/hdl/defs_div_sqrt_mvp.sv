@@ -19,6 +19,7 @@ package defs_div_sqrt_mvp;
    localparam C_RM_TRUNC            = 3'h1;
    localparam C_RM_PLUSINF          = 3'h2;
    localparam C_RM_MINUSINF         = 3'h3;
+   localparam C_RM_NEAREST_RMM      = 3'h4;
    localparam C_PC                  = 6; // Precision Control
    localparam C_FS                  = 2; // Format Selection
    localparam C_IUNC                = 2; // Iteration Unit Number Control
