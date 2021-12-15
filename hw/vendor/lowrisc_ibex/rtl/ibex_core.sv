@@ -1014,7 +1014,7 @@ module ibex_core #(
   end
 
   // FPU instance
-  if (RVF == RV32FSingle || RVF == RV32DDouble) begin
+  if (RVF == RV32FSingle || RVF == RV32DDouble) begin : floating_point
     fpnew_top #(
       .Features       ( fpnew_pkg::RV32F          ),
       .Implementation ( fpnew_pkg::DEFAULT_NOREGS )
