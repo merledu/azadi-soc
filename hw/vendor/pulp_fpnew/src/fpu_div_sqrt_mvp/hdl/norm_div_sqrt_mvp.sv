@@ -407,9 +407,9 @@ module norm_div_sqrt_mvp import defs_div_sqrt_mvp::*;
             Mant_roundUp_S = Mant_lower_D[1] && ((Mant_lower_D[0] | Mant_sticky_bit_D )| ( (FP32_SI&&Mant_upper_D[C_MANT_FP64-C_MANT_FP32]) | (FP64_SI&&Mant_upper_D[0]) | (FP16_SI&&Mant_upper_D[C_MANT_FP64-C_MANT_FP16]) | (FP16ALT_SI&&Mant_upper_D[C_MANT_FP64-C_MANT_FP16ALT]) ) );
           C_RM_TRUNC   :
             Mant_roundUp_S = 0;
-          C_RM_PLUSINF :
-            Mant_roundUp_S = Mant_rounded_S & Sign_in_DI;
           C_RM_MINUSINF:
+            Mant_roundUp_S = Mant_rounded_S & Sign_in_DI;
+          C_RM_PLUSINF :
             Mant_roundUp_S = Mant_rounded_S & ~Sign_in_DI;
           C_RM_NEAREST_RMM:
             Mant_roundUp_S = & Mant_lower_D;
