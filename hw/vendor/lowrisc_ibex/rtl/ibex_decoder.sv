@@ -1788,9 +1788,9 @@ module ibex_decoder #(
   `ASSERT(IbexRegImmAluOpKnown, (opcode == OPCODE_OP_IMM) |->
       !$isunknown(instr[14:12]))
 
-  ////////////////////////
-  //Functional coverages//
-  ////////////////////////
+  ////////////////////////////
+  //  Functional coverages  //
+  ////////////////////////////
   
   `ifdef AZADI_FC
   // Covergroup to capture ALU operations 
@@ -1834,20 +1834,49 @@ module ibex_decoder #(
   covergroup opcode_cg()@(opcode);
     OPCODE_OPERATIONS: coverpoint opcode;
   endgroup : opcode_cg
+
+  //////////////////////////////////////////////////////////////////////////////////////
+  // Added covergroup to capture coverage for typedef opcode_alu present in ibex_pkg  //
+  ////////////////////////////////////////////////////////////////////////////////////
+  // OPCODE_JAL (Jump and Link)
+  // OPCODE_JALR (Jump and Link Register)
+  // OPCODE_BRANCH (Branch)
+  // OPCODE_STORE (Store)
+  // OPCODE_LOAD (Load)
+  // OPCODE_LUI (Load Upper Immediate)
+  // OPCODE_AUIPC (Add Upper Immediate to PC)
+  // OPCODE_OP_IMM (Register-Immediate ALU Operations)
+  // OPCODE_OP (Register-Register ALU operation)
+  // OPCODE_MISC_MEM ( Special)
+  // OPCODE_SYSTEM   (Special)
+  // Floating point 
+  // OPCODE_STORE_FP (Store fp)
+  // OPCODE_LOAD_FP (Load fp)
+  // OPCODE_MADD_FP,  // FMADD.S, FMADD.D
+  // OPCODE_MSUB_FP,  // FMSUB.S, FMSUB.D
+  // OPCODE_NMSUB_FP, // FNMSUB.S, FNMSUB.//D
+  // OPCODE_NMADD_FP: begin //FNMADD.S, FN//MAD
+  // OPCODE_OP_FP
+  // OPCODE_OP_FP
+  covergroup opcode_alu_cg()@(opcode_alu);
+    OPCODE_ALU_OPERATIONS: coverpoint opcode_alu;
+  endgroup : opcode_alu_cg
   
   // Declaration of cover-groups
-  alu_cg     alu_cg_h    ;
-  mul_div_cg mul_div_cg_h;
-  fpu_cg     fpu_cg_h    ;
-  opcode_cg  opcode_cg_h ;
+  alu_cg        alu_cg_h       ;
+  mul_div_cg    mul_div_cg_h   ;
+  fpu_cg        fpu_cg_h       ;
+  opcode_cg     opcode_cg_h    ;
+  opcode_alu_cg opcode_alu_cg_h;
 
   initial begin
-    alu_cg_h     = new();     // Instance of a alu covergroup
-    mul_div_cg_h = new();     // Instance of a mul/div covergroup
-    fpu_cg_h     = new();     // Instance of a fpu covergroup  
-    opcode_cg_h  = new();     // Instance of a opcode covergroup
+    alu_cg_h        = new();     // Instance of a alu covergroup
+    mul_div_cg_h    = new();     // Instance of a mul/div covergroup
+    fpu_cg_h        = new();     // Instance of a fpu covergroup
+    opcode_cg_h     = new();     // Instance of a opcode covergroup
+    opcode_alu_cg_h = new();     // Instance of a opcode_alu covergroup
   end
-  
+
   `endif  // AZADI_FC
 
 endmodule // controller
