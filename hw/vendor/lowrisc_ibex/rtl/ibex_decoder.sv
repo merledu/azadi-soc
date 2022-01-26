@@ -1807,20 +1807,47 @@ module ibex_decoder #(
   covergroup fpu_cg ()@(fp_alu_operator_o); 
     FPU_OPERATIONS: coverpoint fp_alu_operator_o;
   endgroup : fpu_cg
-
+  
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Added cover-group to capture coverage for opcode type def present in ibex_pkg  //
+  ////////////////////////////////////////////////////////////////////////////////////
+  // OPCODE_JAL (Jump and Link)
+  // OPCODE_JALR (Jump and Link Register)
+  // OPCODE_BRANCH (Branch)
+  // OPCODE_STORE (Store)
+  // OPCODE_LOAD (Load)
+  // OPCODE_LUI (Load Upper Immediate)
+  // OPCODE_AUIPC (Add Upper Immediate to PC)
+  // OPCODE_OP_IMM (Register-Immediate ALU Operations)
+  // OPCODE_OP (Register-Register ALU operation)
+  // OPCODE_MISC_MEM ( Special)
+  // OPCODE_SYSTEM   (Special)
+  // Floating point 
+  // OPCODE_STORE_FP (Store fp)
+  // OPCODE_LOAD_FP (Load fp)
+  // OPCODE_MADD_FP,  // FMADD.S, FMADD.D
+  // OPCODE_MSUB_FP,  // FMSUB.S, FMSUB.D
+  // OPCODE_NMSUB_FP, // FNMSUB.S, FNMSUB.//D
+  // OPCODE_NMADD_FP: begin //FNMADD.S, FN//MAD
+  // OPCODE_OP_FP
+  // OPCODE_OP_FP
+  covergroup opcode_cg()@(opcode);
+    OPCODE_OPERATIONS: coverpoint opcode;
+  endgroup : opcode_cg
+  
+  // Declaration of cover-groups
   alu_cg     alu_cg_h    ;
   mul_div_cg mul_div_cg_h;
   fpu_cg     fpu_cg_h    ;
+  opcode_cg  opcode_cg_h ;
 
   initial begin
     alu_cg_h     = new();     // Instance of a alu covergroup
     mul_div_cg_h = new();     // Instance of a mul/div covergroup
     fpu_cg_h     = new();     // Instance of a fpu covergroup  
-    //alu_cg_h.set_inst_name("ALU OPERATIONS COVERAGES");
-    //mul_div_cg_h.set_inst_name("MUL/DIV OPERATIONS COVERAGES");
+    opcode_cg_h  = new();     // Instance of a opcode covergroup
   end
   
   `endif  // AZADI_FC
 
 endmodule // controller
-
