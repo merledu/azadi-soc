@@ -1914,6 +1914,15 @@ module ibex_decoder #(
   covergroup alu_op_b_mux_sel_cg()@(alu_op_b_mux_sel_o);
     ALU_OPERAND_B_MUX_SEL: coverpoint alu_op_b_mux_sel_o;
   endgroup : alu_op_b_mux_sel_cg
+
+  /////////////////////////////////////
+  // Covergroup for bit-manipulation //
+  /////////////////////////////////////
+
+  covergroup bit_manipulation_cg()@(RV32B);
+    BIT_MANIPULATION: coverpoint RV32B;
+  endgroup : bit_manipulation_cg
+
   
   // Declaration of cover-groups
   alu_cg               alu_cg_h              ;
@@ -1926,6 +1935,7 @@ module ibex_decoder #(
   alu_op_a_mux_sel_cg  alu_op_a_mux_sel_cg_h ;
   alu_op_b_mux_sel_cg  alu_op_b_mux_sel_cg_h ;
   imm_operand_b_sel_cg imm_operand_b_sel_cg_h;
+  bit_manipulation_cg  bit_manipulation_cg_h ;
 
   initial begin
     alu_cg_h               = new();     // Instance of a alu covergroup
@@ -1938,6 +1948,7 @@ module ibex_decoder #(
     alu_op_a_mux_sel_cg_h  = new();     // Instance of a alu_op_a_mux_sel_o covergroup
     alu_op_b_mux_sel_cg_h  = new();     // Instance of a alu_op_b_mux_sel_o covergroup
     imm_operand_b_sel_cg_h = new();     // Instance of a imm_b_mux_sel_o covergroup
+    bit_manipulation_cg_h  = new();     // Instance of a RV32B covergroup
   end
 
   `endif  // AZADI_FC
