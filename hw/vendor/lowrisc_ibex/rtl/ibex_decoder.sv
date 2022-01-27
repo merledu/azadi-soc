@@ -1862,9 +1862,9 @@ module ibex_decoder #(
     OPCODE_ALU_OPERATIONS: coverpoint opcode_alu;
   endgroup : opcode_alu_cg
 
-  /////////////////////////////////////////
-  // Branch target Operand "A" selection //
-  /////////////////////////////////////////
+  ////////////////////////////////////////////////////////
+  // Covergroup for branch target operand "A" selection //
+  ////////////////////////////////////////////////////////
   
   // OP_A_REG_A (operand A from register)
   // OP_A_FWD   (operand A from forward )
@@ -1873,6 +1873,22 @@ module ibex_decoder #(
   covergroup bt_operand_a_sel_cg()@(bt_a_mux_sel_o);
     BT_OPERAND_A_SEL: coverpoint bt_a_mux_sel_o;
   endgroup : bt_operand_a_sel_cg
+
+  //////////////////////////////////////////////////////////
+  // Covergroup for branch target immediate "B" selection //
+  //////////////////////////////////////////////////////////
+  
+  // IMM_B_I,        (Immediate b)
+  // IMM_B_S,        (Immediate b for store)
+  // IMM_B_B,        (Immediate b for branch)
+  // IMM_B_U,        (Immediate b for LUI and AUPIC)
+  // IMM_B_J,        (Immediate b for jump)
+  // IMM_B_INCR_PC,  (Immediate b for PC increment)
+  // IMM_B_INCR_ADDR (immediate b for adder)
+
+  covergroup bt_operand_b_sel_cg()@(bt_b_mux_sel_o);
+    BT_OPERAND_B_SEL: coverpoint bt_b_mux_sel_o;
+  endgroup : bt_operand_b_sel_cg
 
   
   // Declaration of cover-groups
