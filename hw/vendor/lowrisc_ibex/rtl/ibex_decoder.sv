@@ -1885,7 +1885,6 @@ module ibex_decoder #(
   // IMM_B_J,        (Immediate b for jump)
   // IMM_B_INCR_PC,  (Immediate b for PC increment)
   // IMM_B_INCR_ADDR (immediate b for adder)
-
   covergroup bt_operand_b_sel_cg()@(bt_b_mux_sel_o);
     BT_OPERAND_B_SEL: coverpoint bt_b_mux_sel_o;
   endgroup : bt_operand_b_sel_cg
@@ -1897,13 +1896,17 @@ module ibex_decoder #(
   fpu_cg        fpu_cg_h       ;
   opcode_cg     opcode_cg_h    ;
   opcode_alu_cg opcode_alu_cg_h;
+  bt_operand_a_sel_cg bt_operand_a_sel_cg_h;
+  bt_operand_b_sel_cg bt_operand_b_sel_cg_h;
 
   initial begin
-    alu_cg_h        = new();     // Instance of a alu covergroup
-    mul_div_cg_h    = new();     // Instance of a mul/div covergroup
-    fpu_cg_h        = new();     // Instance of a fpu covergroup
-    opcode_cg_h     = new();     // Instance of a opcode covergroup
-    opcode_alu_cg_h = new();     // Instance of a opcode_alu covergroup
+    alu_cg_h              = new();     // Instance of a alu covergroup
+    mul_div_cg_h          = new();     // Instance of a mul/div covergroup
+    fpu_cg_h              = new();     // Instance of a fpu covergroup
+    opcode_cg_h           = new();     // Instance of a opcode covergroup
+    opcode_alu_cg_h       = new();     // Instance of a opcode_alu covergroup
+    bt_operand_a_sel_cg_h = new();     // Instance of a bt_a_mux_sel_o covergroup
+    bt_operand_b_sel_cg_h = new();     // Instance of a bt_b_mux_sel_o covergroup
   end
 
   `endif  // AZADI_FC
