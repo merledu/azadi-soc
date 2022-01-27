@@ -1889,6 +1889,17 @@ module ibex_decoder #(
     BT_OPERAND_B_SEL: coverpoint bt_b_mux_sel_o;
   endgroup : bt_operand_b_sel_cg
 
+  ////////////////////////////////////////////////////////////////
+  // Covergroup for branch-target-ALU operand "A" mux selection //
+  ////////////////////////////////////////////////////////////////
+  
+  // OP_A_REG_A (operand A from register)
+  // OP_A_FWD   (operand A from forward )
+  // OP_A_CURRPC(operand A as current pc)
+  // OP_A_IMM   (operand A as immediate )
+  covergroup alu_op_a_mux_sel_cg()@(alu_op_a_mux_sel_o);
+    ALU_OPERAND_A_MUX_SEL: coverpoint alu_op_a_mux_sel_o;
+  endgroup : alu_op_a_mux_sel_cg
   
   // Declaration of cover-groups
   alu_cg        alu_cg_h       ;
@@ -1898,6 +1909,7 @@ module ibex_decoder #(
   opcode_alu_cg opcode_alu_cg_h;
   bt_operand_a_sel_cg bt_operand_a_sel_cg_h;
   bt_operand_b_sel_cg bt_operand_b_sel_cg_h;
+  alu_op_a_mux_sel_cg alu_op_a_mux_sel_cg_h;
 
   initial begin
     alu_cg_h              = new();     // Instance of a alu covergroup
@@ -1907,6 +1919,7 @@ module ibex_decoder #(
     opcode_alu_cg_h       = new();     // Instance of a opcode_alu covergroup
     bt_operand_a_sel_cg_h = new();     // Instance of a bt_a_mux_sel_o covergroup
     bt_operand_b_sel_cg_h = new();     // Instance of a bt_b_mux_sel_o covergroup
+    alu_op_a_mux_sel_cg_h = new();     // Instance of a alu_op_a_mux_sel_o covergroup
   end
 
   `endif  // AZADI_FC
