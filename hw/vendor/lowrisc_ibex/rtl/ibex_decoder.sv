@@ -1794,8 +1794,10 @@ module ibex_decoder #(
   
   `ifdef AZADI_FC
   // Covergroup to capture ALU operations 
-  covergroup alu_cg ()@(alu_operator_o); 
-    ALU_OPERATIONS: coverpoint alu_operator_o;
+      covergroup alu_cg ()@(alu_operator_o); 
+    ALU_OPERATIONS: coverpoint alu_operator_o{
+      ignore_bins ignore_vals = {ALU_XNOR, ALU_ORN, ALU_ANDN, ALU_SRO, ALU_SLO, ALU_ROR, ALU_ROL, ALU_GREV, ALU_GORC, ALU_SHFL, ALU_UNSHFL};
+    }
   endgroup : alu_cg
 
   // Covergroup to capture Multiplier/divider operations
