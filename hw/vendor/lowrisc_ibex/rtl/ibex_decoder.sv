@@ -1797,7 +1797,8 @@ module ibex_decoder #(
       covergroup alu_cg ()@(alu_operator_o); 
     ALU_OPERATIONS: coverpoint alu_operator_o{
       ignore_bins ignore_vals = {ALU_XNOR, ALU_ORN, ALU_ANDN, ALU_SRO, ALU_SLO, ALU_ROR, ALU_ROL, ALU_GREV, 
-                                 ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU};
+                                 ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU, ALU_PACK,
+                                 ALU_PACKU, ALU_PACKH};
     }
   endgroup : alu_cg
 
