@@ -1800,7 +1800,8 @@ module ibex_decoder #(
                                  ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU, ALU_PACK,
                                  ALU_PACKU, ALU_PACKH, ALU_SEXTB, ALU_SEXTH, ALU_CLZ, ALU_CTZ, ALU_PCNT, ALU_CMOV,
                                  ALU_CMIX, ALU_FSL, ALU_FSR, ALU_SBSET, ALU_SBCLR, ALU_SBINV, ALU_SBEXT, ALU_BEXT,
-                                 ALU_BDEP, ALU_BFP, ALU_CLMUL, ALU_CLMULR, ALU_CLMULH};
+                                 ALU_BDEP, ALU_BFP, ALU_CLMUL, ALU_CLMULR, ALU_CLMULH, ALU_CRC32_B, ALU_CRC32C_B, 
+                                 ALU_CRC32_H, ALU_CRC32C_H, ALU_CRC32_W, ALU_CRC32C_W};
     }
   endgroup : alu_cg
 
