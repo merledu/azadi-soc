@@ -1794,15 +1794,16 @@ module ibex_decoder #(
   
   `ifdef AZADI_FC
   // Covergroup to capture ALU operations 
-      covergroup alu_cg ()@(alu_operator_o); 
+  covergroup alu_cg ()@(alu_operator_o); 
     ALU_OPERATIONS: coverpoint alu_operator_o{
-      ignore_bins ignore_vals = {ALU_XNOR, ALU_ORN, ALU_ANDN, ALU_SRO, ALU_SLO, ALU_ROR, ALU_ROL, ALU_GREV, 
-                                 ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU, ALU_PACK,
-                                 ALU_PACKU, ALU_PACKH, ALU_SEXTB, ALU_SEXTH, ALU_CLZ, ALU_CTZ, ALU_PCNT, ALU_CMOV,
-                                 ALU_CMIX, ALU_FSL, ALU_FSR, ALU_SBSET, ALU_SBCLR, ALU_SBINV, ALU_SBEXT, ALU_BEXT,
-                                 ALU_BDEP, ALU_BFP, ALU_CLMUL, ALU_CLMULR, ALU_CLMULH, ALU_CRC32_B, ALU_CRC32C_B, 
-                                 ALU_CRC32_H, ALU_CRC32C_H, ALU_CRC32_W, ALU_CRC32C_W};
-    }
+      // Ignore bins for bit manipulation extension
+      ignore_bins ignore_vals = {ALU_XNOR, ALU_ORN, ALU_ANDN, ALU_SRO, ALU_SLO, ALU_ROR, ALU_ROL, ALU_GREV,
+        ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU, ALU_PACK,
+        ALU_PACKU, ALU_PACKH, ALU_SEXTB, ALU_SEXTH, ALU_CLZ, ALU_CTZ, ALU_PCNT, ALU_CMOV,
+        ALU_CMIX, ALU_FSL, ALU_FSR, ALU_SBSET, ALU_SBCLR, ALU_SBINV, ALU_SBEXT, ALU_BEXT,
+        ALU_BDEP, ALU_BFP, ALU_CLMUL, ALU_CLMULR, ALU_CLMULH, ALU_CRC32_B, ALU_CRC32C_B,
+        ALU_CRC32_H, ALU_CRC32C_H, ALU_CRC32_W, ALU_CRC32C_W};
+      }
   endgroup : alu_cg
 
   // Covergroup to capture Multiplier/divider operations
@@ -1812,7 +1813,11 @@ module ibex_decoder #(
 
   // Covergroup to capture floating point operations
   covergroup fpu_cg ()@(fp_alu_operator_o); 
-    FPU_OPERATIONS: coverpoint fp_alu_operator_o;
+    FPU_OPERATIONS: coverpoint fp_alu_operator_o {
+      // Ignore bins for floating to floating (double floating point not implemented)
+      // and CPKAB & CPKCD (out of risc-v specs for instruction generation do not generates these)
+      ignore_bins ignore_values = {F2F, CPKAB, CPKCD};
+      }
   endgroup : fpu_cg
   
   ////////////////////////////////////////////////////////////////////////////////////
