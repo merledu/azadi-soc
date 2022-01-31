@@ -1797,13 +1797,15 @@ module ibex_decoder #(
   covergroup alu_cg ()@(alu_operator_o); 
     ALU_OPERATIONS: coverpoint alu_operator_o{
       // Ignore bins for bit manipulation extension
-      ignore_bins ignore_vals = {ALU_XNOR, ALU_ORN, ALU_ANDN, ALU_SRO, ALU_SLO, ALU_ROR, ALU_ROL, ALU_GREV,
-        ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU, ALU_PACK,
-        ALU_PACKU, ALU_PACKH, ALU_SEXTB, ALU_SEXTH, ALU_CLZ, ALU_CTZ, ALU_PCNT, ALU_CMOV,
-        ALU_CMIX, ALU_FSL, ALU_FSR, ALU_SBSET, ALU_SBCLR, ALU_SBINV, ALU_SBEXT, ALU_BEXT,
-        ALU_BDEP, ALU_BFP, ALU_CLMUL, ALU_CLMULR, ALU_CLMULH, ALU_CRC32_B, ALU_CRC32C_B,
-        ALU_CRC32_H, ALU_CRC32C_H, ALU_CRC32_W, ALU_CRC32C_W};
+      `ifndef BIT_MANIPULATION_ENABLED
+        ignore_bins ignore_vals = {ALU_XNOR, ALU_ORN, ALU_ANDN, ALU_SRO, ALU_SLO, ALU_ROR, ALU_ROL, ALU_GREV,
+          ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU, ALU_PACK,
+          ALU_PACKU, ALU_PACKH, ALU_SEXTB, ALU_SEXTH, ALU_CLZ, ALU_CTZ, ALU_PCNT, ALU_CMOV,
+          ALU_CMIX, ALU_FSL, ALU_FSR, ALU_SBSET, ALU_SBCLR, ALU_SBINV, ALU_SBEXT, ALU_BEXT,
+          ALU_BDEP, ALU_BFP, ALU_CLMUL, ALU_CLMULR, ALU_CLMULH, ALU_CRC32_B, ALU_CRC32C_B,
+          ALU_CRC32_H, ALU_CRC32C_H, ALU_CRC32_W, ALU_CRC32C_W};
       }
+      `endif
   endgroup : alu_cg
 
   // Covergroup to capture Multiplier/divider operations
