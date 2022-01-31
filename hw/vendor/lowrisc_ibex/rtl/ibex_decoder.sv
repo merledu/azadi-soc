@@ -1813,11 +1813,11 @@ module ibex_decoder #(
 
   // Covergroup to capture floating point operations
   covergroup fpu_cg ()@(fp_alu_operator_o); 
-    FPU_OPERATIONS: coverpoint fp_alu_operator_o {
+    FPU_OPERATIONS: coverpoint fp_alu_operator_o{
       // Ignore bins for floating to floating (double floating point not implemented)
       // and CPKAB & CPKCD (out of risc-v specs for instruction generation do not generates these)
-      ignore_bins ignore_values = {F2F, CPKAB, CPKCD};
-      }
+      ignore_bins ignore_vals = {F2F, CPKAB, CPKCD};
+    }
   endgroup : fpu_cg
   
   ////////////////////////////////////////////////////////////////////////////////////
@@ -1882,9 +1882,12 @@ module ibex_decoder #(
   // OP_A_FWD   (operand A from forward )
   // OP_A_CURRPC(operand A as current pc)
   // OP_A_IMM   (operand A as immediate )
-  covergroup bt_operand_a_sel_cg()@(bt_a_mux_sel_o);
-    BT_OPERAND_A_SEL: coverpoint bt_a_mux_sel_o;
-  endgroup : bt_operand_a_sel_cg
+  `ifdef BRANCH_TARGET_ALU_ENABLED
+    covergroup bt_operand_a_sel_cg()@(bt_a_mux_sel_o);
+      BT_OPERAND_A_SEL: coverpoint bt_a_mux_sel_o;
+    endgroup : bt_operand_a_sel_cg
+  `endif  // BRANCH_TARGET_ALU_ENABLED
+
 
   //////////////////////////////////////////////////////////
   // Covergroup for branch target immediate "B" selection //
@@ -1897,9 +1900,11 @@ module ibex_decoder #(
   // IMM_B_J,        (Immediate b for jump)
   // IMM_B_INCR_PC,  (Immediate b for PC increment)
   // IMM_B_INCR_ADDR (immediate b for adder)
-  covergroup bt_operand_b_sel_cg()@(bt_b_mux_sel_o);
-    BT_OPERAND_B_SEL: coverpoint bt_b_mux_sel_o;
-  endgroup : bt_operand_b_sel_cg
+  `ifdef BRANCH_TARGET_ALU_ENABLED
+    covergroup bt_operand_b_sel_cg()@(bt_b_mux_sel_o);
+      BT_OPERAND_B_SEL: coverpoint bt_b_mux_sel_o;
+    endgroup : bt_operand_b_sel_cg
+  `endif  // BRANCH_TARGET_ALU_ENABLED
 
   covergroup imm_operand_b_sel_cg()@(imm_b_mux_sel_o);
     IMM_OPERAND_B_SEL: coverpoint imm_b_mux_sel_o;
@@ -1942,8 +1947,12 @@ module ibex_decoder #(
   fpu_cg               fpu_cg_h              ;
   opcode_cg            opcode_cg_h           ;
   opcode_alu_cg        opcode_alu_cg_h       ;
-  bt_operand_a_sel_cg  bt_operand_a_sel_cg_h ;
-  bt_operand_b_sel_cg  bt_operand_b_sel_cg_h ;
+  
+  `ifdef BRANCH_TARGET_ALU_ENABLED
+    bt_operand_a_sel_cg  bt_operand_a_sel_cg_h ;
+    bt_operand_b_sel_cg  bt_operand_b_sel_cg_h ;
+  `endif  // BRANCH_TARGET_ALU_ENABLED
+  
   alu_op_a_mux_sel_cg  alu_op_a_mux_sel_cg_h ;
   alu_op_b_mux_sel_cg  alu_op_b_mux_sel_cg_h ;
   imm_operand_b_sel_cg imm_operand_b_sel_cg_h;
@@ -1955,8 +1964,12 @@ module ibex_decoder #(
     fpu_cg_h               = new();     // Instance of a fpu covergroup
     opcode_cg_h            = new();     // Instance of a opcode covergroup
     opcode_alu_cg_h        = new();     // Instance of a opcode_alu covergroup
-    bt_operand_a_sel_cg_h  = new();     // Instance of a bt_a_mux_sel_o covergroup
-    bt_operand_b_sel_cg_h  = new();     // Instance of a bt_b_mux_sel_o covergroup
+    
+    `ifdef BRANCH_TARGET_ALU_ENABLED
+      bt_operand_a_sel_cg_h  = new();     // Instance of a bt_a_mux_sel_o covergroup
+      bt_operand_b_sel_cg_h  = new();     // Instance of a bt_b_mux_sel_o covergroup
+    `endif  // BRANCH_TARGET_ALU_ENABLED
+    
     alu_op_a_mux_sel_cg_h  = new();     // Instance of a alu_op_a_mux_sel_o covergroup
     alu_op_b_mux_sel_cg_h  = new();     // Instance of a alu_op_b_mux_sel_o covergroup
     imm_operand_b_sel_cg_h = new();     // Instance of a imm_b_mux_sel_o covergroup
