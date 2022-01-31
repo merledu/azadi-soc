@@ -1935,11 +1935,11 @@ module ibex_decoder #(
   /////////////////////////////////////
   // Covergroup for bit-manipulation //
   /////////////////////////////////////
-
-  covergroup bit_manipulation_cg()@(RV32B);
-    BIT_MANIPULATION: coverpoint RV32B;
-  endgroup : bit_manipulation_cg
-
+  `ifdef BIT_MANIPULATION_ENABLED
+    covergroup bit_manipulation_cg()@(RV32B);
+      BIT_MANIPULATION: coverpoint RV32B;
+    endgroup : bit_manipulation_cg
+  `endif  // BIT_MANIPULATION_ENABLED
   
   // Declaration of cover-groups
   alu_cg               alu_cg_h              ;
@@ -1956,24 +1956,30 @@ module ibex_decoder #(
   alu_op_a_mux_sel_cg  alu_op_a_mux_sel_cg_h ;
   alu_op_b_mux_sel_cg  alu_op_b_mux_sel_cg_h ;
   imm_operand_b_sel_cg imm_operand_b_sel_cg_h;
-  bit_manipulation_cg  bit_manipulation_cg_h ;
+
+  `ifdef BIT_MANIPULATION_ENABLED
+    bit_manipulation_cg  bit_manipulation_cg_h ;
+  `endif  // BIT_MANIPULATION_ENABLED
 
   initial begin
-    alu_cg_h               = new();     // Instance of a alu covergroup
-    mul_div_cg_h           = new();     // Instance of a mul/div covergroup
-    fpu_cg_h               = new();     // Instance of a fpu covergroup
-    opcode_cg_h            = new();     // Instance of a opcode covergroup
-    opcode_alu_cg_h        = new();     // Instance of a opcode_alu covergroup
+    alu_cg_h               = new();       // Instance of a alu covergroup
+    mul_div_cg_h           = new();       // Instance of a mul/div covergroup
+    fpu_cg_h               = new();       // Instance of a fpu covergroup
+    opcode_cg_h            = new();       // Instance of a opcode covergroup
+    opcode_alu_cg_h        = new();       // Instance of a opcode_alu covergroup
     
     `ifdef BRANCH_TARGET_ALU_ENABLED
       bt_operand_a_sel_cg_h  = new();     // Instance of a bt_a_mux_sel_o covergroup
       bt_operand_b_sel_cg_h  = new();     // Instance of a bt_b_mux_sel_o covergroup
     `endif  // BRANCH_TARGET_ALU_ENABLED
     
-    alu_op_a_mux_sel_cg_h  = new();     // Instance of a alu_op_a_mux_sel_o covergroup
-    alu_op_b_mux_sel_cg_h  = new();     // Instance of a alu_op_b_mux_sel_o covergroup
-    imm_operand_b_sel_cg_h = new();     // Instance of a imm_b_mux_sel_o covergroup
-    bit_manipulation_cg_h  = new();     // Instance of a RV32B covergroup
+    alu_op_a_mux_sel_cg_h  = new();       // Instance of a alu_op_a_mux_sel_o covergroup
+    alu_op_b_mux_sel_cg_h  = new();       // Instance of a alu_op_b_mux_sel_o covergroup
+    imm_operand_b_sel_cg_h = new();       // Instance of a imm_b_mux_sel_o covergroup
+    
+    `ifdef BIT_MANIPULATION_ENABLED
+      bit_manipulation_cg_h  = new();     // Instance of a RV32B covergroup
+    `endif  // BIT_MANIPULATION_ENABLED
   end
 
   `endif  // AZADI_FC
