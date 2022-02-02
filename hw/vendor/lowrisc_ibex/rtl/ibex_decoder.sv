@@ -1788,14 +1788,26 @@ module ibex_decoder #(
   `ASSERT(IbexRegImmAluOpKnown, (opcode == OPCODE_OP_IMM) |->
       !$isunknown(instr[14:12]))
 
-  ////////////////////////
-  //Functional coverages//
-  ////////////////////////
+  ////////////////////////////
+  //  Functional coverages  //
+  ////////////////////////////
   
   `ifdef AZADI_FC
   // Covergroup to capture ALU operations 
   covergroup alu_cg ()@(alu_operator_o); 
-    ALU_OPERATIONS: coverpoint alu_operator_o;
+    `ifdef BIT_MANIPULATION_ENABLED
+      ALU_OPERATIONS: coverpoint alu_operator_o;
+    `else
+      ALU_OPERATIONS: coverpoint alu_operator_o{
+      // Ignore bins for bit manipulation extension
+      ignore_bins ignore_vals = {ALU_XNOR, ALU_ORN, ALU_ANDN, ALU_SRO, ALU_SLO, ALU_ROR, ALU_ROL, ALU_GREV,
+        ALU_GORC, ALU_SHFL, ALU_UNSHFL, ALU_MIN, ALU_MINU, ALU_MAX, ALU_MAXU, ALU_PACK,
+        ALU_PACKU, ALU_PACKH, ALU_SEXTB, ALU_SEXTH, ALU_CLZ, ALU_CTZ, ALU_PCNT, ALU_CMOV,
+        ALU_CMIX, ALU_FSL, ALU_FSR, ALU_SBSET, ALU_SBCLR, ALU_SBINV, ALU_SBEXT, ALU_BEXT,
+        ALU_BDEP, ALU_BFP, ALU_CLMUL, ALU_CLMULR, ALU_CLMULH, ALU_CRC32_B, ALU_CRC32C_B,
+        ALU_CRC32_H, ALU_CRC32C_H, ALU_CRC32_W, ALU_CRC32C_W};
+      }
+    `endif
   endgroup : alu_cg
 
   // Covergroup to capture Multiplier/divider operations
@@ -1805,22 +1817,175 @@ module ibex_decoder #(
 
   // Covergroup to capture floating point operations
   covergroup fpu_cg ()@(fp_alu_operator_o); 
-    FPU_OPERATIONS: coverpoint fp_alu_operator_o;
+    FPU_OPERATIONS: coverpoint fp_alu_operator_o{
+      // Ignore bins for floating to floating (double floating point not implemented)
+      // and CPKAB & CPKCD (out of risc-v specs for instruction generation do not generates these)
+      ignore_bins ignore_vals = {F2F, CPKAB, CPKCD};
+    }
   endgroup : fpu_cg
+  
+  ////////////////////////////////////////////////////////////////////////////////////
+  // Added cover-group to capture coverage for opcode type def present in ibex_pkg  //
+  ////////////////////////////////////////////////////////////////////////////////////
+  // OPCODE_JAL (Jump and Link)
+  // OPCODE_JALR (Jump and Link Register)
+  // OPCODE_BRANCH (Branch)
+  // OPCODE_STORE (Store)
+  // OPCODE_LOAD (Load)
+  // OPCODE_LUI (Load Upper Immediate)
+  // OPCODE_AUIPC (Add Upper Immediate to PC)
+  // OPCODE_OP_IMM (Register-Immediate ALU Operations)
+  // OPCODE_OP (Register-Register ALU operation)
+  // OPCODE_MISC_MEM ( Special)
+  // OPCODE_SYSTEM   (Special)
+  // Floating point 
+  // OPCODE_STORE_FP (Store fp)
+  // OPCODE_LOAD_FP (Load fp)
+  // OPCODE_MADD_FP,  // FMADD.S, FMADD.D
+  // OPCODE_MSUB_FP,  // FMSUB.S, FMSUB.D
+  // OPCODE_NMSUB_FP, // FNMSUB.S, FNMSUB.//D
+  // OPCODE_NMADD_FP: begin //FNMADD.S, FN//MAD
+  // OPCODE_OP_FP
+  // OPCODE_OP_FP
+  covergroup opcode_cg()@(opcode);
+    OPCODE_OPERATIONS: coverpoint opcode;
+  endgroup : opcode_cg
 
-  alu_cg     alu_cg_h    ;
-  mul_div_cg mul_div_cg_h;
-  fpu_cg     fpu_cg_h    ;
+  //////////////////////////////////////////////////////////////////////////////////////
+  // Added covergroup to capture coverage for typedef opcode_alu present in ibex_pkg  //
+  ////////////////////////////////////////////////////////////////////////////////////
+  // OPCODE_JAL (Jump and Link)
+  // OPCODE_JALR (Jump and Link Register)
+  // OPCODE_BRANCH (Branch)
+  // OPCODE_STORE (Store)
+  // OPCODE_LOAD (Load)
+  // OPCODE_LUI (Load Upper Immediate)
+  // OPCODE_AUIPC (Add Upper Immediate to PC)
+  // OPCODE_OP_IMM (Register-Immediate ALU Operations)
+  // OPCODE_OP (Register-Register ALU operation)
+  // OPCODE_MISC_MEM ( Special)
+  // OPCODE_SYSTEM   (Special)
+  // Floating point 
+  // OPCODE_STORE_FP (Store fp)
+  // OPCODE_LOAD_FP (Load fp)
+  // OPCODE_MADD_FP,  // FMADD.S, FMADD.D
+  // OPCODE_MSUB_FP,  // FMSUB.S, FMSUB.D
+  // OPCODE_NMSUB_FP, // FNMSUB.S, FNMSUB.//D
+  // OPCODE_NMADD_FP: begin //FNMADD.S, FN//MAD
+  // OPCODE_OP_FP
+  // OPCODE_OP_FP
+  covergroup opcode_alu_cg()@(opcode_alu);
+    OPCODE_ALU_OPERATIONS: coverpoint opcode_alu;
+  endgroup : opcode_alu_cg
+
+  ////////////////////////////////////////////////////////
+  // Covergroup for branch target operand "A" selection //
+  ////////////////////////////////////////////////////////
+  
+  // OP_A_REG_A (operand A from register)
+  // OP_A_FWD   (operand A from forward )
+  // OP_A_CURRPC(operand A as current pc)
+  // OP_A_IMM   (operand A as immediate )
+  `ifdef BRANCH_TARGET_ALU_ENABLED
+    covergroup bt_operand_a_sel_cg()@(bt_a_mux_sel_o);
+      BT_OPERAND_A_SEL: coverpoint bt_a_mux_sel_o;
+    endgroup : bt_operand_a_sel_cg
+  `endif  // BRANCH_TARGET_ALU_ENABLED
+
+
+  //////////////////////////////////////////////////////////
+  // Covergroup for branch target immediate "B" selection //
+  //////////////////////////////////////////////////////////
+  
+  // IMM_B_I,        (Immediate b)
+  // IMM_B_S,        (Immediate b for store)
+  // IMM_B_B,        (Immediate b for branch)
+  // IMM_B_U,        (Immediate b for LUI and AUPIC)
+  // IMM_B_J,        (Immediate b for jump)
+  // IMM_B_INCR_PC,  (Immediate b for PC increment)
+  // IMM_B_INCR_ADDR (immediate b for adder)
+  `ifdef BRANCH_TARGET_ALU_ENABLED
+    covergroup bt_operand_b_sel_cg()@(bt_b_mux_sel_o);
+      BT_OPERAND_B_SEL: coverpoint bt_b_mux_sel_o;
+    endgroup : bt_operand_b_sel_cg
+  `endif  // BRANCH_TARGET_ALU_ENABLED
+
+  covergroup imm_operand_b_sel_cg()@(imm_b_mux_sel_o);
+    IMM_OPERAND_B_SEL: coverpoint imm_b_mux_sel_o;
+  endgroup : imm_operand_b_sel_cg
+
+  //////////////////////////////////////////////////
+  // Covergroup for ALU operand "A" mux selection //
+  //////////////////////////////////////////////////
+  
+  // OP_A_REG_A (operand A from register)
+  // OP_A_FWD   (operand A from forward )
+  // OP_A_CURRPC(operand A as current pc)
+  // OP_A_IMM   (operand A as immediate )
+  covergroup alu_op_a_mux_sel_cg()@(alu_op_a_mux_sel_o);
+    ALU_OPERAND_A_MUX_SEL: coverpoint alu_op_a_mux_sel_o;
+  endgroup : alu_op_a_mux_sel_cg
+
+  //////////////////////////////////////////////////
+  // Covergroup for ALU operand "B" mux selection //
+  //////////////////////////////////////////////////
+  
+  // OP_B_REG_B (Operand b from register file)
+  // OP_B_IMM   (Operand b as immediate value)
+  covergroup alu_op_b_mux_sel_cg()@(alu_op_b_mux_sel_o);
+    ALU_OPERAND_B_MUX_SEL: coverpoint alu_op_b_mux_sel_o;
+  endgroup : alu_op_b_mux_sel_cg
+
+  /////////////////////////////////////
+  // Covergroup for bit-manipulation //
+  /////////////////////////////////////
+  `ifdef BIT_MANIPULATION_ENABLED
+    covergroup bit_manipulation_cg()@(RV32B);
+      BIT_MANIPULATION: coverpoint RV32B;
+    endgroup : bit_manipulation_cg
+  `endif  // BIT_MANIPULATION_ENABLED
+  
+  // Declaration of cover-groups
+  alu_cg               alu_cg_h              ;
+  mul_div_cg           mul_div_cg_h          ;
+  fpu_cg               fpu_cg_h              ;
+  opcode_cg            opcode_cg_h           ;
+  opcode_alu_cg        opcode_alu_cg_h       ;
+  
+  `ifdef BRANCH_TARGET_ALU_ENABLED
+    bt_operand_a_sel_cg  bt_operand_a_sel_cg_h ;
+    bt_operand_b_sel_cg  bt_operand_b_sel_cg_h ;
+  `endif  // BRANCH_TARGET_ALU_ENABLED
+  
+  alu_op_a_mux_sel_cg  alu_op_a_mux_sel_cg_h ;
+  alu_op_b_mux_sel_cg  alu_op_b_mux_sel_cg_h ;
+  imm_operand_b_sel_cg imm_operand_b_sel_cg_h;
+
+  `ifdef BIT_MANIPULATION_ENABLED
+    bit_manipulation_cg  bit_manipulation_cg_h ;
+  `endif  // BIT_MANIPULATION_ENABLED
 
   initial begin
-    alu_cg_h     = new();     // Instance of a alu covergroup
-    mul_div_cg_h = new();     // Instance of a mul/div covergroup
-    fpu_cg_h     = new();     // Instance of a fpu covergroup  
-    //alu_cg_h.set_inst_name("ALU OPERATIONS COVERAGES");
-    //mul_div_cg_h.set_inst_name("MUL/DIV OPERATIONS COVERAGES");
+    alu_cg_h               = new();       // Instance of a alu covergroup
+    mul_div_cg_h           = new();       // Instance of a mul/div covergroup
+    fpu_cg_h               = new();       // Instance of a fpu covergroup
+    opcode_cg_h            = new();       // Instance of a opcode covergroup
+    opcode_alu_cg_h        = new();       // Instance of a opcode_alu covergroup
+    
+    `ifdef BRANCH_TARGET_ALU_ENABLED
+      bt_operand_a_sel_cg_h  = new();     // Instance of a bt_a_mux_sel_o covergroup
+      bt_operand_b_sel_cg_h  = new();     // Instance of a bt_b_mux_sel_o covergroup
+    `endif  // BRANCH_TARGET_ALU_ENABLED
+    
+    alu_op_a_mux_sel_cg_h  = new();       // Instance of a alu_op_a_mux_sel_o covergroup
+    alu_op_b_mux_sel_cg_h  = new();       // Instance of a alu_op_b_mux_sel_o covergroup
+    imm_operand_b_sel_cg_h = new();       // Instance of a imm_b_mux_sel_o covergroup
+    
+    `ifdef BIT_MANIPULATION_ENABLED
+      bit_manipulation_cg_h  = new();     // Instance of a RV32B covergroup
+    `endif  // BIT_MANIPULATION_ENABLED
   end
-  
+
   `endif  // AZADI_FC
 
 endmodule // controller
-
