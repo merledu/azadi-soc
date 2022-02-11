@@ -1944,6 +1944,13 @@ module ibex_decoder #(
       BIT_MANIPULATION: coverpoint RV32B;
     endgroup : bit_manipulation_cg
   `endif  // BIT_MANIPULATION_ENABLED
+
+  /////////////////////////////////////
+  // Covergroup for CSR operations   //
+  /////////////////////////////////////
+  covergroup csr_operations_cg()@(csr_op_o);
+    CSR_OPERATIONS: coverpoint csr_op_o;
+  endgroup : csr_operations_cg
   
   // Declaration of cover-groups
   alu_cg               alu_cg_h              ;
@@ -1951,6 +1958,7 @@ module ibex_decoder #(
   fpu_cg               fpu_cg_h              ;
   opcode_cg            opcode_cg_h           ;
   opcode_alu_cg        opcode_alu_cg_h       ;
+  csr_operations_cg    csr_operations_cg_h   ;
   
   `ifdef BRANCH_TARGET_ALU_ENABLED
     bt_operand_a_sel_cg  bt_operand_a_sel_cg_h ;
@@ -1971,6 +1979,7 @@ module ibex_decoder #(
     fpu_cg_h               = new();       // Instance of a fpu covergroup
     opcode_cg_h            = new();       // Instance of a opcode covergroup
     opcode_alu_cg_h        = new();       // Instance of a opcode_alu covergroup
+    csr_operations_cg_h    = new();       // Instance of a csr operation covergroup
     
     `ifdef BRANCH_TARGET_ALU_ENABLED
       bt_operand_a_sel_cg_h  = new();     // Instance of a bt_a_mux_sel_o covergroup
