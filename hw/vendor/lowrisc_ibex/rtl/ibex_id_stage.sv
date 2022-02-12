@@ -1204,4 +1204,18 @@ module ibex_id_stage #(
   `ASSERT(IbexMisalignedMemoryAccess, !lsu_addr_incr_req_i)
   `endif
 
+  `ifdef AZADI_FC
+  // Covergroup to capture of Privileged modes
+  covergroup priv_mode_cg ()@(priv_mode_i); 
+    PRIVILEGED_MODE: coverpoint priv_mode_i;
+  endgroup : priv_mode_cg
+  `endif  // AZADI_FC
+
+  // Declaration of cover-groups
+  priv_mode_cg               priv_mode_cg_h;
+
+  initial begin
+    priv_mode_cg_h  = new();       // Instance of a privileged mode covergroup
+  end
+
 endmodule
