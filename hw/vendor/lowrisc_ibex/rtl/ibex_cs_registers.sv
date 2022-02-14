@@ -1521,7 +1521,7 @@ module ibex_cs_registers #(
   
   `ifdef AZADI_FC
 
-  // Covergroup to capture Constants for the dcsr.xdebugver fields
+  // Covergroup to capture constants for the dcsr.xdebugver fields
   // XDEBUGVER_NO     ( 4'd0,) no external debug support
   // XDEBUGVER_STD    ( 4'd4,) external debug according to RISC-V debug spec
   // XDEBUGVER_NONSTD ( 4'd15) debug not conforming to RISC-V debug spec
@@ -1529,11 +1529,18 @@ module ibex_cs_registers #(
     DCSR_XDEBUGER : coverpoint dcsr_d.xdebugver;
   endgroup : dcsr_xdebugver_cg
   
+  // Covergroup to capture dcsr_d
+  covergroup dcsr_d_xdebugver_cg ()@(dcsr_d); 
+    DCSR_D_XDEBUGER : coverpoint dcsr_d;
+  endgroup : dcsr_d_xdebugver_cg
+  
   // Declaration of cover-groups
-  dcsr_xdebugver_cg dcsr_xdebugver_cg_h;
+  dcsr_xdebugver_cg   dcsr_xdebugver_cg_h  ;
+  dcsr_d_xdebugver_cg dcsr_d_xdebugver_cg_h;
 
   initial begin
-    dcsr_xdebugver_cg_h = new();       // Instance of a dcsr_xdebugver_cg covergroup
+    dcsr_xdebugver_cg_h   = new();       // Instance of a dcsr_xdebugver_cg covergroup
+    dcsr_d_xdebugver_cg_h = new();       // Instance of a dcsr_d_xdebugver_cg covergroup
   end
 
   `endif  // AZADI_FC
