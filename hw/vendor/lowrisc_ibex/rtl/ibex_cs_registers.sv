@@ -1531,19 +1531,48 @@ module ibex_cs_registers #(
   
   // Covergroup to capture dcsr_d
   covergroup dcsr_d_xdebugver_cg ()@(dcsr_d); 
-    DCSR_D_XDEBUGER : coverpoint dcsr_d;
+    DCSR_D_XDEBUGER_XDEBUGVER:  coverpoint dcsr_d.xdebugver;
+    DCSR_D_XDEBUGER_ZERO2    :  coverpoint dcsr_d.zero2;
+    DCSR_D_XDEBUGER_EBREAKM  :  coverpoint dcsr_d.ebreakm;
+    DCSR_D_XDEBUGER_ZERO1    :  coverpoint dcsr_d.zero1;
+    DCSR_D_XDEBUGER_EBREAKS  :  coverpoint dcsr_d.ebreaks;
+    DCSR_D_XDEBUGER_EBREAKU  :  coverpoint dcsr_d.ebreaku;
+    DCSR_D_XDEBUGER_STEPIE   :  coverpoint dcsr_d.stepie;
+    DCSR_D_XDEBUGER_STOPCOUNT:  coverpoint dcsr_d.stopcount;
+    DCSR_D_XDEBUGER_STOPTIME :  coverpoint dcsr_d.stoptime;
+    DCSR_D_XDEBUGER_CAUSE    :  coverpoint dcsr_d.cause;
+    DCSR_D_XDEBUGER_ZERO0    :  coverpoint dcsr_d.zero0;
+    DCSR_D_XDEBUGER_MPRVEN   :  coverpoint dcsr_d.mprven;
+    DCSR_D_XDEBUGER_NMIP     :  coverpoint dcsr_d.nmip;
+    DCSR_D_XDEBUGER_STEP     :  coverpoint dcsr_d.step;
+    DCSR_D_XDEBUGER_PRV      :  coverpoint dcsr_d.prv;
   endgroup : dcsr_d_xdebugver_cg
+  
+  // Covergroup for machine status register (m status register)
+  // mie;   // Machine interupt enable
+  // mpie;  // Machine pending interupt enable
+  // mpp;   // Machine previous privilege mode
+  // mprv;  // Memory privilege for memory protection
+  // tw
+  covergroup m_status_reg_cg ()@(mstatus_d); 
+    M_STATUS_MIE :  coverpoint  mstatus_d.mie;
+    M_STATUS_MPIE:  coverpoint  mstatus_d.mpie;
+    M_STATUS_MPP :  coverpoint  mstatus_d.mpp; 
+    M_STATUS_MPRV:  coverpoint  mstatus_d.mprv;
+    M_STATUS_TW  :  coverpoint  mstatus_d.tw;  
+  endgroup : m_status_reg_cg
   
   // Declaration of cover-groups
   dcsr_xdebugver_cg   dcsr_xdebugver_cg_h  ;
   dcsr_d_xdebugver_cg dcsr_d_xdebugver_cg_h;
+  m_status_reg_cg     m_status_reg_cg_h    ;
 
   initial begin
     dcsr_xdebugver_cg_h   = new();       // Instance of a dcsr_xdebugver_cg covergroup
     dcsr_d_xdebugver_cg_h = new();       // Instance of a dcsr_d_xdebugver_cg covergroup
+    m_status_reg_cg_h     = new();       // Instance of a machine mode status register covergroup
   end
 
   `endif  // AZADI_FC
-
 
 endmodule
