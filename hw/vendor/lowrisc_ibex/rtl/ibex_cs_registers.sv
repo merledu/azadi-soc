@@ -1515,4 +1515,28 @@ module ibex_cs_registers #(
 
   `ASSERT(IbexCsrOpEnRequiresAccess, csr_op_en_i |-> csr_access_i)
 
+  ////////////////////////////
+  //  Functional coverages  //
+  ////////////////////////////
+  
+  `ifdef AZADI_FC
+
+  // Covergroup to capture Constants for the dcsr.xdebugver fields
+  // XDEBUGVER_NO     ( 4'd0,) no external debug support
+  // XDEBUGVER_STD    ( 4'd4,) external debug according to RISC-V debug spec
+  // XDEBUGVER_NONSTD ( 4'd15) debug not conforming to RISC-V debug spec
+  covergroup dcsr_xdebugver_cg ()@(dcsr_d.xdebugver); 
+    DCSR_XDEBUGER : coverpoint dcsr_d.xdebugver;
+  endgroup : dcsr_xdebugver_cg
+  
+  // Declaration of cover-groups
+  dcsr_xdebugver_cg dcsr_xdebugver_cg_h;
+
+  initial begin
+    dcsr_xdebugver_cg_h = new();       // Instance of a dcsr_xdebugver_cg covergroup
+  end
+
+  `endif  // AZADI_FC
+
+
 endmodule
