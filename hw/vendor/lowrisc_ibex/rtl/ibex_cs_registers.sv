@@ -1561,16 +1561,26 @@ module ibex_cs_registers #(
     M_STATUS_MPRV:  coverpoint  mstatus_d.mprv;
     M_STATUS_TW  :  coverpoint  mstatus_d.tw;  
   endgroup : m_status_reg_cg
+
+  // Covergroup for CPU control register field
+  covergroup cpu_ctrl_cg ()@(cpuctrl_q); 
+    CPU_CTRL_DUMMY_INSTR_MASK :  coverpoint cpuctrl_q.dummy_instr_mask;
+    CPU_CTRL_DUMMY_INSTR_EN   :  coverpoint cpuctrl_q.dummy_instr_en;
+    CPU_CTRL_DATA_IND_TIMING  :  coverpoint cpuctrl_q.data_ind_timing;
+    CPU_CTRL_ICACHE_EN        :  coverpoint cpuctrl_q.icache_enable;
+  endgroup : cpu_ctrl_cg
   
   // Declaration of cover-groups
   dcsr_xdebugver_cg   dcsr_xdebugver_cg_h  ;
   dcsr_d_xdebugver_cg dcsr_d_xdebugver_cg_h;
   m_status_reg_cg     m_status_reg_cg_h    ;
+  cpu_ctrl_cg         cpu_ctrl_cg_h        ;
 
   initial begin
     dcsr_xdebugver_cg_h   = new();       // Instance of a dcsr_xdebugver_cg covergroup
     dcsr_d_xdebugver_cg_h = new();       // Instance of a dcsr_d_xdebugver_cg covergroup
     m_status_reg_cg_h     = new();       // Instance of a machine mode status register covergroup
+    cpu_ctrl_cg_h         = new();       // Instance of a cpu control covergroup
   end
 
   `endif  // AZADI_FC
