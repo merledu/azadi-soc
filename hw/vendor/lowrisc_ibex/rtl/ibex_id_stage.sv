@@ -1225,17 +1225,39 @@ module ibex_id_stage #(
     INTERRUPT_SIGNAL : coverpoint irqs_i;
   endgroup : irqs_cg
 
+  // Covergroup for exception causes
+
+  // EXC_CAUSE_IRQ_SOFTWARE_M    
+  // EXC_CAUSE_IRQ_TIMER_M       
+  // EXC_CAUSE_IRQ_EXTERNAL_M    
+  // EXC_CAUSE_IRQ_FAST_0     
+  // EXC_CAUSE_IRQ_FAST_14    
+  // EXC_CAUSE_IRQ_NM            
+  // EXC_CAUSE_INSN_ADDR_MISA    
+  // EXC_CAUSE_INSTR_ACCESS_FAULT
+  // EXC_CAUSE_ILLEGAL_INSN      
+  // EXC_CAUSE_BREAKPOINT        
+  // EXC_CAUSE_LOAD_ACCESS_FAULT 
+  // EXC_CAUSE_STORE_ACCESS_FAULT
+  // EXC_CAUSE_ECALL_UMODE       
+  // EXC_CAUSE_ECALL_MMODE       
+  covergroup exc_cause_cg ()@(exc_cause_o); 
+    EXCEPTION_CAUSES : coverpoint exc_cause_o;
+  endgroup : exc_cause_cg
+
   // Declaration of cover-groups
   priv_mode_cg  priv_mode_cg_h ;
   pc_mux_cg     pc_mux_cg_h    ;
   exc_pc_mux_cg exc_pc_mux_cg_h;
   irqs_cg       irqs_cg_h      ;
+  exc_cause_cg  exc_cause_cg_h ;
   
   initial begin
     priv_mode_cg_h  = new();       // Instance of a privileged mode covergroup
     pc_mux_cg_h     = new();       // Instance of a pc mux selection covergroup
     exc_pc_mux_cg_h = new();       // Instance of a exception pc mux selection covergroup
     irqs_cg_h       = new();       // Instance of a interrupt signals covergroup
+    exc_cause_cg_h  = new();       // Instance of a excepton causes
   end
 
   `endif  // AZADI_FC
