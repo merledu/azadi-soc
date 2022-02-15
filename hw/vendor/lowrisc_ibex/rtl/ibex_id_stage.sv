@@ -1220,15 +1220,22 @@ module ibex_id_stage #(
     EXCEPTION_PC_MUX_SEL: coverpoint exc_pc_mux_o;
   endgroup : exc_pc_mux_cg
 
+  // Covergroup for interrupt signals
+  covergroup irqs_cg ()@(irqs_i); 
+    INTERRUPT_SIGNAL : coverpoint irqs_i;
+  endgroup : irqs_cg
+
   // Declaration of cover-groups
   priv_mode_cg  priv_mode_cg_h ;
   pc_mux_cg     pc_mux_cg_h    ;
   exc_pc_mux_cg exc_pc_mux_cg_h;
+  irqs_cg       irqs_cg_h      ;
   
   initial begin
     priv_mode_cg_h  = new();       // Instance of a privileged mode covergroup
     pc_mux_cg_h     = new();       // Instance of a pc mux selection covergroup
-    exc_pc_mux_cg_h = new();       // Instance of a Exception pc mux selection covergroup
+    exc_pc_mux_cg_h = new();       // Instance of a exception pc mux selection covergroup
+    irqs_cg_h       = new();       // Instance of a interrupt signals covergroup
   end
 
   `endif  // AZADI_FC
