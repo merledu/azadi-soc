@@ -1209,19 +1209,26 @@ module ibex_id_stage #(
   covergroup priv_mode_cg ()@(priv_mode_i); 
     PRIVILEGED_MODE: coverpoint priv_mode_i;
   endgroup : priv_mode_cg
-  
+
   // Covergroup for PC mux selection
   covergroup pc_mux_cg ()@(pc_mux_o); 
     PC_MUX_SEL: coverpoint pc_mux_o;
   endgroup : pc_mux_cg
 
-  // Declaration of cover-groups
-  priv_mode_cg priv_mode_cg_h;
-  pc_mux_cg    pc_mux_cg_h;               
+  // Covergroup for Exception PC mux selection
+  covergroup exc_pc_mux_cg ()@(exc_pc_mux_o); 
+    EXCEPTION_PC_MUX_SEL: coverpoint exc_pc_mux_o;
+  endgroup : exc_pc_mux_cg
 
+  // Declaration of cover-groups
+  priv_mode_cg  priv_mode_cg_h ;
+  pc_mux_cg     pc_mux_cg_h    ;
+  exc_pc_mux_cg exc_pc_mux_cg_h;
+  
   initial begin
-    priv_mode_cg_h = new();       // Instance of a privileged mode covergroup
-    pc_mux_cg_h    = new();       // Instance of a pc mux selection covergroup
+    priv_mode_cg_h  = new();       // Instance of a privileged mode covergroup
+    pc_mux_cg_h     = new();       // Instance of a pc mux selection covergroup
+    exc_pc_mux_cg_h = new();       // Instance of a Exception pc mux selection covergroup
   end
 
   `endif  // AZADI_FC
