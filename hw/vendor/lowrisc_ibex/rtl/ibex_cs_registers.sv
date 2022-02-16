@@ -1569,18 +1569,25 @@ module ibex_cs_registers #(
     CPU_CTRL_DATA_IND_TIMING  :  coverpoint cpuctrl_q.data_ind_timing;
     CPU_CTRL_ICACHE_EN        :  coverpoint cpuctrl_q.icache_enable;
   endgroup : cpu_ctrl_cg
+
+  // Covergroup for CSR
+  covergroup csr_num_cg ()@(csr_addr_i);
+    CS_REG :  coverpoint csr_addr_i;
+  endgroup : csr_num_cg
   
   // Declaration of cover-groups
   dcsr_xdebugver_cg   dcsr_xdebugver_cg_h  ;
   dcsr_d_xdebugver_cg dcsr_d_xdebugver_cg_h;
   m_status_reg_cg     m_status_reg_cg_h    ;
   cpu_ctrl_cg         cpu_ctrl_cg_h        ;
+  csr_num_cg          csr_num_cg_h         ;
 
   initial begin
     dcsr_xdebugver_cg_h   = new();       // Instance of a dcsr_xdebugver_cg covergroup
     dcsr_d_xdebugver_cg_h = new();       // Instance of a dcsr_d_xdebugver_cg covergroup
     m_status_reg_cg_h     = new();       // Instance of a machine mode status register covergroup
     cpu_ctrl_cg_h         = new();       // Instance of a cpu control covergroup
+    csr_num_cg_h          = new();       // Instance of a csr covergroup
   end
 
   `endif  // AZADI_FC
