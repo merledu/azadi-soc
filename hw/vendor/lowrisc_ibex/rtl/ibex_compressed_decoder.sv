@@ -318,4 +318,31 @@ module ibex_compressed_decoder (
   `ASSERT(IbexC2Known1, (valid_i && (instr_i[1:0] == 2'b10)) |->
       !$isunknown(instr_i[15:13]))
 
+    ////////////////////////////
+  //  Functional coverages  //
+  ////////////////////////////
+  
+  `ifdef AZADI_FC
+
+  ////////////////////////////////////////////
+  // Covergroup for compressed instructions //
+  ////////////////////////////////////////////
+  covergroup compressed_instruction ()@((instr_i[15:13]) || instr_i[1:0]) ;
+    // Functional coverage for Register-Based Loads and Stores and Integer Register-Immediate Operation
+    C0_ADDI :  coverpoint (instr_i[15:13] == 3'b000) iff (instr_i[1:0] == 2'b00);
+    C0_LW   :  coverpoint (instr_i[15:13] == 3'b010) iff (instr_i[1:0] == 2'b00);
+    C0_FLW  :  coverpoint (instr_i[15:13] == 3'b011) iff (instr_i[1:0] == 2'b00);
+    C0_SW   :  coverpoint (instr_i[15:13] == 3'b110) iff (instr_i[1:0] == 2'b00);
+    C0_FSW  :  coverpoint (instr_i[15:13] == 3'b111) iff (instr_i[1:0] == 2'b00);
+  endgroup : compressed_instruction
+  
+  // Declaration of cover-groups
+  compressed_instruction compressed_instruction_h       ;
+
+  initial begin
+    compressed_instruction_h = new();       // Insatnce of a floating point status flags
+  end
+
+  `endif  // AZADI_FC
+
 endmodule
