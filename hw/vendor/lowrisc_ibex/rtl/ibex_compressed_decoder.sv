@@ -334,6 +334,36 @@ module ibex_compressed_decoder (
     C0_FLW  :  coverpoint (instr_i[15:13] == 3'b011) iff (instr_i[1:0] == 2'b00);
     C0_SW   :  coverpoint (instr_i[15:13] == 3'b110) iff (instr_i[1:0] == 2'b00);
     C0_FSW  :  coverpoint (instr_i[15:13] == 3'b111) iff (instr_i[1:0] == 2'b00);
+
+    C1_ADDI      :  coverpoint (instr_i[15:13] == 3'b000) iff ( instr_i[1:0] == 2'b01);
+    C1_JAL       :  coverpoint (instr_i[15:13] == 3'b001) iff ( instr_i[1:0] == 2'b01);
+    C1_J         :  coverpoint (instr_i[15:13] == 3'b101) iff ( instr_i[1:0] == 2'b01);
+    C1_LI        :  coverpoint (instr_i[15:13] == 3'b010) iff ( instr_i[1:0] == 2'b01);
+    C1_LUI       :  coverpoint (instr_i[15:13] == 3'b011) iff ( instr_i[1:0] == 2'b01);
+    C1_ADDI16SP  :  coverpoint ((instr_i[15:13] == 3'b011) && (instr_i[11:7] == 5'h02))
+                                                          iff ( instr_i[1:0] == 2'b01);
+    C1_SRLI      :  coverpoint ((instr_i[15:13] == 3'b100)) && 
+                               (instr_i[11:10] == 2'b00)    iff ( instr_i [1:0] == 2'b01);
+    C1_SRAI      :  coverpoint ((instr_i[15:13] == 3'b100)  && 
+                               (instr_i[11:10] == 2'b01))   iff ( instr_i [1:0] == 2'b01);
+    C1_ADD_I     :  coverpoint ((instr_i[15:13] == 3'b100)  && 
+                               (instr_i[11:10] == 2'b10))   iff ( instr_i [1:0] == 2'b01);
+    C1_SUB       :  coverpoint ((instr_i[15:13] == 3'b100)  && 
+                               (instr_i[11:10] == 2'b11)    &&
+                               (({instr_i[12], instr_i[6:5]}) == 3'b000 ))
+                                                            iff ( instr_i [1:0] == 2'b01);
+    C1_XOR       :  coverpoint ((instr_i[15:13] == 3'b100)  && 
+                               (instr_i[11:10] == 2'b11)    &&
+                               (({instr_i[12], instr_i[6:5]}) == 3'b001 ))
+                                                            iff ( instr_i [1:0] == 2'b01);
+    C1_OR        :  coverpoint ((instr_i[15:13] == 3'b100)  && 
+                               (instr_i[11:10] == 2'b11)    &&
+                               (({instr_i[12], instr_i[6:5]}) == 3'b010 ))
+                                                            iff ( instr_i [1:0] == 2'b01);
+    C1_AND       :  coverpoint ((instr_i[15:13] == 3'b100)  && 
+                               (instr_i[11:10] == 2'b11)    &&
+                               (({instr_i[12], instr_i[6:5]}) == 3'b011 ))
+                                                            iff ( instr_i [1:0] == 2'b01);
   endgroup : compressed_instruction
   
   // Declaration of cover-groups
