@@ -254,4 +254,21 @@ module ibex_wb_stage #(
 `DV_FCOV_SIGNAL_GEN_IF(logic, wb_valid, g_writeback_stage.wb_valid_q, WritebackStage)
 
   `ASSERT(RFWriteFromOneSourceOnly, $onehot0(rf_wdata_wb_mux_we))
+
+  `ifdef AZADI_FC
+
+  // Covergroup for type of instruction present in writeback stage
+  covergroup wb_instr_type_cg ()@(instr_type_wb_i); 
+    WB_INSTR_TYPE : coverpoint instr_type_wb_i;
+  endgroup : wb_instr_type_cg
+
+  // Declaration of cover-groups
+  wb_instr_type_cg wb_instr_type_cg_h;
+
+  initial begin
+    wb_instr_type_cg_h = new();       // Instance of a covergroup for type of instruction present in writeback stage
+  end
+
+  `endif  // AZADI_FC
+
 endmodule

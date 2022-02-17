@@ -1951,6 +1951,13 @@ module ibex_decoder #(
   covergroup csr_operations_cg()@(csr_op_o);
     CSR_OPERATIONS: coverpoint csr_op_o;
   endgroup : csr_operations_cg
+
+  /////////////////////////////////////////////////
+  // Covergroup for Regfile write data selection //
+  /////////////////////////////////////////////////
+  covergroup rf_wd_sel_cg()@(rf_wdata_sel_o);
+    RF_WD_SEL: coverpoint rf_wdata_sel_o;
+  endgroup : rf_wd_sel_cg
   
   // Declaration of cover-groups
   alu_cg               alu_cg_h              ;
@@ -1959,6 +1966,7 @@ module ibex_decoder #(
   opcode_cg            opcode_cg_h           ;
   opcode_alu_cg        opcode_alu_cg_h       ;
   csr_operations_cg    csr_operations_cg_h   ;
+  rf_wd_sel_cg         rf_wd_sel_cg_h        ;
   
   `ifdef BRANCH_TARGET_ALU_ENABLED
     bt_operand_a_sel_cg  bt_operand_a_sel_cg_h ;
@@ -1989,6 +1997,7 @@ module ibex_decoder #(
     alu_op_a_mux_sel_cg_h  = new();       // Instance of a alu_op_a_mux_sel_o covergroup
     alu_op_b_mux_sel_cg_h  = new();       // Instance of a alu_op_b_mux_sel_o covergroup
     imm_operand_b_sel_cg_h = new();       // Instance of a imm_b_mux_sel_o covergroup
+    rf_wd_sel_cg_h         = new();       // Instance of a rf_wd_sel_cg covergroup
     
     `ifdef BIT_MANIPULATION_ENABLED
       bit_manipulation_cg_h  = new();     // Instance of a RV32B covergroup

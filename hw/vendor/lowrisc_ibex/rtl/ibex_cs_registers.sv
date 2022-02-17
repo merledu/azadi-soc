@@ -1515,4 +1515,74 @@ module ibex_cs_registers #(
 
   `ASSERT(IbexCsrOpEnRequiresAccess, csr_op_en_i |-> csr_access_i)
 
+  ////////////////////////////
+  //  Functional coverages  //
+  ////////////////////////////
+  
+  `ifdef AZADI_FC
+
+  // Covergroup to capture constants for the dcsr.xdebugver fields
+  // XDEBUGVER_NO     ( 4'd0,) no external debug support
+  // XDEBUGVER_STD    ( 4'd4,) external debug according to RISC-V debug spec
+  // XDEBUGVER_NONSTD ( 4'd15) debug not conforming to RISC-V debug spec
+  covergroup dcsr_xdebugver_cg ()@(dcsr_d.xdebugver); 
+    DCSR_XDEBUGER : coverpoint dcsr_d.xdebugver;
+  endgroup : dcsr_xdebugver_cg
+  
+  // Covergroup to capture dcsr_d
+  covergroup dcsr_d_xdebugver_cg ()@(dcsr_d); 
+    DCSR_D_XDEBUGER_XDEBUGVER:  coverpoint dcsr_d.xdebugver;
+    DCSR_D_XDEBUGER_ZERO2    :  coverpoint dcsr_d.zero2;
+    DCSR_D_XDEBUGER_EBREAKM  :  coverpoint dcsr_d.ebreakm;
+    DCSR_D_XDEBUGER_ZERO1    :  coverpoint dcsr_d.zero1;
+    DCSR_D_XDEBUGER_EBREAKS  :  coverpoint dcsr_d.ebreaks;
+    DCSR_D_XDEBUGER_EBREAKU  :  coverpoint dcsr_d.ebreaku;
+    DCSR_D_XDEBUGER_STEPIE   :  coverpoint dcsr_d.stepie;
+    DCSR_D_XDEBUGER_STOPCOUNT:  coverpoint dcsr_d.stopcount;
+    DCSR_D_XDEBUGER_STOPTIME :  coverpoint dcsr_d.stoptime;
+    DCSR_D_XDEBUGER_CAUSE    :  coverpoint dcsr_d.cause;
+    DCSR_D_XDEBUGER_ZERO0    :  coverpoint dcsr_d.zero0;
+    DCSR_D_XDEBUGER_MPRVEN   :  coverpoint dcsr_d.mprven;
+    DCSR_D_XDEBUGER_NMIP     :  coverpoint dcsr_d.nmip;
+    DCSR_D_XDEBUGER_STEP     :  coverpoint dcsr_d.step;
+    DCSR_D_XDEBUGER_PRV      :  coverpoint dcsr_d.prv;
+  endgroup : dcsr_d_xdebugver_cg
+  
+  // Covergroup for machine status register (m status register)
+  // mie;   // Machine interupt enable
+  // mpie;  // Machine pending interupt enable
+  // mpp;   // Machine previous privilege mode
+  // mprv;  // Memory privilege for memory protection
+  // tw
+  covergroup m_status_reg_cg ()@(mstatus_d); 
+    M_STATUS_MIE :  coverpoint  mstatus_d.mie;
+    M_STATUS_MPIE:  coverpoint  mstatus_d.mpie;
+    M_STATUS_MPP :  coverpoint  mstatus_d.mpp; 
+    M_STATUS_MPRV:  coverpoint  mstatus_d.mprv;
+    M_STATUS_TW  :  coverpoint  mstatus_d.tw;  
+  endgroup : m_status_reg_cg
+
+  // Covergroup for CPU control register field
+  covergroup cpu_ctrl_cg ()@(cpuctrl_q); 
+    CPU_CTRL_DUMMY_INSTR_MASK :  coverpoint cpuctrl_q.dummy_instr_mask;
+    CPU_CTRL_DUMMY_INSTR_EN   :  coverpoint cpuctrl_q.dummy_instr_en;
+    CPU_CTRL_DATA_IND_TIMING  :  coverpoint cpuctrl_q.data_ind_timing;
+    CPU_CTRL_ICACHE_EN        :  coverpoint cpuctrl_q.icache_enable;
+  endgroup : cpu_ctrl_cg
+  
+  // Declaration of cover-groups
+  dcsr_xdebugver_cg   dcsr_xdebugver_cg_h  ;
+  dcsr_d_xdebugver_cg dcsr_d_xdebugver_cg_h;
+  m_status_reg_cg     m_status_reg_cg_h    ;
+  cpu_ctrl_cg         cpu_ctrl_cg_h        ;
+
+  initial begin
+    dcsr_xdebugver_cg_h   = new();       // Instance of a dcsr_xdebugver_cg covergroup
+    dcsr_d_xdebugver_cg_h = new();       // Instance of a dcsr_d_xdebugver_cg covergroup
+    m_status_reg_cg_h     = new();       // Instance of a machine mode status register covergroup
+    cpu_ctrl_cg_h         = new();       // Instance of a cpu control covergroup
+  end
+
+  `endif  // AZADI_FC
+
 endmodule
