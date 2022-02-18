@@ -327,7 +327,7 @@ module ibex_compressed_decoder (
   ////////////////////////////////////////////
   // Covergroup for compressed instructions //
   ////////////////////////////////////////////
-  covergroup compressed_instruction ()@((instr_i[15:13]) || instr_i[1:0]) ;
+  covergroup compressed_instruction_cg ()@((instr_i[15:13]) || instr_i[1:0]) ;
     // Functional coverage for Register-Based Loads and Stores and Integer Register-Immediate Operation
     C0_ADDI :  coverpoint (instr_i[15:13] == 3'b000) iff (instr_i[1:0] == 2'b00);
     C0_LW   :  coverpoint (instr_i[15:13] == 3'b010) iff (instr_i[1:0] == 2'b00);
@@ -364,15 +364,39 @@ module ibex_compressed_decoder (
                                (instr_i[11:10] == 2'b11)    &&
                                               (({instr_i[12], instr_i[6:5]}) == 3'b011 ))
                                                             iff ( instr_i [1:0] == 2'b01);
-    C1_BEQZ_BNEZ :  coverpoint ((instr_i[15:13] == 3'b110) || (instr_i[15:13] == 3'b111)) iff 
-                                                                ( instr_i [1:0] == 2'b01);
-  endgroup : compressed_instruction
+    C1_BEQZ_BNEZ :  coverpoint ((instr_i[15:13] == 3'b110)  || (instr_i[15:13] == 3'b111)) 
+                                                            iff ( instr_i [1:0] == 2'b01);
+    
+    C2_SLLI      :  coverpoint ((instr_i[15:13] == 3'b000) &&  (!(instr_i[12] == 1'b1))) 
+                                                           iff ( instr_i [1:0] == 2'b10);
+    C2_LWSP      :  coverpoint ((instr_i[15:13] == 3'b010) &&  (!(instr_i[11:7] == 5'b0))) 
+                                                           iff ( instr_i [1:0] == 2'b10);
+    C2_FLWSP     :  coverpoint (instr_i[15:13] == 3'b011)  iff ( instr_i [1:0] == 2'b10);
+    C2_MV        :  coverpoint ((instr_i[15:13] == 3'b100) &&
+                                     (instr_i[12] == 1'b0) &&
+                                   (instr_i[6:2] != 5'b0)) iff ( instr_i [1:0] == 2'b10);
+    C2_JR        :  coverpoint ((instr_i[15:13] == 3'b100) &&
+                                     (instr_i[12] == 1'b0) &&
+                                 (!(instr_i[6:2] != 5'b0)) &&
+                               (!(instr_i[11:7] == 5'b0))) iff ( instr_i [1:0] == 2'b10);
+    C2_ADD       :  coverpoint ((instr_i[15:13] == 3'b100) &&
+                                  (!(instr_i[12] == 1'b0)) &&
+                                   (instr_i[6:2] != 5'b0)) iff ( instr_i [1:0] == 2'b10);
+    C2_EBREAK    :  coverpoint ((instr_i[15:13] == 3'b100) &&
+                                  (!(instr_i[12] == 1'b0)) &&
+                                 (!(instr_i[6:2] != 5'b0)) &&
+                                  (instr_i[11:7] == 5'b0)) iff ( instr_i [1:0] == 2'b10);
+    C2_JALR      :  coverpoint ((instr_i[15:13] == 3'b100) &&
+                                  (!(instr_i[12] == 1'b0)) &&
+                                 (!(instr_i[6:2] != 5'b0)) &&
+                               (!(instr_i[11:7] == 5'b0))) iff ( instr_i [1:0] == 2'b10);
+  endgroup : compressed_instruction_cg
   
   // Declaration of cover-groups
-  compressed_instruction compressed_instruction_h       ;
+  compressed_instruction_cg compressed_instruction_cg_h;
 
   initial begin
-    compressed_instruction_h = new();       // Insatnce of a floating point status flags
+    compressed_instruction_cg_h = new();       // Insatnce of a floating point status flags
   end
 
   `endif  // AZADI_FC
