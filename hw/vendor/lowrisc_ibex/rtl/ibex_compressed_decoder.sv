@@ -390,6 +390,8 @@ module ibex_compressed_decoder (
                                   (!(instr_i[12] == 1'b0)) &&
                                  (!(instr_i[6:2] != 5'b0)) &&
                                (!(instr_i[11:7] == 5'b0))) iff ( instr_i [1:0] == 2'b10);
+    C2_SWSP      :  coverpoint  (instr_i[15:13] == 3'b110) iff ( instr_i [1:0] == 2'b10);
+    C2_FSWSP     :  coverpoint  (instr_i[15:13] == 3'b111) iff ( instr_i [1:0] == 2'b10);
   endgroup : compressed_instruction_cg
   
   // Declaration of cover-groups
