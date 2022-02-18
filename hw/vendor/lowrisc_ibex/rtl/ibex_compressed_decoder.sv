@@ -362,8 +362,10 @@ module ibex_compressed_decoder (
                                                             iff ( instr_i [1:0] == 2'b01);
     C1_AND       :  coverpoint ((instr_i[15:13] == 3'b100)  && 
                                (instr_i[11:10] == 2'b11)    &&
-                               (({instr_i[12], instr_i[6:5]}) == 3'b011 ))
+                                              (({instr_i[12], instr_i[6:5]}) == 3'b011 ))
                                                             iff ( instr_i [1:0] == 2'b01);
+    C1_BEQZ_BNEZ :  coverpoint ((instr_i[15:13] == 3'b110) || (instr_i[15:13] == 3'b111)) iff 
+                                                                ( instr_i [1:0] == 2'b01);
   endgroup : compressed_instruction
   
   // Declaration of cover-groups
