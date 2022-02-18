@@ -329,69 +329,70 @@ module ibex_compressed_decoder (
   ////////////////////////////////////////////
   covergroup compressed_instruction_cg ()@((instr_i[15:13]) || instr_i[1:0]) ;
     // Functional coverage for Register-Based Loads and Stores and Integer Register-Immediate Operation
-    C0_ADDI :  coverpoint (instr_i[15:13] == 3'b000) iff (instr_i[1:0] == 2'b00);
+    C0_ADDI :  coverpoint ((instr_i[15:13] == 3'b000) && 
+                          (!(instr_i[12:5] == 8'b0))) iff  (instr_i[1:0] == 2'b00);
     C0_LW   :  coverpoint (instr_i[15:13] == 3'b010) iff (instr_i[1:0] == 2'b00);
     C0_FLW  :  coverpoint (instr_i[15:13] == 3'b011) iff (instr_i[1:0] == 2'b00);
     C0_SW   :  coverpoint (instr_i[15:13] == 3'b110) iff (instr_i[1:0] == 2'b00);
     C0_FSW  :  coverpoint (instr_i[15:13] == 3'b111) iff (instr_i[1:0] == 2'b00);
 
-    C1_ADDI      :  coverpoint (instr_i[15:13] == 3'b000) iff ( instr_i[1:0] == 2'b01);
-    C1_JAL       :  coverpoint (instr_i[15:13] == 3'b001) iff ( instr_i[1:0] == 2'b01);
-    C1_J         :  coverpoint (instr_i[15:13] == 3'b101) iff ( instr_i[1:0] == 2'b01);
-    C1_LI        :  coverpoint (instr_i[15:13] == 3'b010) iff ( instr_i[1:0] == 2'b01);
-    C1_LUI       :  coverpoint (instr_i[15:13] == 3'b011) iff ( instr_i[1:0] == 2'b01);
-    C1_ADDI16SP  :  coverpoint ((instr_i[15:13] == 3'b011) && (instr_i[11:7] == 5'h02))
-                                                          iff ( instr_i[1:0] == 2'b01);
-    C1_SRLI      :  coverpoint ((instr_i[15:13] == 3'b100)) && 
-                               (instr_i[11:10] == 2'b00)    iff ( instr_i [1:0] == 2'b01);
+    C1_ADDI      :  coverpoint (instr_i[15:13] == 3'b000)   iff ( instr_i[1:0] == 2'b01);
+    C1_JAL       :  coverpoint (instr_i[15:13] == 3'b001)   iff ( instr_i[1:0] == 2'b01);
+    C1_J         :  coverpoint (instr_i[15:13] == 3'b101)   iff ( instr_i[1:0] == 2'b01);
+    C1_LI        :  coverpoint (instr_i[15:13] == 3'b010)   iff ( instr_i[1:0] == 2'b01);
+    C1_LUI       :  coverpoint ((instr_i[15:13] == 3'b011)  && 
+                  (!({instr_i[12], instr_i[6:2]} == 6'b0))) iff ( instr_i[1:0] == 2'b01);
+    C1_ADDI16SP  :  coverpoint ((instr_i[15:13] == 3'b011)  && 
+                                 (instr_i[11:7] == 5'h02)   &&
+                  (!({instr_i[12], instr_i[6:2]} == 6'b0))) iff ( instr_i[1:0] == 2'b01);
+    C1_SRLI      :  coverpoint ((instr_i[15:13] == 3'b100)  && 
+                               (instr_i[11:10] == 2'b00)    &&
+                               (!(instr_i[12] == 1'b1)))    iff ( instr_i [1:0] == 2'b01);
     C1_SRAI      :  coverpoint ((instr_i[15:13] == 3'b100)  && 
-                               (instr_i[11:10] == 2'b01))   iff ( instr_i [1:0] == 2'b01);
+                               (instr_i[11:10] == 2'b01)    &&
+                               (!(instr_i[12] == 1'b1)))    iff ( instr_i [1:0] == 2'b01);
     C1_ADD_I     :  coverpoint ((instr_i[15:13] == 3'b100)  && 
                                (instr_i[11:10] == 2'b10))   iff ( instr_i [1:0] == 2'b01);
     C1_SUB       :  coverpoint ((instr_i[15:13] == 3'b100)  && 
                                (instr_i[11:10] == 2'b11)    &&
-                               (({instr_i[12], instr_i[6:5]}) == 3'b000 ))
-                                                            iff ( instr_i [1:0] == 2'b01);
+                  (({instr_i[12], instr_i[6:5]})==3'b000))  iff ( instr_i [1:0] == 2'b01);
     C1_XOR       :  coverpoint ((instr_i[15:13] == 3'b100)  && 
                                (instr_i[11:10] == 2'b11)    &&
-                               (({instr_i[12], instr_i[6:5]}) == 3'b001 ))
-                                                            iff ( instr_i [1:0] == 2'b01);
+                  (({instr_i[12], instr_i[6:5]})==3'b001))  iff ( instr_i [1:0] == 2'b01);
     C1_OR        :  coverpoint ((instr_i[15:13] == 3'b100)  && 
                                (instr_i[11:10] == 2'b11)    &&
-                               (({instr_i[12], instr_i[6:5]}) == 3'b010 ))
-                                                            iff ( instr_i [1:0] == 2'b01);
+                  (({instr_i[12], instr_i[6:5]})==3'b010))  iff ( instr_i [1:0] == 2'b01);
     C1_AND       :  coverpoint ((instr_i[15:13] == 3'b100)  && 
                                (instr_i[11:10] == 2'b11)    &&
-                                              (({instr_i[12], instr_i[6:5]}) == 3'b011 ))
-                                                            iff ( instr_i [1:0] == 2'b01);
-    C1_BEQZ_BNEZ :  coverpoint ((instr_i[15:13] == 3'b110)  || (instr_i[15:13] == 3'b111)) 
+                  (({instr_i[12], instr_i[6:5]})==3'b011))  iff ( instr_i [1:0] == 2'b01);
+    C1_BEQZ_BNEZ :  coverpoint ((instr_i[15:13] == 3'b110)  ||  (instr_i[15:13] == 3'b111)) 
                                                             iff ( instr_i [1:0] == 2'b01);
     
-    C2_SLLI      :  coverpoint ((instr_i[15:13] == 3'b000) &&  (!(instr_i[12] == 1'b1))) 
-                                                           iff ( instr_i [1:0] == 2'b10);
-    C2_LWSP      :  coverpoint ((instr_i[15:13] == 3'b010) &&  (!(instr_i[11:7] == 5'b0))) 
-                                                           iff ( instr_i [1:0] == 2'b10);
-    C2_FLWSP     :  coverpoint (instr_i[15:13] == 3'b011)  iff ( instr_i [1:0] == 2'b10);
-    C2_MV        :  coverpoint ((instr_i[15:13] == 3'b100) &&
-                                     (instr_i[12] == 1'b0) &&
-                                   (instr_i[6:2] != 5'b0)) iff ( instr_i [1:0] == 2'b10);
-    C2_JR        :  coverpoint ((instr_i[15:13] == 3'b100) &&
-                                     (instr_i[12] == 1'b0) &&
-                                 (!(instr_i[6:2] != 5'b0)) &&
-                               (!(instr_i[11:7] == 5'b0))) iff ( instr_i [1:0] == 2'b10);
-    C2_ADD       :  coverpoint ((instr_i[15:13] == 3'b100) &&
-                                  (!(instr_i[12] == 1'b0)) &&
-                                   (instr_i[6:2] != 5'b0)) iff ( instr_i [1:0] == 2'b10);
-    C2_EBREAK    :  coverpoint ((instr_i[15:13] == 3'b100) &&
-                                  (!(instr_i[12] == 1'b0)) &&
-                                 (!(instr_i[6:2] != 5'b0)) &&
-                                  (instr_i[11:7] == 5'b0)) iff ( instr_i [1:0] == 2'b10);
-    C2_JALR      :  coverpoint ((instr_i[15:13] == 3'b100) &&
-                                  (!(instr_i[12] == 1'b0)) &&
-                                 (!(instr_i[6:2] != 5'b0)) &&
-                               (!(instr_i[11:7] == 5'b0))) iff ( instr_i [1:0] == 2'b10);
-    C2_SWSP      :  coverpoint  (instr_i[15:13] == 3'b110) iff ( instr_i [1:0] == 2'b10);
-    C2_FSWSP     :  coverpoint  (instr_i[15:13] == 3'b111) iff ( instr_i [1:0] == 2'b10);
+    C2_SLLI      :  coverpoint ((instr_i[15:13] == 3'b000)  &&  (!(instr_i[12] == 1'b1))) 
+                                                            iff ( instr_i [1:0] == 2'b10);
+    C2_LWSP      :  coverpoint ((instr_i[15:13] == 3'b010)  &&  (!(instr_i[11:7] == 5'b0))) 
+                                                            iff ( instr_i [1:0] == 2'b10);
+    C2_FLWSP     :  coverpoint (instr_i[15:13] == 3'b011)   iff ( instr_i [1:0] == 2'b10);
+    C2_MV        :  coverpoint ((instr_i[15:13] == 3'b100)  &&
+                                     (instr_i[12] == 1'b0)  &&
+                                   (instr_i[6:2] != 5'b0))  iff ( instr_i [1:0] == 2'b10);
+    C2_JR        :  coverpoint ((instr_i[15:13] == 3'b100)  &&
+                                     (instr_i[12] == 1'b0)  &&
+                                 (!(instr_i[6:2] != 5'b0))  &&
+                               (!(instr_i[11:7] == 5'b0)))  iff ( instr_i [1:0] == 2'b10);
+    C2_ADD       :  coverpoint ((instr_i[15:13] == 3'b100)  &&
+                                  (!(instr_i[12] == 1'b0))  &&
+                                   (instr_i[6:2] != 5'b0))  iff ( instr_i [1:0] == 2'b10);
+    C2_EBREAK    :  coverpoint ((instr_i[15:13] == 3'b100)  &&
+                                  (!(instr_i[12] == 1'b0))  &&
+                                 (!(instr_i[6:2] != 5'b0))  &&
+                                  (instr_i[11:7] == 5'b0))  iff ( instr_i [1:0] == 2'b10);
+    C2_JALR      :  coverpoint ((instr_i[15:13] == 3'b100)  &&
+                                  (!(instr_i[12] == 1'b0))  &&
+                                 (!(instr_i[6:2] != 5'b0))  &&
+                               (!(instr_i[11:7] == 5'b0)))  iff ( instr_i [1:0] == 2'b10);
+    C2_SWSP      :  coverpoint  (instr_i[15:13] == 3'b110)  iff ( instr_i [1:0] == 2'b10);
+    C2_FSWSP     :  coverpoint  (instr_i[15:13] == 3'b111)  iff ( instr_i [1:0] == 2'b10);
   endgroup : compressed_instruction_cg
   
   // Declaration of cover-groups
