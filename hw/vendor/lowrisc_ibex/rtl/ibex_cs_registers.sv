@@ -1520,8 +1520,10 @@ module ibex_cs_registers #(
   ////////////////////////////
   
   `ifdef AZADI_FC
-
-  // Covergroup to capture constants for the dcsr.xdebugver fields
+   
+  ///////////////////////////////////////////////////////////////////
+  // Covergroup to capture constants for the dcsr.xdebugver fields //
+  ///////////////////////////////////////////////////////////////////
   // XDEBUGVER_NO     ( 4'd0,) no external debug support
   // XDEBUGVER_STD    ( 4'd4,) external debug according to RISC-V debug spec
   // XDEBUGVER_NONSTD ( 4'd15) debug not conforming to RISC-V debug spec
@@ -1529,7 +1531,9 @@ module ibex_cs_registers #(
     DCSR_XDEBUGER : coverpoint dcsr_d.xdebugver;
   endgroup : dcsr_xdebugver_cg
   
-  // Covergroup to capture dcsr_d
+  //////////////////////////////////
+  // Covergroup to capture dcsr_d //
+  //////////////////////////////////
   covergroup dcsr_d_xdebugver_cg ()@(dcsr_d); 
     DCSR_D_XDEBUGER_XDEBUGVER:  coverpoint dcsr_d.xdebugver;
     DCSR_D_XDEBUGER_ZERO2    :  coverpoint dcsr_d.zero2;
@@ -1548,7 +1552,9 @@ module ibex_cs_registers #(
     DCSR_D_XDEBUGER_PRV      :  coverpoint dcsr_d.prv;
   endgroup : dcsr_d_xdebugver_cg
   
-  // Covergroup for machine status register (m status register)
+  ////////////////////////////////////////////////////////////////
+  // Covergroup for machine status register (m status register) //
+  ////////////////////////////////////////////////////////////////
   // mie;   // Machine interupt enable
   // mpie;  // Machine pending interupt enable
   // mpp;   // Machine previous privilege mode
@@ -1562,7 +1568,9 @@ module ibex_cs_registers #(
     M_STATUS_TW  :  coverpoint  mstatus_d.tw;  
   endgroup : m_status_reg_cg
 
-  // Covergroup for CPU control register field
+  ///////////////////////////////////////////////
+  // Covergroup for CPU control register field //
+  ///////////////////////////////////////////////
   covergroup cpu_ctrl_cg ()@(cpuctrl_q); 
     CPU_CTRL_DUMMY_INSTR_MASK :  coverpoint cpuctrl_q.dummy_instr_mask;
     CPU_CTRL_DUMMY_INSTR_EN   :  coverpoint cpuctrl_q.dummy_instr_en;
@@ -1570,17 +1578,35 @@ module ibex_cs_registers #(
     CPU_CTRL_ICACHE_EN        :  coverpoint cpuctrl_q.icache_enable;
   endgroup : cpu_ctrl_cg
   
-  // Declaration of cover-groups
+  ////////////////////////
+  // Covergroup for CSR //
+  ////////////////////////
+  covergroup csr_num_cg ()@(csr_addr_i);
+    CS_REG :  coverpoint csr_addr_i;
+  endgroup : csr_num_cg
+  
+  ////////////////////////////////////////////////
+  // Covergroup for floating point status flags //
+  ////////////////////////////////////////////////
+  covergroup fp_status_cg ()@(fp_status_i);
+    FPU_STATUS_FLAGS :  coverpoint fp_status_i;
+  endgroup : fp_status_cg
+  
+  // Declaration of cover-groups //
   dcsr_xdebugver_cg   dcsr_xdebugver_cg_h  ;
   dcsr_d_xdebugver_cg dcsr_d_xdebugver_cg_h;
   m_status_reg_cg     m_status_reg_cg_h    ;
   cpu_ctrl_cg         cpu_ctrl_cg_h        ;
+  csr_num_cg          csr_num_cg_h         ;
+  fp_status_cg        fp_status_cg_h       ;
 
   initial begin
     dcsr_xdebugver_cg_h   = new();       // Instance of a dcsr_xdebugver_cg covergroup
     dcsr_d_xdebugver_cg_h = new();       // Instance of a dcsr_d_xdebugver_cg covergroup
     m_status_reg_cg_h     = new();       // Instance of a machine mode status register covergroup
     cpu_ctrl_cg_h         = new();       // Instance of a cpu control covergroup
+    csr_num_cg_h          = new();       // Instance of a csr covergroup
+    fp_status_cg_h        = new();       // Insatnce of a floating point status flags
   end
 
   `endif  // AZADI_FC

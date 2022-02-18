@@ -1204,29 +1204,42 @@ module ibex_id_stage #(
   `ASSERT(IbexMisalignedMemoryAccess, !lsu_addr_incr_req_i)
   `endif
 
+  ////////////////////////////
+  //  Functional coverages  //
+  ////////////////////////////
+  
   `ifdef AZADI_FC
-  // Covergroup to capture of Privileged modes
+  ///////////////////////////////////////////////
+  // Covergroup to capture of Privileged modes //
+  ///////////////////////////////////////////////
   covergroup priv_mode_cg ()@(priv_mode_i); 
     PRIVILEGED_MODE: coverpoint priv_mode_i;
   endgroup : priv_mode_cg
-
-  // Covergroup for PC mux selection
+  
+  /////////////////////////////////////
+  // Covergroup for PC mux selection //
+  /////////////////////////////////////
   covergroup pc_mux_cg ()@(pc_mux_o); 
     PC_MUX_SEL: coverpoint pc_mux_o;
   endgroup : pc_mux_cg
 
-  // Covergroup for Exception PC mux selection
+  ///////////////////////////////////////////////
+  // Covergroup for Exception PC mux selection //
+  ///////////////////////////////////////////////
   covergroup exc_pc_mux_cg ()@(exc_pc_mux_o); 
     EXCEPTION_PC_MUX_SEL: coverpoint exc_pc_mux_o;
   endgroup : exc_pc_mux_cg
-
-  // Covergroup for interrupt signals
+  
+  //////////////////////////////////////
+  // Covergroup for interrupt signals //
+  //////////////////////////////////////
   covergroup irqs_cg ()@(irqs_i); 
     INTERRUPT_SIGNAL : coverpoint irqs_i;
   endgroup : irqs_cg
-
-  // Covergroup for exception causes
-
+  
+  /////////////////////////////////////
+  // Covergroup for exception causes //
+  /////////////////////////////////////
   // EXC_CAUSE_IRQ_SOFTWARE_M    
   // EXC_CAUSE_IRQ_TIMER_M       
   // EXC_CAUSE_IRQ_EXTERNAL_M    
@@ -1244,20 +1257,34 @@ module ibex_id_stage #(
   covergroup exc_cause_cg ()@(exc_cause_o); 
     EXCEPTION_CAUSES : coverpoint exc_cause_o;
   endgroup : exc_cause_cg
+  
+  ////////////////////////////////
+  // Covergroup for Debug cause //
+  ////////////////////////////////
+  // DBG_CAUSE_NONE    
+  // DBG_CAUSE_EBREAK  
+  // DBG_CAUSE_TRIGGER 
+  // DBG_CAUSE_HALTREQ 
+  // DBG_CAUSE_STEP    
+  covergroup debug_cause_cg ()@(debug_cause_o); 
+    DEBUG_CAUSES : coverpoint debug_cause_o;
+  endgroup : debug_cause_cg
 
   // Declaration of cover-groups
-  priv_mode_cg  priv_mode_cg_h ;
-  pc_mux_cg     pc_mux_cg_h    ;
-  exc_pc_mux_cg exc_pc_mux_cg_h;
-  irqs_cg       irqs_cg_h      ;
-  exc_cause_cg  exc_cause_cg_h ;
+  priv_mode_cg   priv_mode_cg_h  ;
+  pc_mux_cg      pc_mux_cg_h     ;
+  exc_pc_mux_cg  exc_pc_mux_cg_h ;
+  irqs_cg        irqs_cg_h       ;
+  exc_cause_cg   exc_cause_cg_h  ;
+  debug_cause_cg debug_cause_cg_h;
   
   initial begin
-    priv_mode_cg_h  = new();       // Instance of a privileged mode covergroup
-    pc_mux_cg_h     = new();       // Instance of a pc mux selection covergroup
-    exc_pc_mux_cg_h = new();       // Instance of a exception pc mux selection covergroup
-    irqs_cg_h       = new();       // Instance of a interrupt signals covergroup
-    exc_cause_cg_h  = new();       // Instance of a excepton causes
+    priv_mode_cg_h   = new();       // Instance of a privileged mode covergroup
+    pc_mux_cg_h      = new();       // Instance of a pc mux selection covergroup
+    exc_pc_mux_cg_h  = new();       // Instance of a exception pc mux selection covergroup
+    irqs_cg_h        = new();       // Instance of a interrupt signals covergroup
+    exc_cause_cg_h   = new();       // Instance of a excepton cause covergroup
+    debug_cause_cg_h = new();       // Instance of a debug causes covergroup
   end
 
   `endif  // AZADI_FC

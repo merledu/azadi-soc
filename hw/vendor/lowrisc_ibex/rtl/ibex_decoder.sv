@@ -1809,13 +1809,17 @@ module ibex_decoder #(
       }
     `endif
   endgroup : alu_cg
-
-  // Covergroup to capture Multiplier/divider operations
+   
+  /////////////////////////////////////////////////////////
+  // Covergroup to capture Multiplier/divider operations //
+  /////////////////////////////////////////////////////////
   covergroup mul_div_cg ()@(multdiv_operator_o); 
     MUL_DIV_OPERATIONS: coverpoint multdiv_operator_o;
   endgroup : mul_div_cg
 
-  // Covergroup to capture floating point operations
+  /////////////////////////////////////////////////////
+  // Covergroup to capture floating point operations //
+  /////////////////////////////////////////////////////
   covergroup fpu_cg ()@(fp_alu_operator_o); 
     FPU_OPERATIONS: coverpoint fp_alu_operator_o{
       // Ignore bins for floating to floating (double floating point not implemented)
@@ -1823,6 +1827,13 @@ module ibex_decoder #(
       ignore_bins ignore_vals = {F2F, CPKAB, CPKCD};
     }
   endgroup : fpu_cg
+
+  ////////////////////////////////////////////////////////
+  // Covergroup to capture floating point rounding mode //
+  ////////////////////////////////////////////////////////
+  covergroup fpu_round_mode_cg ()@(fp_rounding_mode_o); 
+    FPU_ROUND_MODE: coverpoint fp_rounding_mode_o;
+  endgroup : fpu_round_mode_cg
   
   ////////////////////////////////////////////////////////////////////////////////////
   // Added cover-group to capture coverage for opcode type def present in ibex_pkg  //
@@ -1967,6 +1978,7 @@ module ibex_decoder #(
   opcode_alu_cg        opcode_alu_cg_h       ;
   csr_operations_cg    csr_operations_cg_h   ;
   rf_wd_sel_cg         rf_wd_sel_cg_h        ;
+  fpu_round_mode_cg    fpu_round_mode_cg_h   ;
   
   `ifdef BRANCH_TARGET_ALU_ENABLED
     bt_operand_a_sel_cg  bt_operand_a_sel_cg_h ;
@@ -1988,20 +2000,21 @@ module ibex_decoder #(
     opcode_cg_h            = new();       // Instance of a opcode covergroup
     opcode_alu_cg_h        = new();       // Instance of a opcode_alu covergroup
     csr_operations_cg_h    = new();       // Instance of a csr operation covergroup
+    alu_op_a_mux_sel_cg_h  = new();       // Instance of a alu_op_a_mux_sel_o covergroup
+    alu_op_b_mux_sel_cg_h  = new();       // Instance of a alu_op_b_mux_sel_o covergroup
+    imm_operand_b_sel_cg_h = new();       // Instance of a imm_b_mux_sel_o covergroup
+    rf_wd_sel_cg_h         = new();       // Instance of a rf_wd_sel_cg covergroup
+    fpu_round_mode_cg_h    = new();       // INstance of a fpu_round_mode_cg covergroup
     
     `ifdef BRANCH_TARGET_ALU_ENABLED
       bt_operand_a_sel_cg_h  = new();     // Instance of a bt_a_mux_sel_o covergroup
       bt_operand_b_sel_cg_h  = new();     // Instance of a bt_b_mux_sel_o covergroup
     `endif  // BRANCH_TARGET_ALU_ENABLED
     
-    alu_op_a_mux_sel_cg_h  = new();       // Instance of a alu_op_a_mux_sel_o covergroup
-    alu_op_b_mux_sel_cg_h  = new();       // Instance of a alu_op_b_mux_sel_o covergroup
-    imm_operand_b_sel_cg_h = new();       // Instance of a imm_b_mux_sel_o covergroup
-    rf_wd_sel_cg_h         = new();       // Instance of a rf_wd_sel_cg covergroup
-    
     `ifdef BIT_MANIPULATION_ENABLED
       bit_manipulation_cg_h  = new();     // Instance of a RV32B covergroup
     `endif  // BIT_MANIPULATION_ENABLED
+    
   end
 
   `endif  // AZADI_FC
