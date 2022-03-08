@@ -23,7 +23,7 @@ Now you can check the list of core files by running
 
 Finally you can run the following command to build the verilator model for risc-v compliance
 
-    fusesoc run --target=sim --setup --buid lowrisc:ibex:ibex_riscv_compliance --RV32E=0 --RV32M=ibex_pkg::RV32MSlow --RVF=ibex_pkg::RV32FDNone
+    fusesoc run --target=sim --setup --build lowrisc:ibex:ibex_riscv_compliance --RV32E=0 --RV32M=ibex_pkg::RV32MSlow --RVF=ibex_pkg::RV32FSingle
 
 You can find the verilator model in the build folder which is created at the root of the directory.  
 `build/lowrisc_ibex_ibex_riscv_compliance_0.1/sim-verilator/Vibex_riscv_compliance`  
