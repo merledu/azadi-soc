@@ -121,7 +121,9 @@ module ibex_cs_registers #(
     input  logic                  fp_rm_dynamic_i,
     output fpnew_pkg::roundmode_e fp_frm_o,
     input  fpnew_pkg::status_t    fp_status_i,
-    input  logic                  fflags_en_id_i
+    input  logic                  fflags_en_id_i,
+    input  logic                  fp_instr_i,
+    input  logic                  fp_div_i
 );
 
   import ibex_pkg::*;
@@ -1224,6 +1226,9 @@ module ibex_cs_registers #(
     mhpmcounter_incr[10] = instr_ret_compressed_i; // num of compressed instr
     mhpmcounter_incr[11] = mul_wait_i;             // cycles waiting for multiply
     mhpmcounter_incr[12] = div_wait_i;             // cycles waiting for divide
+    mhpmcounter_incr[13] = fp_instr_i & instr_ret_i;  // encounter floating point instr
+    mhpmcounter_incr[14] = fp_div_i & instr_ret_i;    // cycles waiting for fp-divide
+    mhpmcounter_incr[15] = fp_div_i;                  // encounter floating point DIV instr
   end
 
   // event selector (hardwired, 0 means no event)

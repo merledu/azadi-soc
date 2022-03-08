@@ -162,6 +162,7 @@ module ibex_core #(
   logic                   fp_rf_wen_id;
   logic                   is_fp_instr;
   logic [2:0][FPU_WIDTH-1:0] fp_operands;   // three operands in fpu   
+  logic                   pref_fp_div;
   logic                   fp_busy;
   logic                   fpu_busy_idu;
   logic [4:0]             fp_rf_waddr_id;
@@ -1067,11 +1068,13 @@ module ibex_core #(
     assign fpu_busy_idu = fp_busy & (~out_valid_fpu2c);
 
     assign core_busy_d = ctrl_busy | if_busy | lsu_busy | fpu_busy_idu;
+    assign pref_fp_div = is_fp_instr & (fp_alu_operator == fpnew_pkg::DIV);
   end else begin
     // Before going to sleep, wait for I- and D-side
     // interfaces to finish ongoing operations.
     assign core_busy_d   = ctrl_busy | if_busy | lsu_busy;
     assign valid_id_fpu  = ex_valid;
+    assign pref_fp_div   = 1'b0;
   end
 
   ///////////////////
@@ -1251,7 +1254,9 @@ module ibex_core #(
       .fp_rm_dynamic_i         ( fp_rm_dynamic                ),
       .fp_frm_o                ( fp_frm_csr                   ),
       .fp_status_i             ( fp_status                    ),
-      .fflags_en_id_i          ( fflags_en_id                 )
+      .fflags_en_id_i          ( fflags_en_id                 ),
+      .fp_instr_i              ( is_fp_instr                  ),
+      .fp_div_i                ( pref_fp_div                  )
   );
 
   // These assertions are in top-level as instr_valid_id required as the enable term

@@ -1637,7 +1637,7 @@ module ibex_decoder #(
           7'b0001001: begin // FMUL.D
             fp_alu_operator_o     = MUL;
           end
-          7'b0001101:begin // FDIV.S
+          7'b0001101:begin // FDIV.D
             fp_alu_operator_o     = DIV;
           end
           7'b0000000: begin // FADD.S
