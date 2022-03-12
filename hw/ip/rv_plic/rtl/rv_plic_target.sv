@@ -14,8 +14,8 @@
 
 
 module rv_plic_target #(
-  parameter int N_SOURCE = 32,
-  parameter int MAX_PRIO = 7,
+  parameter int N_SOURCE = 37,
+  parameter int MAX_PRIO = 2,
 
   // Local param (Do not change this through parameter
   localparam int SrcWidth  = $clog2(N_SOURCE+1),  // derived parameter

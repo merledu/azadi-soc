@@ -1,0 +1,22 @@
+# paths 
+<path to repo home>/rtl/plic
+<path to repo home>/rtl/common
+
+# top module = rv_plic
+
+# bus package
+tlul_pkg.sv
+
+# plic package
+rv_plic_reg_pkg.sv
+
+# bus modules
+tlul_adapter_reg.sv
+tlul_err.sv
+
+# plic modules 
+rv_plic_gateway.sv    
+rv_plic_reg_top.sv  
+rv_plic.sv  
+rv_plic_target.sv
+
