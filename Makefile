@@ -48,7 +48,6 @@ verilator-build: ${TOP_HDL}
 	  ${TOP_HDL} --top-module azadi_top_verilator \
 	  -exe $(TBDIR)/sim.cpp
 	$(MAKE) -C obj_dir/ -f Vazadi_top_verilator.mk $(VERILATOR_MAKE_FLAGS)
-	touch verilator-build
 
 verilator: verilator-build
 	./obj_dir/Vazadi_top_verilator
