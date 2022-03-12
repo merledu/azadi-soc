@@ -30,7 +30,7 @@ logic         err;
 
 //assign err = '0;
 
-pwm pwm_core(
+pwm_core pwm_core_u(
 
 .clk_i      (clk_i),												
 .rst_ni     (rst_ni),												
