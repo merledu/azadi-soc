@@ -1,20 +1,16 @@
-// Copyright lowRISC contributors.
-// Licensed under the Apache License, Version 2.0, see LICENSE for details.
-// SPDX-License-Identifier: Apache-2.0
-//
+
 // General Purpose Input/Output module
 
-`include "prim_assert.sv"
 
 module gpio (
-  input clk_i,
-  input rst_ni,
+  input logic clk_i,
+  input logic rst_ni,
 
   // Below Regster interface can be changed
   input  tlul_pkg::tl_h2d_t tl_i,
   output tlul_pkg::tl_d2h_t tl_o,
 
-  input        [31:0] cio_gpio_i,
+  input  logic [31:0] cio_gpio_i,
   output logic [31:0] cio_gpio_o,
   output logic [31:0] cio_gpio_en_o,
 
@@ -132,22 +128,17 @@ module gpio (
 
   // Register module
   gpio_reg_top u_reg (
-    .clk_i,
-    .rst_ni,
+    .clk_i (clk_i),
+    .rst_ni (rst_ni),
 
-    .tl_i,
-    .tl_o,
+    .tl_i (tl_i),
+    .tl_o (tl_o),
 
-    .reg2hw,
-    .hw2reg,
+    .reg2hw (reg2hw),
+    .hw2reg (hw2reg),
 
-    .intg_err_o (),
     .devmode_i  (1'b1)
   );
 
-  // Assert Known: Outputs
-  `ASSERT_KNOWN(IntrGpioKnown, intr_gpio_o)
-  `ASSERT_KNOWN(CioGpioEnOKnown, cio_gpio_en_o)
-  `ASSERT_KNOWN(CioGpioOKnown, cio_gpio_o)
 
 endmodule

@@ -1,0 +1,20 @@
+# paths 
+<path to repo home>/rtl/gpio
+<path to repo home>/rtl/common
+
+# top module = gpio
+
+# bus package
+tlul_pkg.sv
+
+# gpio package
+gpio_reg_pkg.sv
+
+# bus modules
+tlul_adapter_reg.sv
+tlul_err.sv
+
+# gpio modules  
+gpio_reg_top.sv  
+gpio.sv
+
