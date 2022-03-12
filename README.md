@@ -12,4 +12,4 @@ The status of all the tests can be found [Verification Basic Tests Sheet.](https
 3. After successful make you can find the waveform file in `logs` folder on root of this repo. To see the waves you should have `gtkwave` installed.
 
 ### Block Diagram of SoC
-![](docs/images/Azadi-MicroArchitechtureDiagram-SoC..png)
+![](docs/images/Azadi%20MicroArchitechtureDiagram-SoC.drawio.png)
