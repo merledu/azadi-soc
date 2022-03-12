@@ -17,7 +17,8 @@ module uart_top (
     output logic tx_o,
     input  logic rx_i,
     
-    output logic intr_tx
+    output logic intr_tx,
+    output logic intr_rx
 );
     
     logic [31:0] wdata;
@@ -38,11 +39,10 @@ uart_core u_uart_core(
     .addr    (addr),    
     .tx_o    (tx_o),
     .rx_i    (rx_i),
-    
     .intr_tx (intr_tx)
+    // .intr_rx (intr_rx)
 );
 
-    
  tlul_adapter_reg #(
     .RegAw(8),
     .RegDw(32)

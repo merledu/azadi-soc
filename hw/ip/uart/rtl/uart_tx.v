@@ -114,7 +114,7 @@ module uart_tx (
           begin
             r_TX_Done     <= 1'b1;
             r_Clock_Count <= 16'b0;
-            r_SM_Main     <= CLEANUP;
+            r_SM_Main     <= IDLE;
            // r_TX_Active   <= 1'b0;
           end 
         end // case: TX_STOP_BIT

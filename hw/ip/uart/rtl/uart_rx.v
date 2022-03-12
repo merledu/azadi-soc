@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+// `timescale 1ns / 1ps
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,7 @@ module uart_rx (
    input  wire       rst_ni,
    input  wire       i_Rx_Serial,
    input  wire [15:0] CLKS_PER_BIT,
+   output reg 	      sbit_o,
    output wire        o_Rx_DV,
    output wire  [7:0] o_Rx_Byte
    );
@@ -55,6 +56,7 @@ module uart_rx (
         r_Clock_Count <= 16'b0;
         r_Bit_Index   <= 3'b0;
 	r_Rx_Byte     <= 8'b0;
+	sbit_o	      <= 1'b0;
       end else begin       
       case (r_SM_Main)
         s_IDLE :
@@ -63,10 +65,13 @@ module uart_rx (
             r_Clock_Count <= 16'b0;
             r_Bit_Index   <= 3'b0;
             r_Rx_Byte     <= 8'b0; 
-            if (r_Rx_Data == 1'b0)          // Start bit detected
+            if (r_Rx_Data == 1'b0) begin          // Start bit detected
               r_SM_Main <= s_RX_START_BIT;
-            else
+              sbit_o	<= 1'b1;
+            end else begin
               r_SM_Main <= s_IDLE;
+              sbit_o    <= 1'b0;
+           end
           end
          
         // Check middle of start bit to make sure it's still low

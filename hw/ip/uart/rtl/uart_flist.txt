@@ -1,0 +1,24 @@
+# paths 
+<path to repo home>/rtl/uart
+<path to repo home>/rtl/common
+
+# top module = uart_top
+
+# bus package
+tlul_pkg.sv
+
+# uart package
+
+# bus modules
+tlul_adapter_reg.sv
+tlul_err.sv
+
+# uart modules  
+generic_fifo.sv  
+rx_timer.sv  
+uart_core.sv  
+uart_rx.v  
+uart_top.sv  
+uart_tx.v
+
+
