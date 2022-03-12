@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+// `timescale 1ns / 1ps
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -35,7 +35,7 @@ module uart_rx_prog (
   // This allows it to be used in the UART RX Clock Domain.
   // (It removes problems caused by metastability)
   always @(posedge clk_i)
-  begin
+    begin
     if (~rst_ni) begin
       r_Rx_Data_R <= 1'b1;
       r_Rx_Data   <= 1'b1;
@@ -48,106 +48,108 @@ module uart_rx_prog (
    
   // Purpose: Control RX state machine
   always @(posedge clk_i or negedge rst_ni)
-  begin
-    if (~rst_ni) begin
-      r_SM_Main <= s_IDLE;
-      r_Rx_DV       <= 1'b0;
-      r_Clock_Count <= 16'b0;
-      r_Bit_Index   <= 3'b0;
-	    r_Rx_Byte     <= 8'b0;
-    end else begin       
+    begin
+      if (~rst_ni) begin
+        r_SM_Main <= s_IDLE;
+        r_Rx_DV       <= 1'b0;
+        r_Clock_Count <= 16'b0;
+        r_Bit_Index   <= 3'b0;
+	r_Rx_Byte     <= 8'b0;
+      end else begin       
       case (r_SM_Main)
         s_IDLE :
-        begin
-          r_Rx_DV       <= 1'b0;
-          r_Clock_Count <= 16'b0;
-          r_Bit_Index   <= 3'b0;
-          r_Rx_Byte     <= 8'b0; 
-          if (r_Rx_Data == 1'b0)          // Start bit detected
-            r_SM_Main <= s_RX_START_BIT;
-          else
-            r_SM_Main <= s_IDLE;
-        end
+          begin
+            r_Rx_DV       <= 1'b0;
+            r_Clock_Count <= 16'b0;
+            r_Bit_Index   <= 3'b0;
+            r_Rx_Byte     <= 8'b0; 
+            if (r_Rx_Data == 1'b0)          // Start bit detected
+              r_SM_Main <= s_RX_START_BIT;
+            else
+              r_SM_Main <= s_IDLE;
+          end
          
         // Check middle of start bit to make sure it's still low
         s_RX_START_BIT :
-        begin
-          if (r_Clock_Count == ((CLKS_PER_BIT-1)>>1))
           begin
-            if (r_Rx_Data == 1'b0)
+            if (r_Clock_Count == ((CLKS_PER_BIT-1)>>1))
               begin
-                r_Clock_Count <= 16'b0;  // reset counter, found the middle
-                r_SM_Main     <= s_RX_DATA_BITS;
-              end else
-                r_SM_Main <= s_IDLE;
+                if (r_Rx_Data == 1'b0)
+                  begin
+                    r_Clock_Count <= 16'b0;  // reset counter, found the middle
+                    r_SM_Main     <= s_RX_DATA_BITS;
+                  end
+                else
+                  r_SM_Main <= s_IDLE;
               end
-            else begin
-              r_Clock_Count <= r_Clock_Count + 16'b1;
-              r_SM_Main     <= s_RX_START_BIT;
-          end
-        end // case: s_RX_START_BIT
+            else
+              begin
+                r_Clock_Count <= r_Clock_Count + 16'b1;
+                r_SM_Main     <= s_RX_START_BIT;
+              end
+          end // case: s_RX_START_BIT
          
          
         // Wait CLKS_PER_BIT-1 clock cycles to sample serial data
         s_RX_DATA_BITS :
-        begin
-          if (r_Clock_Count < CLKS_PER_BIT-1)
           begin
-            r_Clock_Count <= r_Clock_Count + 16'b1;
-            r_SM_Main     <= s_RX_DATA_BITS;
-          end
-          else
-          begin
-            r_Clock_Count          <= 16'b0;
-            r_Rx_Byte[r_Bit_Index] <= r_Rx_Data;
+            if (r_Clock_Count < CLKS_PER_BIT-1)
+              begin
+                r_Clock_Count <= r_Clock_Count + 16'b1;
+                r_SM_Main     <= s_RX_DATA_BITS;
+              end
+            else
+              begin
+                r_Clock_Count          <= 16'b0;
+                r_Rx_Byte[r_Bit_Index] <= r_Rx_Data;
                  
                 // Check if we have received all bits
-            if (r_Bit_Index < 7)
-            begin
-              r_Bit_Index <= r_Bit_Index + 3'b1;
-              r_SM_Main   <= s_RX_DATA_BITS;
-            end
-              else
-              begin
-                r_Bit_Index <= 3'b0;
-                r_SM_Main   <= s_RX_STOP_BIT;
+                if (r_Bit_Index < 7)
+                  begin
+                    r_Bit_Index <= r_Bit_Index + 3'b1;
+                    r_SM_Main   <= s_RX_DATA_BITS;
+                  end
+                else
+                  begin
+                    r_Bit_Index <= 3'b0;
+                    r_SM_Main   <= s_RX_STOP_BIT;
+                  end
               end
-            end
           end // case: s_RX_DATA_BITS
      
      
         // Receive Stop bit.  Stop bit = 1
         s_RX_STOP_BIT :
-        begin
+          begin
             // Wait CLKS_PER_BIT-1 clock cycles for Stop bit to finish
-          if (r_Clock_Count < CLKS_PER_BIT-1)
-          begin
-            r_Clock_Count <= r_Clock_Count + 16'b1;
-            r_SM_Main     <= s_RX_STOP_BIT;
-          end
-          else
-          begin
-            r_Rx_DV       <= 1'b1;
-            r_Clock_Count <= 16'b0;
-            r_SM_Main     <= s_CLEANUP;
-          end
-        end // case: s_RX_STOP_BIT
+            if (r_Clock_Count < CLKS_PER_BIT-1)
+              begin
+                r_Clock_Count <= r_Clock_Count + 16'b1;
+                r_SM_Main     <= s_RX_STOP_BIT;
+              end
+            else
+              begin
+                r_Rx_DV       <= 1'b1;
+                r_Clock_Count <= 16'b0;
+                r_SM_Main     <= s_CLEANUP;
+              end
+          end // case: s_RX_STOP_BIT
      
          
         // Stay here 1 clock
         s_CLEANUP :
-        begin
-          r_SM_Main <= s_IDLE;
-          r_Rx_DV   <= 1'b0;
-        end
+          begin
+            r_SM_Main <= s_IDLE;
+            r_Rx_DV   <= 1'b0;
+          end
          
          
         default :
           r_SM_Main <= s_IDLE;
          
       endcase
-    end
-  end   
+      end
+    end   
    
   assign o_Rx_DV   = r_Rx_DV;
   assign o_Rx_Byte = r_Rx_Byte;
