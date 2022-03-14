@@ -7,10 +7,10 @@ module azadi_soc_top (
   input  logic        clk_i,
   input  logic        rst_ni,
 
-  // programming uart rx
-  input  logic        prog,
+  // programming switch
+  input  logic        prog_i,
 
-  input  logic [15:0] clks_per_bit, 
+  input  logic [15:0] clks_per_bit,
   input  logic [31:0] gpio_i,
   output logic [31:0] gpio_o,
   output logic [31:0] gpio_oe,
@@ -26,10 +26,10 @@ module azadi_soc_top (
   output logic        pwm2_oe,
 
   // SPI interface
-  output logic [3:0]  ss_o,        
-  output logic        sclk_o,      
+  output logic [3:0]  ss_o,
+  output logic        sclk_o,
   output logic        sd_o,
-  output logic        sd_oe,       
+  output logic        sd_oe,
   input  logic        sd_i
 );
 
@@ -44,7 +44,7 @@ module azadi_soc_top (
   logic        req_i;
   logic [31:0] tlul_data;
 
-  // instruction sram interface 
+  // instruction sram interface
   logic        instr_csb;
   logic [11:0] instr_addr;
   logic [31:0] instr_wdata;
@@ -96,7 +96,7 @@ module azadi_soc_top (
   // interrupt vector
   logic [36:0] intr_vector;
 
-  assign intr_vector = { 
+  assign intr_vector = {
     intr_srx,
     intr_stx,
     intr_u_tx,
@@ -105,7 +105,7 @@ module azadi_soc_top (
     1'b0
   };
 
-  // Interrupt source list 
+  // Interrupt source list
   logic [31:0] intr_gpio;
   logic        intr_uart0_tx_watermark;
   logic        intr_uart0_rx_watermark;
@@ -124,23 +124,23 @@ module azadi_soc_top (
 
   ibex_core_top #(
     .PMPEnable        (0),
-    .PMPGranularity   (0), 
-    .PMPNumRegions    (4), 
-    .MHPMCounterNum   (0), 
-    .MHPMCounterWidth (40), 
-    .RV32E            (0), 
-    .RV32M            (ibex_pkg::RV32MSlow), 
-    .RV32B            (ibex_pkg::RV32BNone), 
-    .RegFile          (ibex_pkg::RegFileFF), 
-    .BranchTargetALU  (1), 
-    .WritebackStage   (1), 
-    .ICache           (0), 
-    .ICacheECC        (0), 
-    .BranchPredictor  (0), 
-    .DbgTriggerEn     (1), 
-    .DbgHwBreakNum    (1), 
+    .PMPGranularity   (0),
+    .PMPNumRegions    (4),
+    .MHPMCounterNum   (0),
+    .MHPMCounterWidth (40),
+    .RV32E            (0),
+    .RV32M            (ibex_pkg::RV32MSlow),
+    .RV32B            (ibex_pkg::RV32BNone),
+    .RegFile          (ibex_pkg::RegFileFF),
+    .BranchTargetALU  (1),
+    .WritebackStage   (1),
+    .ICache           (0),
+    .ICacheECC        (0),
+    .BranchPredictor  (0),
+    .DbgTriggerEn     (1),
+    .DbgHwBreakNum    (1),
     .SecureIbex       (0),
-    .DmHaltAddr       (0), 
+    .DmHaltAddr       (0),
     .DmExceptionAddr  (0)
   ) u_ibex_core_top (
 
@@ -156,7 +156,7 @@ module azadi_soc_top (
     .tl_d_o         ( lsu_to_xbar   ),
 
     .test_en_i      ( 1'b0          ),
-    .hart_id_i      ( 32'b0         ), 
+    .hart_id_i      ( 32'b0         ),
     .boot_addr_i    ( 32'h20000000  ),
 
     // Interrupt inputs
@@ -226,13 +226,13 @@ module azadi_soc_top (
     .tl_i        ( xbar_to_spi   ),
     .tl_o        ( spi_to_xbar   ),
 
-    // SPI signals                  
+    // SPI signals
     .intr_rx_o   ( intr_srx      ),
-    .intr_tx_o   ( intr_stx      ),                   
-    .ss_o        ( ss_o          ),         
-    .sclk_o      ( sclk_o        ),       
+    .intr_tx_o   ( intr_stx      ),
+    .ss_o        ( ss_o          ),
+    .sclk_o      ( sclk_o        ),
     .sd_o        ( sd_o          ),
-    .sd_oe       ( sd_oe         ),       
+    .sd_oe       ( sd_oe         ),
     .sd_i        ( sd_i          )
   );
 
@@ -247,7 +247,7 @@ module azadi_soc_top (
     .cio_gpio_i    ( gpio_in       ),
     .cio_gpio_o    ( gpio_out      ),
     .cio_gpio_en_o ( gpio_oe       ),
-    .intr_gpio_o   ( intr_gpio     )  
+    .intr_gpio_o   ( intr_gpio     )
   );
 
   // peripheral UART 
@@ -295,9 +295,9 @@ module azadi_soc_top (
     .clk_i	      ( clk_i            ),
     .rst_ni	      ( rst_ni           ),
 
-    .prog_i	      ( prog             ),
+    .prog_i	      ( prog_i           ),
     .rx_i		      ( uart_rx          ),
-    .clks_per_bit	( clks_per_bit     ), 
+    .clks_per_bit	( clks_per_bit     ),
 
     .we_o		      ( iccm_ctrl_we     ),
     .addr_o	      ( iccm_ctrl_addr_o ),
@@ -310,21 +310,21 @@ module azadi_soc_top (
     .clk_i            (clk_i),
     .rst_ni           (system_rst_ni),
   
-    .tl_i             (xbar_to_iccm),
-    .tl_o             (iccm_to_xbar),
+    .tl_i             ( xbar_to_iccm     ),
+    .tl_o             ( iccm_to_xbar     ),
     // iccm controller interface 
-    .iccm_ctrl_addr   (iccm_ctrl_addr_o),
-    .iccm_ctrl_wdata  (iccm_ctrl_data),
-    .iccm_ctrl_we     (iccm_ctrl_we),
-    .prog_rst_ni      (prog_rst_ni),
+    .iccm_ctrl_addr   ( iccm_ctrl_addr_o ),
+    .iccm_ctrl_wdata  ( iccm_ctrl_data   ),
+    .iccm_ctrl_we     ( iccm_ctrl_we     ),
+    .prog_rst_ni      ( prog_rst_ni      ),
 
     // instruction sram interface 
-    .csb              (instr_csb),
-    .addr_o           (instr_addr),
-    .wdata_o          (instr_wdata),
-    .wmask_o          (instr_wmask),
-    .we_o             (instr_we),
-    .rdata_i          (instr_rdata)
+    .csb              ( instr_csb        ),
+    .addr_o           ( instr_addr       ),
+    .wdata_o          ( instr_wdata      ),
+    .wmask_o          ( instr_wmask      ),
+    .we_o             ( instr_we         ),
+    .rdata_i          ( instr_rdata      )
   );
   
   // intruction memory
@@ -372,6 +372,6 @@ module azadi_soc_top (
   );
 
   assign gpio_in = gpio_i;
-  assign gpio_o  = gpio_out; 
+  assign gpio_o  = gpio_out;
 
 endmodule
