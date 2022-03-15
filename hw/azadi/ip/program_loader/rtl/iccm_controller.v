@@ -81,7 +81,13 @@ module iccm_controller (
 	assign rx_byte_d = rx_byte_i;
 	assign we_o = we_q;
 	assign addr_o = addr_q;
-	assign wdata_o = {rx_byte_q0, rx_byte_q1, rx_byte_q2, rx_byte_q3};
+
+	`ifdef VERILATOR
+		assign wdata_o = {rx_byte_q3, rx_byte_q2, rx_byte_q1, rx_byte_q0};
+	`else
+		assign wdata_o = {rx_byte_q0, rx_byte_q1, rx_byte_q2, rx_byte_q3};
+	`endif
+	
 	assign reset_o = reset_q;
 	always @(posedge clk_i or negedge rst_ni)
 		if (!rst_ni) begin
