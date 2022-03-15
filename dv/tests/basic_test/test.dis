@@ -1,0 +1,13 @@
+
+test.elf:     file format elf64-littleriscv
+
+
+Disassembly of section .text:
+
+0000000020000000 <_start>:
+    20000000:	a009                	j	20000002 <start>
+
+0000000020000002 <start>:
+    20000002:	4085                	li	x1,1
+    20000004:	4109                	li	x2,2
+    20000006:	418d                	li	x3,3
