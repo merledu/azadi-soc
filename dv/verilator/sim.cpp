@@ -31,18 +31,13 @@ int main (int argc, char **argv) {
   tfp->open("logs/sim.vcd");
 
   top -> clk_i = 0;
-  top -> gpio_i = 8;
 
   while (!(Verilated::gotFinish() || done)){
 
     top->clk_i = !top->clk_i;
     
-    if(main_time < 4000) {
-      top -> rst_ni = 0;
-    }
-    else {
-      top -> rst_ni = 1;
-    }
+    top->rst_ni = (main_time < 8000 ) ? 0 : 1;
+    top->prog_btn = (main_time >= 10000 &&  main_time <= 14000) ? 1 : 0;
 
     top->eval();
 
