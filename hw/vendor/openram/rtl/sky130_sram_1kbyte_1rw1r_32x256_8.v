@@ -76,7 +76,7 @@ module sky130_sram_1kbyte_1rw1r_32x256_8(
     // #(T_HOLD);
     dout1 = 32'bx;
     if ( !csb1_reg && VERBOSE ) 
-      $display($time," Reading %m addr1=%b dout1=%b",addr1_reg,mem[addr1_reg]);
+      // $display($time," Reading %m addr1=%b dout1=%b",addr1_reg,mem[addr1_reg]);
   end
 
 reg [DATA_WIDTH-1:0]    mem [0:RAM_DEPTH-1];
