@@ -37,7 +37,8 @@ clean:
 
 
 verilator-build: ${TOP_HDL} 
-	$(VERILATOR) --cc -CFLAGS ${CFLAGS} -I${AZADI_ROOT}/hw/ip/prim/rtl \
+	$(VERILATOR) --cc -CFLAGS ${CFLAGS} -DAZADI \
+	  -I${AZADI_ROOT}/hw/ip/prim/rtl \
 	  -I${AZADI_ROOT}/hw/ip/prim \
 	  -I${AZADI_ROOT}/hw/vendor/pulp_fpnew/src/common_cells/include \
 	  -I${AZADI_ROOT}/hw/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl \
