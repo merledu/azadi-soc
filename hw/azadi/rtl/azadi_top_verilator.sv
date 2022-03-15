@@ -1,37 +1,34 @@
- 
+// Top module for verilator simulation
+
 module azadi_top_verilator (
   input  logic        clk_i,
   input  logic        rst_ni,
-
-  input  logic [19:0] gpio_i,
-  output logic [19:0] gpio_o,
-
-  input  logic        uart_rx,
-  output logic        uart_tx,
-  
-  input logic         uart_rx_i
+  input  logic        prog_btn
 );
+
+  import prog_image_loader_pkg::*;
+
+  string HEX = "/home/merl-lab/projects/merledu/azadi-new/dv/tests/basic_test/test.hex";
+  int CLKS_PER_BIT, CLK_FREQ, BAUD_RATE;
+  bit [7:0] prog_image [int];
+  bit [7:0] w_byte;
+  bit       tx_done;
+  bit       tx_en;
+  int       index;
 
   logic pwm_o;
   logic pwm_o_2;
+
+  logic [19:0] gpio_i;
+  logic [19:0] gpio_o;
+
+  logic        uart_recv;
+  logic        uart_trans;
 
   logic [`SPI_SS_NB-1:0] ss_o;
   logic                  sclk_o;
   logic                  sd_o;
   logic                  sd_i;
-
-  /* The frequency of the output clk_out = The frequency of the input clk_in divided by DIVISOR
-  For example: Fclk_in = 50Mhz, if you want to get 1Hz signal to blink LEDs
-  You will modify the DIVISOR parameter value to 28'd50.000.000
-  Then the frequency of the output clk_out = 50Mhz/50.000.000 = 1Hz */
-  // logic clk_i; 
-  // reg[27:0] counter=28'd0;
-  // parameter DIVISOR = 28'd6000;
-  // always @(posedge clk_i) begin
-  //   counter <= counter + 28'd1;
-  //   if(counter >= (DIVISOR-1)) counter <= 28'd0;
-  //   clk_i <= (counter < DIVISOR/2) ? 1'b1 : 1'b0;
-  // end
 
   //localparam logic [31:0] JTAG_IDCODE = 32'h04F5484D;
   localparam logic [31:0] JTAG_IDCODE = {
@@ -41,48 +38,60 @@ module azadi_top_verilator (
     1'b1      // (fixed)
   };
 
-  logic cio_jtag_tck;
-  logic cio_jtag_tdi;
-  logic cio_jtag_tdo;
-  logic cio_jtag_tms;
-  logic cio_jtag_trst_n;
-  logic cio_jtag_srst_n;
-  logic i2c0_scl_in;
-  logic i2c0_scl_out;
-  logic i2c0_sda_in;
-  logic i2c0_sda_out;
-
   azadi_soc_top soc_top_verilator(
-    .clk_i   ( clk_i     ),
-    .rst_ni  ( rst_ni    ),  
-    .gpio_i  ( gpio_i    ),
-    .gpio_o  ( gpio_o    ),
-    .uart_tx ( uart_tx   ),
-    .uart_rx ( uart_rx   ),
+    .clk_i        ( clk_i        ),
+    .rst_ni       ( rst_ni       ),
+    .clks_per_bit ( CLKS_PER_BIT ),
+    .gpio_i       ( gpio_i       ),
+    .gpio_o       ( gpio_o       ),
+    .gpio_oe      (              ),
+    .uart_tx      ( uart_trans   ),
+    .uart_rx      ( uart_recv    ),
+    .prog_i       ( prog_btn     ),
 
-    .prog    ( uart_rx_i ),
+    .pwm_o        ( pwm_o        ),
+    .pwm_o_2      ( pwm_o_2      ),
+    .pwm1_oe      (              ),
+    .pwm2_oe      (              ),
 
-    .pwm_o   ( pwm_o     ),
-    .pwm_o_2 ( pwm_o_2   ),
-    .pwm1_oe (           ),
-    .pwm2_oe (           ),
-
-    // spi interface 
-    .ss_o    ( ss_o      ),         
-    .sclk_o  ( sclk_o    ),       
-    .sd_o    ( sd_o      ),       
-    .sd_i    ( sd_i      )
+    // spi interface
+    .ss_o         ( ss_o         ),
+    .sclk_o       ( sclk_o       ),
+    .sd_o         ( sd_o         ),
+    .sd_oe        (              ),
+    .sd_i         ( sd_i         )
   );
 
-  // jtagdpi u_jtagdpi (
-  //   .clk_i(clk_i),
-  //   .rst_ni(rst_ni),
-  //   .jtag_tck    (cio_jtag_tck),
-  //   .jtag_tms    (cio_jtag_tms),
-  //   .jtag_tdi    (cio_jtag_tdi),
-  //   .jtag_tdo    (cio_jtag_tdo),
-  //   .jtag_trst_n (cio_jtag_trst_n),
-  //   .jtag_srst_n (cio_jtag_srst_n)
-  // );
+  uart_tx programmer_TX (
+    .clk_i        ( clk_i        ),
+    .rst_ni       ( rst_ni       ),
+    .tx_en        ( tx_en        ),
+    .i_TX_Byte    ( w_byte       ),
+    .CLKS_PER_BIT ( CLKS_PER_BIT ),
+    .o_TX_Serial  ( uart_recv    ),
+    .o_TX_Done    ( tx_done      )
+  );
+
+  initial begin
+    CLK_FREQ = 25000000;
+    BAUD_RATE = 115200;
+    CLKS_PER_BIT = CLK_FREQ / BAUD_RATE;
+    read_hex(HEX, prog_image);
+  end
+
+  always_ff @ (posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      w_byte <= '0;
+      tx_en  <= '0;
+      index  <=  0;
+    end 
+    else if (prog_btn || tx_done) begin
+      tx_en <= 1;
+      w_byte <= prog_image[index];
+      index  <= index + 1;
+      // $display("prog_image[%x] = 0x%x",index, prog_image[index]);
+    end else
+      tx_en  <= 0;
+  end
 
 endmodule
