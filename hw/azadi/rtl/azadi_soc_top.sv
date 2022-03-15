@@ -162,7 +162,18 @@ module azadi_soc_top (
     // Interrupt inputs
     .irq_software_i ( 1'b0          ),
     .irq_timer_i    ( intr_timer    ),
-    .irq_external_i ( intr_req      )
+    .irq_external_i ( intr_req      ),
+    .irq_fast_i     (   '0          ),
+    .irq_nm_i       (   '0          ),
+
+    // Debug Interface
+    .debug_req_i    ( 1'b0          ),
+
+    // CPU Control Signals
+    .fetch_enable_i ( system_rst_ni ),
+    .alert_minor_o  ( ),
+    .alert_major_o  ( ),
+    .core_sleep_o   ( )
   );
 
   // main xbar
