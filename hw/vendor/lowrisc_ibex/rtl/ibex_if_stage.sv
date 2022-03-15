@@ -166,15 +166,24 @@ module ibex_if_stage #(
   // fetch address selection mux
   always_comb begin : fetch_addr_mux
     unique case (pc_mux_internal)
+    `ifndef AZADI
       PC_BOOT: fetch_addr_n = { boot_addr_i[31:8], 8'h80 };
+    `else
+      PC_BOOT: fetch_addr_n = { boot_addr_i[31:8], 8'h00 };
+    `endif
       PC_JUMP: fetch_addr_n = branch_target_ex_i;
       PC_EXC:  fetch_addr_n = exc_pc;                       // set PC to exception handler
       PC_ERET: fetch_addr_n = csr_mepc_i;                   // restore PC when returning from EXC
       PC_DRET: fetch_addr_n = csr_depc_i;
       // Without branch predictor will never get pc_mux_internal == PC_BP. We still handle no branch
       // predictor case here to ensure redundant mux logic isn't synthesised.
+    `ifndef AZADI
       PC_BP:   fetch_addr_n = BranchPredictor ? predict_branch_pc : { boot_addr_i[31:8], 8'h80 };
       default: fetch_addr_n = { boot_addr_i[31:8], 8'h80 };
+    `else
+      PC_BP:   fetch_addr_n = BranchPredictor ? predict_branch_pc : { boot_addr_i[31:8], 8'h00 };
+      default: fetch_addr_n = { boot_addr_i[31:8], 8'h00 };
+    `endif
     endcase
   end
 
