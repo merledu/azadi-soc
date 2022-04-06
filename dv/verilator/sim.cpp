@@ -3,6 +3,8 @@
 #include "Vazadi_top_verilator.h"
 #include "verilated_vcd_c.h"
 
+vluint64_t timeout = 0;
+vluint64_t cycles  = 0;
 vluint64_t main_time = 0;
 static bool done;
 
@@ -24,11 +26,28 @@ int main (int argc, char **argv) {
   Verilated::traceEverOn(true);
   VerilatedVcdC * tfp = new VerilatedVcdC;
 
+  const char *arg_timeout = Verilated::commandArgsPlusMatch("timeout=");
+  if (arg_timeout[0])
+    timeout = atoi(arg_timeout+9);
+
+  const char *arg_cycles = Verilated::commandArgsPlusMatch("cycles=");
+  if (arg_cycles[0])
+    cycles = atoi(arg_cycles+8);
+
   signal(SIGINT, INThandler);
 
   top->trace (tfp, 99);
   Verilated::mkdir("logs");
-  tfp->open("logs/sim.vcd");
+  tfp->open("obj_dir/sim.vcd");
+
+  // int num_cycles;
+  // for (int i=0; i < argc; ++i){
+  //   std::string arg = argv[i];
+  //   if (arg.compare(std::string{"--cycles"}) == 0){
+  //     sscanf(argv[++i], "%d", &num_cycles);
+  //     printf("num_cycles = %d", num_cycles);
+  //   }
+  // }
 
   top -> clk_i = 0;
 
@@ -44,6 +63,16 @@ int main (int argc, char **argv) {
     if (tfp) tfp -> dump(main_time);
 
     main_time += 2000; // 4ns ~ 25MHz
+
+    if (timeout && (main_time >= timeout)) {
+      printf("Timeout: Exiting at time %lu\n", main_time);
+      done = true;
+    } else if (cycles && (cycles == (main_time/200))){
+      printf("Requested number of cycles executed = %lu \n \
+      1 = 10 clocks \n \
+      Exiting at time %lu\n", cycles, main_time);
+      done = true;
+    }
   }
   if (tfp) tfp -> close();
 
