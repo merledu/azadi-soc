@@ -5,8 +5,11 @@ TBDIR = ${AZADI_ROOT}/dv/verilator
 # Try later (see usage in /home/zain/Documents/Code/tf)
 #RTLSRC=../src
 
-# Define test name
-TEST = add
+# Define plus arguments
+TIMEOUT ?=
+M_TIMEOUT= +timeout=${TIMEOUT}
+CYCLES ?= 519800
+M_CYCLES= +cycles=${CYCLES}
 
 # Constants
 RISCV_PREFIX = riscv32-unknown-elf-
@@ -29,12 +32,10 @@ CFLAGS += "-std=c++11"
 VERILATOR_MAKE_FLAGS = OPT_FAST="-O2"
 
 # Targets
-all: clean verilator
+all: run
 
 clean:
-	rm -rf logs *.log *.s *.hex *.dis *.tbl irun* vcs* simv* snapshots \
-	verilator* *.exe obj* *.o ucli.key vc_hdrs.h csrc *.csv work
-
+	rm -rf obj_dir
 
 verilator-build: ${TOP_HDL} 
 	$(VERILATOR) --cc -CFLAGS ${CFLAGS} -DAZADI \
@@ -50,8 +51,8 @@ verilator-build: ${TOP_HDL}
 	  -exe $(TBDIR)/sim.cpp
 	$(MAKE) -C obj_dir/ -f Vazadi_top_verilator.mk $(VERILATOR_MAKE_FLAGS)
 
-verilator: verilator-build
-	./obj_dir/Vazadi_top_verilator
+run: verilator-build
+	./obj_dir/Vazadi_top_verilator ${M_CYCLES} ${M_TIMEOUT}
 
 help:
 	@echo Possible targets: verilator help clean all verilator-build
