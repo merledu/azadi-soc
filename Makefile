@@ -1,5 +1,5 @@
 # Directory
-AZADI_ROOT = $(realpath ./)
+AZADI_ROOT := $(realpath ./)
 TBDIR = ${AZADI_ROOT}/dv/verilator
 TESTDIR = ${AZADI_ROOT}/dv/tests
 
