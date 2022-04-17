@@ -1,6 +1,7 @@
 # Directory
 AZADI_ROOT = $(realpath ./)
 TBDIR = ${AZADI_ROOT}/dv/verilator
+TESTDIR = ${AZADI_ROOT}/dv/tests
 
 # Try later (see usage in /home/zain/Documents/Code/tf)
 #RTLSRC=../src
@@ -10,6 +11,8 @@ TIMEOUT ?=
 M_TIMEOUT= +timeout=${TIMEOUT}
 CYCLES ?= 519800
 M_CYCLES= +cycles=${CYCLES}
+TEST ?= basic_test
+HEX= ${TESTDIR}/${TEST}/test.hex
 
 # Constants
 RISCV_PREFIX = riscv32-unknown-elf-
@@ -52,7 +55,7 @@ verilator-build: ${TOP_HDL}
 	$(MAKE) -C obj_dir/ -f Vazadi_top_verilator.mk $(VERILATOR_MAKE_FLAGS)
 
 run: verilator-build
-	./obj_dir/Vazadi_top_verilator ${M_CYCLES} ${M_TIMEOUT}
+	./obj_dir/Vazadi_top_verilator +HEX="${HEX}" ${M_CYCLES} ${M_TIMEOUT}
 
 help:
 	@echo Possible targets: verilator help clean all verilator-build

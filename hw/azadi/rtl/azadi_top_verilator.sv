@@ -8,7 +8,7 @@ module azadi_top_verilator (
 
   import prog_image_loader_pkg::*;
 
-  string HEX = "/home/merl-lab/projects/merledu/azadi-new/dv/tests/basic_test/test.hex";
+  string HEX;// = "/home/merl-lab/azadi-new/dv/tests/basic_test/test.hex";
   int CLKS_PER_BIT, CLK_FREQ, BAUD_RATE;
   bit [7:0] prog_image [int];
   bit [7:0] w_byte;
@@ -76,6 +76,8 @@ module azadi_top_verilator (
     CLK_FREQ = 25000000;
     BAUD_RATE = 115200;
     CLKS_PER_BIT = CLK_FREQ / BAUD_RATE;
+    if ($value$plusargs("HEX=%s",HEX))
+      $display("Reading hex: %s", HEX);
     read_hex(HEX, prog_image);
   end
 
