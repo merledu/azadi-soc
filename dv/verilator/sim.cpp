@@ -38,7 +38,7 @@ int main (int argc, char **argv) {
 
   top->trace (tfp, 99);
   Verilated::mkdir("logs");
-  tfp->open("obj_dir/sim.vcd");
+  tfp->open("logs/sim.vcd");
 
   // int num_cycles;
   // for (int i=0; i < argc; ++i){
