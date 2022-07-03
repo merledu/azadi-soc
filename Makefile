@@ -1,7 +1,7 @@
 # Directory
 AZADI_ROOT := $(realpath ./)
-TBDIR = ${AZADI_ROOT}/dv/verilator
-TESTDIR = ${AZADI_ROOT}/dv/tests
+TBDIR = ${AZADI_ROOT}/verif/verilator
+TESTDIR = ${AZADI_ROOT}/verif/tests
 
 # Try later (see usage in /home/zain/Documents/Code/tf)
 #RTLSRC=../src
@@ -11,7 +11,7 @@ TIMEOUT ?=
 M_TIMEOUT= +timeout=${TIMEOUT}
 CYCLES ?= 519800
 M_CYCLES= +cycles=${CYCLES}
-TEST ?= basic_test
+TEST ?= tests/basic_test
 HEX= ${TESTDIR}/${TEST}/test.hex
 
 # Constants
@@ -23,7 +23,7 @@ OBJDUMP_PREFIX = $(RISCV_PREFIX)objdump
 OBJDUMP_FLAGS = --disassemble-all --disassemble-zeroes --section=.text --section=.text.startup --section=.text.init --section=.data
 VERILATOR = verilator
 
-TOP_HDL = $(AZADI_ROOT)/hw/azadi/rtl/azadi_top_verilator.sv
+TOP_HDL = $(AZADI_ROOT)/src/top/azadi_top_verilator.sv
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++11 it
 # complains for `auto` variables
@@ -42,13 +42,13 @@ clean:
 
 verilator-build: ${TOP_HDL} 
 	$(VERILATOR) --cc -CFLAGS ${CFLAGS} -DAZADI \
-	  -I${AZADI_ROOT}/hw/ip/prim/rtl \
-	  -I${AZADI_ROOT}/hw/ip/prim \
-	  -I${AZADI_ROOT}/hw/vendor/pulp_fpnew/src/common_cells/include \
-	  -I${AZADI_ROOT}/hw/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl \
-	  -I${AZADI_ROOT}/tests -f flist \
+	  -I${AZADI_ROOT}/src/periph/prim/rtl \
+	  -I${AZADI_ROOT}/src/periph/prim \
+	  -I${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/include \
+	  -I${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl \
+	  -I${AZADI_ROOT}/verif/tests -f flist \
 	  --trace --trace-structs --trace-params --threads 4 \
-		-Wno-IMPLICIT -Wno-LITENDIAN -Wno-UNSIGNED -Wno-LATCH -Wno-PINMISSING -Wno-WIDTH \
+		-Wno-IMPLICIT -Wno-LITENDIAN -Wno-UNSIGNED -Wno-PINMISSING -Wno-WIDTH \
 		-Wno-MODDUP -Wno-UNOPTFLAT -Wno-BLKANDNBLK -Wno-UNOPTTHREADS -Wno-ALWCOMBORDER \
 	  ${TOP_HDL} --top-module azadi_top_verilator \
 	  -exe $(TBDIR)/sim.cpp

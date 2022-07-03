@@ -8,7 +8,7 @@ module azadi_top_verilator (
 
   import prog_image_loader_pkg::*;
 
-  string HEX;// = "/home/merl-lab/azadi-new/dv/tests/basic_test/test.hex";
+  string HEX;// = "/home/merl-lab/GSoC/verif/tests/basic_test/test.hex";
   int CLKS_PER_BIT, CLK_FREQ, BAUD_RATE;
   bit [7:0] prog_image [int];
   bit [7:0] w_byte;
