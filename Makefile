@@ -48,7 +48,7 @@ verilator-build: ${TOP_HDL}
 	  -I${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl \
 	  -I${AZADI_ROOT}/verif/tests -f flist \
 	  --trace --trace-structs --trace-params --threads 4 \
-		-Wno-IMPLICIT -Wno-LITENDIAN -Wno-UNSIGNED -Wno-PINMISSING -Wno-WIDTH \
+		-Wno-IMPLICIT -Wno-LITENDIAN -Wno-UNSIGNED -Wno-LATCH -Wno-PINMISSING -Wno-WIDTH \
 		-Wno-MODDUP -Wno-UNOPTFLAT -Wno-BLKANDNBLK -Wno-UNOPTTHREADS -Wno-ALWCOMBORDER \
 	  ${TOP_HDL} --top-module azadi_top_verilator \
 	  -exe $(TBDIR)/sim.cpp
