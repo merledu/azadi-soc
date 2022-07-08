@@ -16,5 +16,5 @@ The status of all the tests can be found [Verification Basic Tests Sheet.](https
 
 ### Block Diagram of SoC
 ![](docs/images/Azadi%20MicroArchitechtureDiagram-SoC.drawio.png)
-### Hierarchy Diagram of SoC
-
+### Directory Structure Diagram of SoC
+![](docs/AZADI-II%20directory%20structure.png)
