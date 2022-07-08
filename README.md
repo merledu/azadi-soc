@@ -10,7 +10,7 @@ The status of all the tests can be found [Verification Basic Tests Sheet.](https
 
 ## Quickstart guide
 
-1. Clone the repository and set $AZADI_ROOT variable to your repo root path.
+1. Clone the repository and set `AZADI_ROOT` variable to your repo root path.
 2. You can build the simulation for verilator by simply running `make` from the root of this repo. You need to have the `verilator` installed for this.
 3. After successful make you can find the waveform file in `logs` folder on root of this repo. To see the waves you should have `gtkwave` installed.
 
