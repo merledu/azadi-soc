@@ -11,7 +11,7 @@ TIMEOUT ?=
 M_TIMEOUT= +timeout=${TIMEOUT}
 CYCLES ?= 519800
 M_CYCLES= +cycles=${CYCLES}
-TEST ?= tests/basic_test
+TEST ?= basic_test
 HEX= ${TESTDIR}/${TEST}/test.hex
 
 # Constants

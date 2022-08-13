@@ -1,0 +1,12 @@
+CAPI=2:
+name : ::top:1.0
+filesets:
+  files_rtl:
+    files:
+      - azadi_soc_top_caravel.sv
+      - azadi_soc_top.sv
+      - azadi_top_arty7.sv
+      - azadi_top_verilator.sv
+      - ibex_core_top.sv
+    file_type: systemVerilogSource
+
