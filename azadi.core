@@ -138,7 +138,29 @@ targets:
   sim:
     default_tool: verilator
     filesets: [risc, tb]
+    parameters:
+        - HEX
+        - timeout
+        - cycles
+        - main_time
+        - done
     tools:
       verilator:
         verilator_options: [--trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-LATCH, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER, --debug]
     toplevel: azadi_top_verilator
+parameters:
+  HEX:
+    datatype: str
+    paramtype: plusarg
+  timeout:
+    datatype: int
+    paramtype: plusarg
+  cycles:
+    datatype: int
+    paramtype: plusarg
+  main_time:
+    datatype: int
+    paramtype: plusarg
+  done:
+    datatype: bool
+    paramtype: plusarg

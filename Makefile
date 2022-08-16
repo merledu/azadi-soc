@@ -1,5 +1,5 @@
 # Directory
-AZADI_ROOT := $(realpath ./)
+export AZADI_ROOT := $(realpath ./)
 TBDIR = ${AZADI_ROOT}/verif/verilator
 TESTDIR = ${AZADI_ROOT}/verif/tests
 
