@@ -9,10 +9,12 @@ Ibex+FPU passes all the compliance test of RV32IMFC, here is the [status](https:
 The status of all the tests can be found [Verification Basic Tests Sheet.](https://docs.google.com/spreadsheets/d/1gIzSU5mb4L3pPdiJr7MkdhvupT7p5VF2qy1PzDwq-5I/edit#gid=1374860298)
 
 ## Quickstart guide
-Note==> You need to have the `verilator` installed for simulation.
+Prerequisite ==> You need to have the `verilator` installed for simulation.
 1. Clone the repository and set `AZADI_ROOT` variable to your repo root path.
 2. For direct simulation through verilator simply execute `make` from the root of this repo.
-                                          OR
+                                          
+                                 OR
+                                 
    To use fusesoc then execute `fusesoc run --target=sim azadi --cycles=519800 --HEX=$AZADI_ROOT/verif/tests/basic_test/test.hex`
 3. After successful make you can find the waveform file in `logs` folder on root of this repo. To see the waves you should have `gtkwave` installed.
 
