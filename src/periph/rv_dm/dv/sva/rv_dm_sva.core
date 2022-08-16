@@ -21,9 +21,9 @@ targets:
     filesets:
       - files_dv
 
-  formal:
-    <<: *default_target
-    filesets:
-      - files_formal
-      - files_dv
-    toplevel: rv_dm
+  #formal:
+  #  <<: *default_target
+  #  filesets:
+  #    - files_formal
+  #    - files_dv
+  #  toplevel: rv_dm

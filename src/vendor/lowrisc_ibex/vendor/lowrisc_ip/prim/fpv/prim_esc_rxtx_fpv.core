@@ -18,11 +18,11 @@ targets:
   default: &default_target
     # note, this setting is just used
     # to generate a file list for jg
-    formal: icarus
+    #formal: icarus
     filesets:
       - files_formal
     toplevel:
       - prim_esc_rxtx_fpv
 
-  formal:
-    <<: *default_target
+  #formal:
+  #  <<: *default_target

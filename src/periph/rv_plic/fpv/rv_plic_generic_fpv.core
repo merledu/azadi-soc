@@ -36,8 +36,8 @@ targets:
       - csr_assert_gen
     toplevel: rv_plic_generic_fpv
 
-  formal:
-    <<: *default_target
+  #formal:
+  #  <<: *default_target
 
   lint:
     <<: *default_target

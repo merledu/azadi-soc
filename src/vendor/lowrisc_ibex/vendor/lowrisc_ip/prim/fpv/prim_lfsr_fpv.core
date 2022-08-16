@@ -22,5 +22,5 @@ targets:
     toplevel:
       - prim_lfsr_fpv
 
-  formal:
-    <<: *default_target
+  #formal:
+  #  <<: *default_target

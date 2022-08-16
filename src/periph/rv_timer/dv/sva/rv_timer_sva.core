@@ -30,9 +30,9 @@ targets:
     generate:
       - csr_assert_gen
 
-  formal:
-    <<: *default_target
-    filesets:
-      - files_formal
-      - files_dv
-    toplevel: rv_timer
+  #formal:
+  #  <<: *default_target
+  #  filesets:
+  #    - files_formal
+  #    - files_dv
+  #  toplevel: rv_timer

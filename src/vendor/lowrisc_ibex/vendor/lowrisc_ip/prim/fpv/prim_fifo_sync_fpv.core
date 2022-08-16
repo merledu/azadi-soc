@@ -23,5 +23,5 @@ targets:
       - files_formal
     toplevel: prim_fifo_sync_fpv
 
-  formal:
-    <<: *default_target
+  #formal:
+  #  <<: *default_target

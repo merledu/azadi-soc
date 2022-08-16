@@ -44,9 +44,9 @@ targets:
       - tool_veriblelint ? (files_veriblelint_waiver)
       - files_rtl
     toplevel: prim_dom_and_2share
-  formal:
-    filesets:
-      - files_rtl
-    toplevel: prim_dom_and_2share
+  #formal:
+  #  filesets:
+  #    - files_rtl
+  #  toplevel: prim_dom_and_2share
 
 
