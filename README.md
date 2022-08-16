@@ -11,11 +11,7 @@ The status of all the tests can be found [Verification Basic Tests Sheet.](https
 ## Quickstart guide
 Prerequisite ==> You need to have the `verilator` installed for simulation.
 1. Clone the repository and set `AZADI_ROOT` variable to your repo root path.
-2. For direct simulation through verilator simply execute `make` from the root of this repo.
-                                          
-                                 OR
-                                 
-   To use fusesoc then execute `fusesoc run --target=sim azadi --cycles=519800 --HEX=$AZADI_ROOT/verif/tests/basic_test/test.hex`
+2. For direct simulation through verilator simply execute `make` from the root of this repo. OR To use fusesoc then execute `fusesoc run --target=sim azadi --cycles=519800 --HEX=$AZADI_ROOT/verif/tests/basic_test/test.hex`
 3. After successful make you can find the waveform file in `logs` folder on root of this repo. To see the waves you should have `gtkwave` installed.
 
 ### Block Diagram of SoC
