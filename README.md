@@ -10,11 +10,19 @@ The status of all the tests can be found [Verification Basic Tests Sheet.](https
 
 ## Quickstart guide
 Prerequisite ==> You need to have the `verilator` installed for simulation.
-1. Clone the repository and set `AZADI_ROOT` variable to your repo root path.
-2. For direct simulation through verilator simply execute `make` from the root of this repo. OR To use fusesoc then execute `fusesoc run --target=sim azadi --cycles=519800 --HEX=$AZADI_ROOT/verif/tests/basic_test/test.hex`
-3. After successful make you can find the waveform file in `logs` folder on root of this repo. To see the waves you should have `gtkwave` installed.
+1. Clone the repository.
+2. `export AZADI_ROOT= `pwd` `
+3. Set the `LOCATION` variables to your `repo's root path` in `fusesoc.conf` file.
+4. For direct simulation through verilator simply execute `make` from the root of this repo. OR To use fusesoc then execute `fusesoc run --target=sim azadi --cycles=519800 --HEX=$AZADI_ROOT/verif/tests/basic_test/test.hex`
+5. After successful make you can find the waveform file in `logs` folder on root of this repo. To see the waves you should have `gtkwave` installed.
 
 ### Block Diagram of SoC
 ![](docs/images/Azadi%20MicroArchitechtureDiagram-SoC.drawio.png)
 ### Directory Structure Diagram of SoC
 ![](docs/AZADI-II%20directory%20structure.png)
+
+## Issues and Solutions
+1. If you encountered with `Key 'cores' not found in GAPI structure. Install a compatible version with 'pip3 install --user -r python-requirements.txt'` then run from the root of the repo:
+`cd src/vendor/lowrisc_ibex/`
+`pip3 install -U -r python-requirements.txt`
+then he required version should be installed and you can try to run the core again.
