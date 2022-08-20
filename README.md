@@ -25,4 +25,4 @@ Prerequisite ==> You need to have the `verilator` installed for simulation.
 1. If you encountered with `Key 'cores' not found in GAPI structure. Install a compatible version with 'pip3 install --user -r python-requirements.txt'` then run from the root of the repo:
 `cd src/vendor/lowrisc_ibex/`
 `pip3 install -U -r python-requirements.txt`
-then he required version should be installed and you can try to run the core again.
+then the required version should be installed and you can try to run the core again.
