@@ -4,72 +4,74 @@ name : ::azadi:1.0
 filesets:
   risc:
     depend:
+      - azadi_pkg
       - lowrisc:ibex:ibex_core
-      - lowrisc:tool:check_tool_requirements
+      #- lowrisc:tool:check_tool_requirements
     files:
-      - src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_tracer_pkg.sv
-      - src/vendor/pulp_fpnew/src/fpnew_pkg.sv
-      - src/vendor/pulp_fpnew/src/common_cells/src/cf_math_pkg.sv
-      - src/vendor/pulp_fpnew/src/common_cells/src/ecc_pkg.sv
-      - src/vendor/pulp_fpnew/src/common_cells/src/cb_filter_pkg.sv
-      - src/vendor/pulp_riscv_dbg/src/dm_pkg.sv
-      - src/vendor/pulp_riscv_dbg/tb/dm_tb_pkg.sv
-      - src/periph/rv_plic/rtl/rv_plic_reg_pkg.sv
-      - src/periph/rv_timer/rtl/rv_timer_reg_pkg.sv
-      - src/periph/gpio/rtl/gpio_reg_pkg.sv
-      - src/periph/rv_dm/rtl/jtag_pkg.sv
-      - src/ip/xbar/rtl/tl_main_pkg.sv
-      - src/common/rtl/tlul_pkg.sv
-      - src/common/rtl/prim_pkg.sv
-      - src/common/rtl/prim_util_pkg.sv
+      #- src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv
+      #- verif/verilator/debug/prog_image_loader_pkg.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_tracer_pkg.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_pkg.sv
+      #- src/vendor/pulp_fpnew/src/common_cells/src/cf_math_pkg.sv
+      #- src/vendor/pulp_fpnew/src/common_cells/src/ecc_pkg.sv
+      #- src/vendor/pulp_fpnew/src/common_cells/src/cb_filter_pkg.sv
+      #- src/vendor/pulp_riscv_dbg/src/dm_pkg.sv
+      #- src/vendor/pulp_riscv_dbg/tb/dm_tb_pkg.sv
+      #- src/periph/rv_plic/rtl/rv_plic_reg_pkg.sv
+      #- src/periph/rv_timer/rtl/rv_timer_reg_pkg.sv
+      #- src/periph/gpio/rtl/gpio_reg_pkg.sv
+      #- src/periph/rv_dm/rtl/jtag_pkg.sv
+      #- src/ip/xbar/rtl/tl_main_pkg.sv
+      #- src/common/rtl/tlul_pkg.sv
+      #- src/common/rtl/prim_pkg.sv
+      #- src/common/rtl/prim_util_pkg.sv
       - src/periph/spi_host/rtl/spi_defines.v
-      - src/vendor/lowrisc_ibex/rtl/ibex_if_stage.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_csr.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_register_file_ff.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_controller.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_branch_predict.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_pmp.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_id_stage.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_ex_block.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_decoder.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_load_store_unit.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_multdiv_slow.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_wb_stage.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_fetch_fifo.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_icache.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_register_file_latch.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_alu.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_multdiv_fast.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_core_tracing.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_core.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_prefetch_buffer.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_counter.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_cs_registers.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_tracer.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_register_file_fpga.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_dummy_instr.sv
-      - src/vendor/pulp_fpnew/src/fpnew_opgroup_block.sv
-      - src/vendor/pulp_fpnew/src/fpnew_opgroup_multifmt_slice.sv
-      - src/vendor/pulp_fpnew/src/fpnew_top.sv
-      - src/vendor/pulp_fpnew/src/fpnew_fma.sv
-      - src/vendor/pulp_fpnew/src/fpnew_noncomp.sv
-      - src/vendor/pulp_fpnew/src/fpnew_opgroup_fmt_slice.sv
-      - src/vendor/pulp_fpnew/src/fpnew_divsqrt_multi.sv
-      - src/vendor/pulp_fpnew/src/fpnew_classifier.sv
-      - src/vendor/pulp_fpnew/src/fpnew_rounding.sv
-      - src/vendor/pulp_fpnew/src/fpnew_fma_multi.sv
-      - src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/div_sqrt_top_mvp.sv
-      - src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/norm_div_sqrt_mvp.sv
-      - src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/control_mvp.sv
-      - src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/preprocess_mvp.sv
-      - src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/nrbd_nrsc_mvp.sv
-      - src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/iteration_div_sqrt_mvp.sv
-      - src/vendor/pulp_fpnew/src/fpnew_cast_multi.sv
-      - src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv
-      - src/vendor/pulp_fpnew/src/common_cells/src/lzc.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_if_stage.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_csr.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_register_file_ff.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_controller.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_branch_predict.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_pmp.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_id_stage.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_ex_block.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_decoder.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_load_store_unit.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_multdiv_slow.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_wb_stage.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_fetch_fifo.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_icache.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_register_file_latch.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_alu.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_multdiv_fast.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_core_tracing.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_core.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_prefetch_buffer.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_counter.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_cs_registers.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_tracer.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_register_file_fpga.sv
+      #- src/vendor/lowrisc_ibex/rtl/ibex_dummy_instr.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_opgroup_block.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_opgroup_multifmt_slice.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_top.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_fma.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_noncomp.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_opgroup_fmt_slice.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_divsqrt_multi.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_classifier.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_rounding.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_fma_multi.sv
+      #- src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/div_sqrt_top_mvp.sv
+      #- src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/norm_div_sqrt_mvp.sv
+      #- src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/control_mvp.sv
+      #- src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/preprocess_mvp.sv
+      #- src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/nrbd_nrsc_mvp.sv
+      #- src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/iteration_div_sqrt_mvp.sv
+      #- src/vendor/pulp_fpnew/src/fpnew_cast_multi.sv
+      #- src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv
+      #- src/vendor/pulp_fpnew/src/common_cells/src/lzc.sv
       - src/ip/sram_interfaces/rtl/instr_mem_top.sv
       - src/ip/sram_interfaces/rtl/data_mem_top.sv
       - src/ip/sram_interfaces/rtl/sram_32x1024.sv
@@ -77,7 +79,6 @@ filesets:
       - src/ip/program_loader/rtl/programmer.sv
       - src/ip/program_loader/rtl/iccm_controller.v
       - src/ip/xbar/rtl/tl_xbar_main.sv
-      - verif/verilator/debug/prog_image_loader_pkg.sv
       - src/top/azadi_top_verilator.sv
       - src/top/azadi_soc_top.sv
       - src/top/ibex_core_top.sv
@@ -108,13 +109,13 @@ filesets:
       - src/periph/rv_plic/rtl/rv_plic_gateway.sv
       - src/common/rtl/fifo_async.sv
       - src/common/rtl/fifo_sync.sv
-      - src/common/rtl/prim_arbiter_ppc.sv
+      #- src/common/rtl/prim_arbiter_ppc.sv
       - src/common/rtl/prim_clock_gating.sv
       - src/common/rtl/prim_filter_ctr.sv
-      - src/common/rtl/prim_generic_clock_inv.sv
-      - src/common/rtl/prim_generic_clock_mux2.sv
-      - src/common/rtl/prim_generic_flop_2sync.sv
-      - src/common/rtl/prim_generic_flop.sv
+      #- src/common/rtl/prim_generic_clock_inv.sv
+      #- src/common/rtl/prim_generic_clock_mux2.sv
+      #- src/common/rtl/prim_generic_flop_2sync.sv
+      #- src/common/rtl/prim_generic_flop.sv
       - src/common/rtl/prim_intr_hw.sv
       - src/common/rtl/prim_subreg_arb.sv
       - src/common/rtl/prim_subreg_ext.sv

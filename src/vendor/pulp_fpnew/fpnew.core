@@ -5,7 +5,6 @@ name : pulp-platform.org::fpnew:1.0.0
 filesets:
   files_rtl:
     depend: 
-      - pulp-platform.org::fpnew_pkg
       - pulp-platform.org::fpu_div_sqrt_mvp
       - pulp-platform.org::common_cells_new
       - pulp-platform.org::registers
