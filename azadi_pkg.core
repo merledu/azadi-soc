@@ -1,19 +1,14 @@
 CAPI=2:
 name : ::azadi_pkg:1.0
+description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC."
 filesets:
-  risc:
+  azadi:
     depend:
       - lowrisc:prim:prim_pkg
       - pulp-platform.org::fpnew_pkg
       - lowrisc:ibex:ibex_pkg
     files:
-      #- src/vendor/lowrisc_ibex/rtl/ibex_tracer_pkg.sv
-      #- src/vendor/pulp_fpnew/src/fpnew_pkg.sv
       - verif/verilator/debug/prog_image_loader_pkg.sv
-      #- src/vendor/pulp_fpnew/src/common_cells/src/cf_math_pkg.sv
-      #- src/vendor/pulp_fpnew/src/common_cells/src/ecc_pkg.sv
-      #- src/vendor/pulp_fpnew/src/common_cells/src/cb_filter_pkg.sv
-      #- src/vendor/pulp_riscv_dbg/src/dm_pkg.sv
       - src/vendor/pulp_riscv_dbg/tb/dm_tb_pkg.sv
       - src/periph/rv_plic/rtl/rv_plic_reg_pkg.sv
       - src/periph/rv_timer/rtl/rv_timer_reg_pkg.sv
@@ -21,9 +16,8 @@ filesets:
       - src/periph/rv_dm/rtl/jtag_pkg.sv
       - src/ip/xbar/rtl/tl_main_pkg.sv
       - src/common/rtl/tlul_pkg.sv
-      #- src/common/rtl/prim_pkg.sv
       - src/common/rtl/prim_util_pkg.sv
     file_type : systemVerilogSource
 targets:
   default: &default
-    filesets: [risc]
+    filesets: [azadi]
