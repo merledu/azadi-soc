@@ -35,4 +35,4 @@ After simulation is done, you can find the waveform file in `$AZADI_ROOT/build/a
 ### Block Diagram of SoC
 ![](docs/images/Azadi%20MicroArchitechtureDiagram-SoC.drawio.png)
 ### Directory Structure Diagram of SoC
-![](docs/AZADI-II%20directory%20structure.png)
+![](docs/AZADI-II%20directory%20structure.jpeg)
