@@ -18,7 +18,7 @@ cd azadi-II/
 ```
 Root directory.
 ```
-export AZADI_ROOT= `pwd`
+export AZADI_ROOT=`pwd`
 ```
 Add azadi as a separate FuseSoC library into the workspace.
 ```
