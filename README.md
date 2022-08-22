@@ -9,16 +9,24 @@ Ibex+FPU passes all the compliance test of RV32IMFC, here is the [status](https:
 The status of all the tests can be found [Verification Basic Tests Sheet.](https://docs.google.com/spreadsheets/d/1gIzSU5mb4L3pPdiJr7MkdhvupT7p5VF2qy1PzDwq-5I/edit#gid=1374860298)
 
 ## Prerequisite
-You need to have the `verilator` , `GtkWave` installed for simulation.
+You need to have the `verilator` for running the simulation of the SoC and `GtkWave` for opening the waveform file.
 
 ## Quickstart guide
 Clone the repositroy.
 ```
 cd azadi-II/
+```
+Root directory.
+```
 export AZADI_ROOT= `pwd`
+```
+Add azadi as a separate FuseSoC library into the workspace.
+```
 fusesoc library add azadi https://github.com/Nameer-Iqbal-Ansari/azadi-II
 ```
-For direct simulation through verilator simply execute `make` from the root of this repo. OR To use fusesoc then execute
+We are now ready to do our first exercises with AZADI. Following are the options to run the basic tests on the SoC.
+1. Run simulation directly using pre-build makefile by simple executing `make` from the root and get `.vcd` file in `logs`.
+2. Run simulation through `FuseSoc`.
 ```
 fusesoc run --target=sim azadi --cycles=519800 --HEX=$AZADI_ROOT/verif/tests/basic_test/test.hex
 ```

@@ -3,10 +3,6 @@ name : ::azadi_pkg:1.0
 description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC."
 filesets:
   azadi:
-    depend:
-      - lowrisc:prim:prim_pkg
-      - pulp-platform.org::fpnew_pkg
-      - lowrisc:ibex:ibex_pkg
     files:
       - verif/verilator/debug/prog_image_loader_pkg.sv
       - src/vendor/pulp_riscv_dbg/tb/dm_tb_pkg.sv
