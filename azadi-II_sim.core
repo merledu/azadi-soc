@@ -1,0 +1,46 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-II_sim:1.0"
+description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC simulation core file."
+filesets:
+  azadi:
+    depend:
+      - merl:azadi-II:azadi-II_verif
+      - merl:azadi-II:azadi-II_pkg
+      - merl:azadi-II:azadi-II_rtl
+  tb:
+    files:
+      - verif/verilator/sim.cpp
+    file_type: cppSource
+
+targets:
+  default: &default
+    filesets: [azadi , tb]
+  sim:
+    default_tool: verilator
+    filesets: [azadi, tb]
+    parameters:
+        - HEX
+        - timeout
+        - cycles
+        - main_time
+        - done
+    tools:
+      verilator:
+        verilator_options: [--trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-LATCH, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER, --debug]
+    toplevel: azadi_top_verilator
+parameters:
+  HEX:
+    datatype: str
+    paramtype: plusarg
+  timeout:
+    datatype: int
+    paramtype: plusarg
+  cycles:
+    datatype: int
+    paramtype: plusarg
+  main_time:
+    datatype: int
+    paramtype: plusarg
+  done:
+    datatype: bool
+    paramtype: plusarg

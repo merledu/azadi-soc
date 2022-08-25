@@ -1,4 +1,4 @@
-${AZADI_ROOT}/verif/verilator/debug/prog_image_loader_pkg.sv
+${AZADI_ROOT}/verif/src/prog_image_loader_pkg.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_pkg.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_tracer_pkg.sv
@@ -8,10 +8,10 @@ ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/src/ecc_pkg.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/src/cb_filter_pkg.sv
 ${AZADI_ROOT}/src/vendor/pulp_riscv_dbg/src/dm_pkg.sv
 ${AZADI_ROOT}/src/vendor/pulp_riscv_dbg/tb/dm_tb_pkg.sv
-${AZADI_ROOT}/src/periph/rv_plic/rtl/rv_plic_reg_pkg.sv
+${AZADI_ROOT}/src/ip/rv_plic/rtl/rv_plic_reg_pkg.sv
 ${AZADI_ROOT}/src/periph/rv_timer/rtl/rv_timer_reg_pkg.sv
 ${AZADI_ROOT}/src/periph/gpio/rtl/gpio_reg_pkg.sv
-${AZADI_ROOT}/src/periph/rv_dm/rtl/jtag_pkg.sv
+${AZADI_ROOT}/src/ip/rv_dm/rtl/jtag_pkg.sv
 ${AZADI_ROOT}/src/ip/xbar/rtl/tl_main_pkg.sv
 ${AZADI_ROOT}/src/common/rtl/tlul_pkg.sv
 ${AZADI_ROOT}/src/common/rtl/prim_pkg.sv
@@ -70,9 +70,9 @@ ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/src/lzc.sv
 ${AZADI_ROOT}/src/ip/sram_interfaces/rtl/instr_mem_top.sv
 ${AZADI_ROOT}/src/ip/sram_interfaces/rtl/data_mem_top.sv
 ${AZADI_ROOT}/src/ip/sram_interfaces/rtl/sram_32x1024.sv
-${AZADI_ROOT}/verif/src/program_loader/rtl/uart_rx_prog.v
-${AZADI_ROOT}/verif/src/program_loader/rtl/programmer.sv
-${AZADI_ROOT}/verif/src/program_loader/rtl/iccm_controller.v
+${AZADI_ROOT}/src/ip/program_loader/rtl/uart_rx_prog.v
+${AZADI_ROOT}/src/ip/program_loader/rtl/programmer.sv
+${AZADI_ROOT}/src/ip/program_loader/rtl/iccm_controller.v
 ${AZADI_ROOT}/src/ip/xbar/rtl/tl_xbar_main.sv
 
 ${AZADI_ROOT}/src/top/azadi_top_verilator.sv
@@ -91,7 +91,7 @@ ${AZADI_ROOT}/src/periph/uart/rtl/uart_core.v
 ${AZADI_ROOT}/src/periph/uart/rtl/uart_rx.v
 ${AZADI_ROOT}/src/periph/uart/rtl/uart_top.sv
 
-${AZADI_ROOT}/src/periph/rstmgr/rtl/rstmgr.sv
+${AZADI_ROOT}/src/ip/rstmgr/rtl/rstmgr.sv
 
 ${AZADI_ROOT}/src/periph/spi_host/rtl/spi_core.sv
 ${AZADI_ROOT}/src/periph/spi_host/rtl/spi_top.sv
@@ -107,10 +107,10 @@ ${AZADI_ROOT}/src/periph/pwm/rtl/pwm_core.v
 ${AZADI_ROOT}/src/periph/pwm/rtl/pwm_channel.v
 ${AZADI_ROOT}/src/periph/pwm/rtl/pwm_clock.v
 
-${AZADI_ROOT}/src/periph/rv_plic/rtl/rv_plic.sv
-${AZADI_ROOT}/src/periph/rv_plic/rtl/rv_plic_target.sv
-${AZADI_ROOT}/src/periph/rv_plic/rtl/rv_plic_reg_top.sv
-${AZADI_ROOT}/src/periph/rv_plic/rtl/rv_plic_gateway.sv
+${AZADI_ROOT}/src/ip/rv_plic/rtl/rv_plic.sv
+${AZADI_ROOT}/src/ip/rv_plic/rtl/rv_plic_target.sv
+${AZADI_ROOT}/src/ip/rv_plic/rtl/rv_plic_reg_top.sv
+${AZADI_ROOT}/src/ip/rv_plic/rtl/rv_plic_gateway.sv
 
 
 

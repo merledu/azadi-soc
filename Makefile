@@ -40,10 +40,10 @@ all: run
 clean:
 	rm -rf obj_dir
 
-verilator-build: ${TOP_HDL} 
+verilator-build: ${TOP_HDL}
 	$(VERILATOR) --cc -CFLAGS ${CFLAGS} -DAZADI \
-	  -I${AZADI_ROOT}/src/periph/prim/rtl \
-	  -I${AZADI_ROOT}/src/periph/prim \
+	  -I${AZADI_ROOT}/src/ip/prim/rtl \
+	  -I${AZADI_ROOT}/src/ip/prim \
 	  -I${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/include \
 	  -I${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl \
 	  -I${AZADI_ROOT}/verif/tests -f flist \

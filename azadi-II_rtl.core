@@ -1,19 +1,18 @@
 CAPI=2:
-name : ::azadi:1.0
+name: "merl:azadi-II:azadi-II_rtl:1.0"
 description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC."
 filesets:
   azadi:
     depend:
-      - azadi_pkg
       - lowrisc:ibex:ibex_core
     files:
       - src/periph/spi_host/rtl/spi_defines.v
       - src/ip/sram_interfaces/rtl/instr_mem_top.sv
       - src/ip/sram_interfaces/rtl/data_mem_top.sv
       - src/ip/sram_interfaces/rtl/sram_32x1024.sv
-      - verif/src/program_loader/rtl/uart_rx_prog.v
-      - verif/src/program_loader/rtl/programmer.sv
-      - verif/src/program_loader/rtl/iccm_controller.v
+      - src/ip/program_loader/rtl/uart_rx_prog.v
+      - src/ip/program_loader/rtl/programmer.sv
+      - src/ip/program_loader/rtl/iccm_controller.v
       - src/ip/xbar/rtl/tl_xbar_main.sv
       - src/top/azadi_top_verilator.sv
       - src/top/azadi_soc_top.sv
@@ -27,7 +26,7 @@ filesets:
       - src/periph/uart/rtl/uart_core.v
       - src/periph/uart/rtl/uart_rx.v
       - src/periph/uart/rtl/uart_top.sv
-      - src/periph/rstmgr/rtl/rstmgr.sv
+      - src/ip/rstmgr/rtl/rstmgr.sv
       - src/periph/spi_host/rtl/spi_core.sv
       - src/periph/spi_host/rtl/spi_top.sv
       - src/periph/spi_host/rtl/spi_clgen.v
@@ -39,10 +38,10 @@ filesets:
       - src/periph/pwm/rtl/pwm_core.v
       - src/periph/pwm/rtl/pwm_channel.v
       - src/periph/pwm/rtl/pwm_clock.v
-      - src/periph/rv_plic/rtl/rv_plic.sv
-      - src/periph/rv_plic/rtl/rv_plic_target.sv
-      - src/periph/rv_plic/rtl/rv_plic_reg_top.sv
-      - src/periph/rv_plic/rtl/rv_plic_gateway.sv
+      - src/ip/rv_plic/rtl/rv_plic.sv
+      - src/ip/rv_plic/rtl/rv_plic_target.sv
+      - src/ip/rv_plic/rtl/rv_plic_reg_top.sv
+      - src/ip/rv_plic/rtl/rv_plic_gateway.sv
       - src/common/rtl/fifo_async.sv
       - src/common/rtl/fifo_sync.sv
       - src/common/rtl/prim_clock_gating.sv
@@ -59,40 +58,6 @@ filesets:
       - src/common/rtl/tlul_socket_1n.sv
       - src/common/rtl/tlul_sram_adapter.sv
     file_type : systemVerilogSource, VerilogSource
-  tb:
-    files:
-      - verif/verilator/sim.cpp
-    file_type: cppSource
-
 targets:
   default: &default
-    filesets: [azadi , tb]
-  sim:
-    default_tool: verilator
-    filesets: [azadi, tb]
-    parameters:
-        - HEX
-        - timeout
-        - cycles
-        - main_time
-        - done
-    tools:
-      verilator:
-        verilator_options: [--trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-LATCH, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER, --debug]
-    toplevel: azadi_top_verilator
-parameters:
-  HEX:
-    datatype: str
-    paramtype: plusarg
-  timeout:
-    datatype: int
-    paramtype: plusarg
-  cycles:
-    datatype: int
-    paramtype: plusarg
-  main_time:
-    datatype: int
-    paramtype: plusarg
-  done:
-    datatype: bool
-    paramtype: plusarg
+    filesets: [azadi]
