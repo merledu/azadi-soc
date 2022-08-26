@@ -1,0 +1,14 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-IIpwm:1.0"
+description: "Azadi SoC pwm core files."
+filesets:
+  azadi:
+    files:
+      - rtl/pwm_top.sv
+      - rtl/pwm_core.v
+      - rtl/pwm_channel.v
+      - rtl/pwm_clock.v
+    file_type : systemVerilogSource, VerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

@@ -1,6 +1,6 @@
 CAPI=2:
 name: "merl:azadi-II:azadi-II_sim:1.0"
-description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC simulation core file."
+description: "Azadi SoC simulation core file."
 filesets:
   azadi:
     depend:

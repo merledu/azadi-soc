@@ -1,0 +1,12 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-IIgpio:1.0"
+description: "Azadi SoC gpio core files."
+filesets:
+  azadi:
+    files:
+      - rtl/gpio.sv
+      - rtl/gpio_reg_top.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

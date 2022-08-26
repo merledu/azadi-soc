@@ -1,0 +1,15 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-IIspi_host:1.0"
+description: "Azadi SoC spi_host core files."
+filesets:
+  azadi:
+    files:
+      - rtl/spi_defines.v
+      - rtl/spi_core.sv
+      - rtl/spi_top.sv
+      - rtl/spi_clgen.v
+      - rtl/spi_shift.v
+    file_type : systemVerilogSource, VerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

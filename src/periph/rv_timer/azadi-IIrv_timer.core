@@ -1,0 +1,13 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-IIrv_timer:1.0"
+description: "Azadi SoC rv_timer core files."
+filesets:
+  azadi:
+    files:
+      - rtl/rv_timer.sv
+      - rtl/rv_timer_reg_top.sv
+      - rtl/timer_core.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

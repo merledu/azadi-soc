@@ -1,12 +1,11 @@
 CAPI=2:
 name: "merl:azadi-II:azadi-II_verif:1.0"
-description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC verification core files."
+description: "Azadi SoC verification core files."
 filesets:
   azadi:
     files:
-      - verif/src/prog_image_loader_pkg.sv
+      - src/prog_image_loader_pkg.sv
     file_type : systemVerilogSource
 targets:
   default: &default
     filesets: [azadi]
-    

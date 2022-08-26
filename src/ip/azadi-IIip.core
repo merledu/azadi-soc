@@ -1,0 +1,22 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-IIip:1.0"
+description: "Azadi SoC ip core files."
+filesets:
+  azadi:
+    files:
+      - sram_interfaces/rtl/instr_mem_top.sv
+      - sram_interfaces/rtl/data_mem_top.sv
+      - sram_interfaces/rtl/sram_32x1024.sv
+      - program_loader/rtl/uart_rx_prog.v
+      - program_loader/rtl/programmer.sv
+      - program_loader/rtl/iccm_controller.v
+      - xbar/rtl/tl_xbar_main.sv
+      - rstmgr/rtl/rstmgr.sv
+      - rv_plic/rtl/rv_plic.sv
+      - rv_plic/rtl/rv_plic_target.sv
+      - rv_plic/rtl/rv_plic_reg_top.sv
+      - rv_plic/rtl/rv_plic_gateway.sv
+    file_type : systemVerilogSource, VerilogSource
+targets:
+  default: &default
+    filesets: [azadi]
