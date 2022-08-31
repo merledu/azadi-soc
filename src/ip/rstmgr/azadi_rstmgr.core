@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-II_rstmgr:1.0"
+name: "merl:azadi-II:azadi_rstmgr:1.0"
 description: "Azadi SoC rstmgr core files."
 filesets:
   azadi:

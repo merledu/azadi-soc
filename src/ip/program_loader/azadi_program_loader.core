@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-II_program_loader:1.0"
+name: "merl:azadi-II:azadi_program_loader:1.0"
 description: "Azadi SoC program_loader core files."
 filesets:
   azadi:

@@ -1,0 +1,16 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_ip:1.0"
+description: "Azadi SoC ip core file."
+filesets:
+  azadi:
+    depend:
+      - merl:azadi-II:azadi_prim
+      - merl:azadi-II:azadi_program_loader
+      - merl:azadi-II:azadi_rstmgr
+      - merl:azadi-II:azadi_rv_dm
+      - merl:azadi-II:azadi_rv_plic
+      - merl:azadi-II:azadi_sram_interfaces
+      - merl:azadi-II:azadi_xbar
+targets:
+  default: &default
+    filesets: [azadi]

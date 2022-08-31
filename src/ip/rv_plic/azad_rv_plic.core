@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-II_rv_plic:1.0"
+name: "merl:azadi-II:azadi_rv_plic:1.0"
 description: "Azadi SoC rv_plic core files."
 filesets:
   azadi:

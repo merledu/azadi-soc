@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-II_sram_interfaces:1.0"
+name: "merl:azadi-II:azadi_sram_interfaces:1.0"
 description: "Azadi SoC sram_interfaces core files."
 filesets:
   azadi:

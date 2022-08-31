@@ -1,12 +1,12 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-II_sim:1.0"
+name: "merl:azadi-II:azadi_sim:1.0"
 description: "Azadi SoC simulation core file."
 filesets:
   azadi:
     depend:
-      - merl:azadi-II:azadi-II-verif
-      - merl:azadi-II:azadi-II-pkg
-      - merl:azadi-II:azadi-II_rtl
+      - merl:azadi-II:azadi-prog_loader_pkg
+      - merl:azadi-II:azadi-pkg
+      - merl:azadi-II:azadi_rtl
   tb:
     files:
       - verif/verilator/sim.cpp

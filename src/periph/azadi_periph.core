@@ -1,0 +1,14 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_periph:1.0"
+description: "Azadi SoC peripherals core file."
+filesets:
+  azadi:
+    depend:
+      - merl:azadi-II:azadi_spi_host
+      - merl:azadi-II:azadi_pwm
+      - merl:azadi-II:azadi_gpio
+      - merl:azadi-II:azadi_rv_timer
+      - merl:azadi-II:azadi_uart
+targets:
+  default: &default
+    filesets: [azadi]

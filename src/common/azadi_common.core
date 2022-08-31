@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-II_common:1.0"
+name: "merl:azadi-II:azadi_common:1.0"
 description: "Azadi SoC all common files."
 filesets:
   azadi:

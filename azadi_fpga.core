@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-II_fpga:1.0"
+name: "merl:azadi-II:azadi_fpga:1.0"
 description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC."
 filesets:
   azadi:
