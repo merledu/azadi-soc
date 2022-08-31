@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-IIuart:1.0"
+name: "merl:azadi-II:azadi-II_uart:1.0"
 description: "Azadi SoC UART core files."
 filesets:
   azadi:

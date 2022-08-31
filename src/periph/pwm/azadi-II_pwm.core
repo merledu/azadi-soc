@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-IIpwm:1.0"
+name: "merl:azadi-II:azadi-II_pwm:1.0"
 description: "Azadi SoC pwm core files."
 filesets:
   azadi:

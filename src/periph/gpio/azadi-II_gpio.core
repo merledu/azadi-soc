@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-IIgpio:1.0"
+name: "merl:azadi-II:azadi-II_gpio:1.0"
 description: "Azadi SoC gpio core files."
 filesets:
   azadi:

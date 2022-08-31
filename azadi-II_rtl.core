@@ -5,9 +5,9 @@ filesets:
   azadi:
     depend:
       - lowrisc:ibex:ibex_core
-      - merl:azadi-II:azadi-IIperiph
-      - merl:azadi-II:azadi-IIip
-      - merl:azadi-II:azadi-IIcommon
+      - merl:azadi-II:azadi-II_periph
+      - merl:azadi-II:azadi-II_ip
+      - merl:azadi-II:azadi-II_common
     files:
       - src/top/azadi_top_verilator.sv
       - src/top/azadi_soc_top.sv

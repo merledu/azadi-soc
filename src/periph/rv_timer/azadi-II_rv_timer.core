@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-IIrv_timer:1.0"
+name: "merl:azadi-II:azadi-II_rv_timer:1.0"
 description: "Azadi SoC rv_timer core files."
 filesets:
   azadi:

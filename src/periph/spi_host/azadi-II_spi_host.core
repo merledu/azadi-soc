@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi-IIspi_host:1.0"
+name: "merl:azadi-II:azadi-II_spi_host:1.0"
 description: "Azadi SoC spi_host core files."
 filesets:
   azadi:

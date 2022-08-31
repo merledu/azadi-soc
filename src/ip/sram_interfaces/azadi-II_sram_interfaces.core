@@ -1,0 +1,13 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-II_sram_interfaces:1.0"
+description: "Azadi SoC sram_interfaces core files."
+filesets:
+  azadi:
+    files:
+      - rtl/instr_mem_top.sv
+      - rtl/data_mem_top.sv
+      - rtl/sram_32x1024.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

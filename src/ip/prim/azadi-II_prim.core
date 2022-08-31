@@ -1,0 +1,10 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-II_prim:1.0"
+description: "Azadi SoC prim core files."
+filesets:
+  azadi:
+    files:
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

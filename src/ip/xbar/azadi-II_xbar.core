@@ -1,0 +1,11 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-II_xbar:1.0"
+description: "Azadi SoC xbar core files."
+filesets:
+  azadi:
+    files:
+      - rtl/tl_xbar_main.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]
