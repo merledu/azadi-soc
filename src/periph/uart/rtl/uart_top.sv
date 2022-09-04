@@ -11,8 +11,8 @@ module uart_top (
     input logic rst_ni,
 
   // Bus Interface
-    input  tlul_pkg::tl_h2d_t tl_i,
-    output tlul_pkg::tl_d2h_t tl_o,
+    input  tlul_pkg::tlul_h2d_t tl_i,
+    output tlul_pkg::tlul_d2h_t tl_o,
    
     output logic tx_o,
     input  logic rx_i,
@@ -39,10 +39,12 @@ uart_core u_uart_core(
     .addr    (addr),    
     .tx_o    (tx_o),
     .rx_i    (rx_i),
-    .intr_tx (intr_tx)
-    // .intr_rx (intr_rx)
+    
+    .intr_tx (intr_tx),
+    .intr_rx (intr_rx)
 );
 
+    
  tlul_adapter_reg #(
     .RegAw(8),
     .RegDw(32)

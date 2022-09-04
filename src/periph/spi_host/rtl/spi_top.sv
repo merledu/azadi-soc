@@ -6,8 +6,8 @@ module spi_top(
   input logic clk_i,
   input logic rst_ni,
 
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  input  tlul_pkg::tlul_h2d_t tl_i,
+  output tlul_pkg::tlul_d2h_t tl_o,
 
   // SPI signals                  
   output logic    intr_rx_o,

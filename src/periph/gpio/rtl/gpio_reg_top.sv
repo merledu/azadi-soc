@@ -10,8 +10,8 @@ module gpio_reg_top (
   input logic rst_ni,
 
   // Below Regster interface can be changed
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  input  tlul_pkg::tlul_h2d_t tl_i,
+  output tlul_pkg::tlul_d2h_t tl_o,
   // To HW
   output gpio_reg_pkg::gpio_reg2hw_t reg2hw, // Write
   input  gpio_reg_pkg::gpio_hw2reg_t hw2reg, // Read
@@ -39,8 +39,8 @@ module gpio_reg_top (
 
   logic [DW-1:0] reg_rdata_next;
 
-  tlul_pkg::tl_h2d_t tl_reg_h2d;
-  tlul_pkg::tl_d2h_t tl_reg_d2h;
+  tlul_pkg::tlul_h2d_t tl_reg_h2d;
+  tlul_pkg::tlul_d2h_t tl_reg_d2h;
 
   assign tl_reg_h2d = tl_i;
   assign tl_o       = tl_reg_d2h;

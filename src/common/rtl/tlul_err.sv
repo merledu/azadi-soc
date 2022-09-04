@@ -2,7 +2,7 @@
 
 module tlul_err import tlul_pkg::*; (
 
-  input tl_h2d_t tl_i,
+  input tlul_h2d_t tl_i,
 
   output logic err_o
 );

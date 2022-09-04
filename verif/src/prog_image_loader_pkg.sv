@@ -10,7 +10,7 @@ package prog_image_loader_pkg;
     hex_fd = $fopen(hex_file, "r");
   
     if (hex_fd == 0)
-      $display("Hex file not opened! Check path.");
+      $fatal("Hex file not opened! Check path.");
     else 
       $display("Hex file opened succesfully!!!");
   
@@ -18,7 +18,7 @@ package prog_image_loader_pkg;
     while ($fscanf(hex_fd, "%s", astring) != 0 && !$feof(hex_fd)) begin
       if (astring[0] == "@" && astring.len() > 1) begin
         addr_string = astring.substr(1, astring.len()-1);
-        addr = addr_string.atohex();
+        // addr = addr_string.atohex();
       end
       else begin
         data = astring.atohex();

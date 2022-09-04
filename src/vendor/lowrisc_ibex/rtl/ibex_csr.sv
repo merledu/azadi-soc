@@ -6,7 +6,7 @@
  * Control / status register primitive
  */
 
-`include "prim_assert.sv"
+`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
 
 module ibex_csr #(
     parameter int unsigned    Width      = 32,

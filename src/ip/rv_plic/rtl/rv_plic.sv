@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
+// Modified by MERL, for Azadi SoC
+//
 // RISC-V Platform-Level Interrupt Controller compliant INTC
 //
 //   Current version doesn't support MSI interrupt but it is easy to add
@@ -22,8 +24,8 @@ module rv_plic import rv_plic_reg_pkg::*; #(
   input logic     rst_ni,
 
   // Bus Interface (device)
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  input  tlul_pkg::tlul_h2d_t tl_i,
+  output tlul_pkg::tlul_d2h_t tl_o,
 
   // Interrupt Sources
   input  logic [NumSrc-1:0] intr_src_i,
@@ -40,11 +42,10 @@ module rv_plic import rv_plic_reg_pkg::*; #(
   localparam int MAX_PRIO    = 3;
   localparam int PRIOW = $clog2(MAX_PRIO+1);
 
-  logic [SRCW:0]      irq_id_o [NumTarget];
+  logic [SRCW-1:0]   irq_id_o [NumTarget];
 
   logic [NumSrc-1:0] le; // 0:level 1:edge
   logic [NumSrc-1:0] ip;
-
   logic [NumSrc-1:0] ie [NumTarget];
 
   logic [NumTarget-1:0] claim_re; // Target read indicator
@@ -55,10 +56,8 @@ module rv_plic import rv_plic_reg_pkg::*; #(
   logic [SRCW-1:0]      complete_id [NumTarget];
   logic [NumSrc-1:0]    complete; // Converted from complete_re/complete_id
 
-  logic [SRCW:0]      cc_id [NumTarget]; // Write ID
-
+  logic [SRCW-1 :0] cc_id [NumTarget]; // Write ID
   logic [PRIOW-1:0] prio [NumSrc];
-
   logic [PRIOW-1:0] threshold [NumTarget];
 
   // Glue logic between rv_plic_reg_top and others
@@ -80,11 +79,6 @@ module rv_plic import rv_plic_reg_pkg::*; #(
       end 
     end
   end
-
-  //`ASSERT_PULSE(claimPulse, claim_re[i])
-  //`ASSERT_PULSE(completePulse, complete_we[i])
-
-
 
   //////////////
   // Priority //
@@ -126,10 +120,23 @@ module rv_plic import rv_plic_reg_pkg::*; #(
   assign prio[34] = reg2hw.prio34.q;
   assign prio[35] = reg2hw.prio35.q;
   assign prio[36] = reg2hw.prio36.q;
+  assign prio[37] = reg2hw.prio37.q;
+  assign prio[38] = reg2hw.prio38.q;
+  assign prio[39] = reg2hw.prio39.q;
+  assign prio[40] = reg2hw.prio40.q;
+  assign prio[41] = reg2hw.prio41.q;
+  assign prio[42] = reg2hw.prio42.q;
+  assign prio[43] = reg2hw.prio43.q;
+  assign prio[44] = reg2hw.prio44.q;
+  assign prio[45] = reg2hw.prio45.q;
+  assign prio[46] = reg2hw.prio46.q;
+  assign prio[47] = reg2hw.prio47.q;
+  assign prio[48] = reg2hw.prio48.q;
+
   //////////////////////
   // Interrupt Enable //
   //////////////////////
-  for (genvar s = 0; s < 37; s++) begin : gen_ie0
+  for (genvar s = 0; s < NumSrc; s++) begin : gen_ie0
     assign ie[0][s] = reg2hw.ie0[s].q;
   end
 
@@ -155,7 +162,7 @@ module rv_plic import rv_plic_reg_pkg::*; #(
   ////////
   // IP //
   ////////
-  for (genvar s = 0; s < 37; s++) begin : gen_ip
+  for (genvar s = 0; s < NumSrc; s++) begin : gen_ip
     assign hw2reg.ip[s].de = 1'b1; // Always write
     assign hw2reg.ip[s].d  = ip[s];
   end
@@ -163,7 +170,7 @@ module rv_plic import rv_plic_reg_pkg::*; #(
   ///////////////////////////////////
   // Detection:: 0: Level, 1: Edge //
   ///////////////////////////////////
-  for (genvar s = 0; s < 37; s++) begin : gen_le
+  for (genvar s = 0; s < NumSrc; s++) begin : gen_le
     assign le[s] = reg2hw.le[s].q;
   end
 
@@ -226,7 +233,4 @@ module rv_plic import rv_plic_reg_pkg::*; #(
     .devmode_i  (1'b1)
   );
 
-
-
 endmodule
-

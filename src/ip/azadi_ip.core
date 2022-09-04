@@ -4,13 +4,14 @@ description: "Azadi SoC ip core file."
 filesets:
   azadi:
     depend:
-      - merl:azadi-II:azadi_prim
-      - merl:azadi-II:azadi_program_loader
+      - merl:azadi-II:azadi_boot_addr_mngr
+      - merl:azadi-II:azadi_pin_mux
+      - merl:azadi-II:azadi_qspi
+      - merl:azadi-II:azadi_rom
+      - merl:azadi-II:azadi_tic
       - merl:azadi-II:azadi_rstmgr
-      - merl:azadi-II:azadi_rv_dm
       - merl:azadi-II:azadi_rv_plic
       - merl:azadi-II:azadi_sram_interfaces
-      - merl:azadi-II:azadi_xbar
 targets:
   default: &default
     filesets: [azadi]

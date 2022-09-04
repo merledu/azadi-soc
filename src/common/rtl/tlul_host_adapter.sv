@@ -31,8 +31,8 @@ module tlul_host_adapter #(
     output logic [tlul_pkg::TL_DW-1:0] rdata_o,
     output logic                        err_o,
 // interface with other tilelink agents or tlul interface
-    output tlul_pkg::tl_h2d_t          tl_h_c_a, // tilelink host channel A
-    input  tlul_pkg::tl_d2h_t          tl_h_c_d  // tilelink host channel D
+    output tlul_pkg::tlul_h2d_t          tl_h_c_a, // tilelink host channel A
+    input  tlul_pkg::tlul_d2h_t          tl_h_c_d  // tilelink host channel D
 );
 
     localparam int WordSize = $clog2(tlul_pkg::TL_DBW);

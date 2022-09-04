@@ -14,7 +14,7 @@
  * file.
  */
 
-`include "prim_assert.sv"
+`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
 
 module ibex_id_stage #(
     parameter bit               RV32E           = 0,
@@ -185,7 +185,7 @@ module ibex_id_stage #(
     output logic                      instr_id_done_o,
 
     // Floating point extensions IO
-    output fpnew_pkg::roundmode_e     fp_rounding_mode_o,    // defines the rounding mode 
+    output fpnew_pkg::roundmode_e     fp_rounding_mode_o,    // defines the rounding mode
 
     input  logic [FPU_WIDTH-1:0]      fp_rf_rdata_a_i,
     input  logic [FPU_WIDTH-1:0]      fp_rf_rdata_b_i,
@@ -315,7 +315,7 @@ module ibex_id_stage #(
   logic [31:0] alu_operand_a;
   logic [31:0] alu_operand_b;
 
-  /* FPU limit start */ 
+  /* FPU limit start */
   logic                 fpu_to_int_rf;
   logic                 mv_instn_xw;
   logic                 mv_instn_wx;
@@ -327,14 +327,14 @@ module ibex_id_stage #(
   logic [FPU_WIDTH-1:0] fpu_op_b;
   logic [FPU_WIDTH-1:0] fpu_op_c;
   logic [FPU_WIDTH-1:0] fp_result_wb;
-  
+
   if (RVF == RV32FSingle || RVF == RV32DDouble) begin
     assign fpu_op_a = use_fp_rs1_o ? fp_rf_rdata_a_fwd : rf_rdata_a_fwd;
     assign fpu_op_b = use_fp_rs2_o ? fp_rf_rdata_b_fwd : rf_rdata_b_fwd;
     assign fpu_op_c = fp_rf_rdata_c_fwd;
 
     /* Swap operands for FADD/FSUB */
-    assign fp_operands_o = fp_swap_oprnds_o ? {fpu_op_b, fpu_op_a, fpu_op_c} : 
+    assign fp_operands_o = fp_swap_oprnds_o ? {fpu_op_b, fpu_op_a, fpu_op_c} :
                                               {fpu_op_c, fpu_op_b, fpu_op_a};
 
     logic [FPU_WIDTH-1:0] fpu_wb_rf_int;
@@ -548,7 +548,7 @@ module ibex_id_stage #(
       .branch_in_dec_o                 ( branch_in_dec        ),
 
       // Floating point extensions IO
-      .fp_rounding_mode_o              ( fp_rounding_mode_o    ),   // defines the rounding mode 
+      .fp_rounding_mode_o              ( fp_rounding_mode_o    ),   // defines the rounding mode
       .fp_rf_raddr_a_o                 ( fp_rf_raddr_a_o       ),
       .fp_rf_raddr_b_o                 ( fp_rf_raddr_b_o       ),
       .fp_rf_raddr_c_o                 ( fp_rf_raddr_c_o       ),
@@ -562,7 +562,7 @@ module ibex_id_stage #(
       .fp_src_fmt_o                    ( fp_src_fmt_o          ),
       .fp_dst_fmt_o                    ( fp_dst_fmt_o          ),
       .fp_rm_dynamic_o                 ( fp_rm_dynamic_o       ),
-      .is_fp_instr_o                   ( is_fp_instr_o         ), 
+      .is_fp_instr_o                   ( is_fp_instr_o         ),
       .use_fp_rs1_o                    ( use_fp_rs1_o          ),
       .use_fp_rs2_o                    ( use_fp_rs2_o          ),
       .use_fp_rs3_o                    ( use_fp_rs3_o          ),
@@ -581,7 +581,7 @@ module ibex_id_stage #(
 
   // Suppress register write if there is an illegal CSR access or instruction is not executing
   assign rf_we_id_o = rf_we_raw & instr_executing & ~illegal_csr_insn_i;
-  
+
   // Register file write data mux
   always_comb begin : rf_wdata_id_mux
     unique case (rf_wdata_sel)
@@ -1028,7 +1028,7 @@ module ibex_id_stage #(
     // resolved via a stall (see above).
     assign rf_rdata_a_fwd = rf_rd_a_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_a_i;
     assign rf_rdata_b_fwd = rf_rd_b_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_b_i;
-    
+
     // forwarding for floating point unit
     logic unused_fpu_wires;
     if (RVF == RV32FSingle || RVF == RV32DDouble) begin
@@ -1084,7 +1084,7 @@ module ibex_id_stage #(
     // register file
     assign rf_rdata_a_fwd = rf_rdata_a_i;
     assign rf_rdata_b_fwd = rf_rdata_b_i;
-    
+
     logic unused_fpu_wires;
     if (RVF == RV32FSingle || RVF == RV32DDouble) begin
       assign fp_rf_rdata_a_fwd = fp_rf_rdata_a_i;

@@ -6,13 +6,12 @@
 module tlul_err_resp (
   input  logic              clk_i,
   input  logic              rst_ni,
-  input  tlul_pkg::tl_h2d_t tl_h_i,
-  output tlul_pkg::tl_d2h_t tl_h_o
+  input  tlul_pkg::tlul_h2d_t tl_h_i,
+  output tlul_pkg::tlul_d2h_t tl_h_o
 );
   import tlul_pkg::*;
 
-  tlul_pkg::tl_a_m_op        err_opcode;
-//  tlul_pkg::tl_a_m_op    get;
+  tlul_pkg::tlul_a_m_op        err_opcode;
   logic [$bits(tl_h_i.a_source)-1:0] err_source;
   logic [$bits(tl_h_i.a_size)-1:0]   err_size;
   logic                              err_req_pending, err_rsp_pending;

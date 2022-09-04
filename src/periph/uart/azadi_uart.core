@@ -4,13 +4,13 @@ description: "Azadi SoC UART core files."
 filesets:
   azadi:
     files:
-      - rtl/generic_fifo.sv
+      - rtl/buffer_control.sv
       - rtl/rx_timer.sv
-      - rtl/uart_tx.v
-      - rtl/uart_core.v
-      - rtl/uart_rx.v
+      - rtl/uart_tx.sv
+      - rtl/uart_core.sv
+      - rtl/uart_rx.sv
       - rtl/uart_top.sv
-    file_type : systemVerilogSource, VerilogSource
+    file_type : systemVerilogSource
 targets:
   default: &default
     filesets: [azadi]

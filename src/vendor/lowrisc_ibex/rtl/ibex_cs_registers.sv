@@ -10,7 +10,7 @@
  * Specification, draft version 1.11
  */
 
-`include "prim_assert.sv"
+`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
 
 module ibex_cs_registers #(
     parameter bit               DbgTriggerEn      = 0,
@@ -304,7 +304,7 @@ module ibex_cs_registers #(
   assign mip.irq_timer    = irq_timer_i;
   assign mip.irq_external = irq_external_i;
   assign mip.irq_fast     = irq_fast_i;
-  
+
   // Floating point
   always_comb begin
     illegal_dyn_mod =  1'b0;
@@ -318,7 +318,7 @@ module ibex_cs_registers #(
     end
     fp_frm_o = frm_q;
   end
-  
+
   // read logic
   always_comb begin
     csr_rdata_int = '0;
@@ -327,10 +327,10 @@ module ibex_cs_registers #(
     unique case (csr_addr_i)
       // fcsr: floating-point control and status register (frm+fflags)
       CSR_FCSR: csr_rdata_int = {24'b0 , frm_q, fflags_q};
-      
+
       // fflags: floating-point accrued exception
       CSR_FFLAG: csr_rdata_int = {27'b0 , fflags_q};
-      
+
       // frm: floating-point dynamic rounding mode
       CSR_FRM: begin
         csr_rdata_int = {29'b0 , frm_q};
@@ -556,7 +556,7 @@ module ibex_cs_registers #(
     if (csr_we_int) begin
       unique case (csr_addr_i)
         // FPU
-        CSR_FCSR: begin 
+        CSR_FCSR: begin
           fflags_en = 1'b1;
           frm_en    = 1'b1;
           fflags_d  = csr_wdata_int[4:0];
@@ -570,7 +570,7 @@ module ibex_cs_registers #(
 
         CSR_FRM: begin
           frm_en  = 1'b1;
-          frm_d   = roundmode_e'(csr_wdata_int[2:0]); 
+          frm_d   = roundmode_e'(csr_wdata_int[2:0]);
         end
 
         // mstatus: IE bit
@@ -851,7 +851,7 @@ module ibex_cs_registers #(
     .rd_data_o  (frm_q),
     .rd_error_o ()
   );
-  
+
   // MEPC
   ibex_csr #(
     .Width      (32),

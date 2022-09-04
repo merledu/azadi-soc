@@ -11,7 +11,7 @@
  * assertions only.
  */
 
-`include "prim_assert.sv"
+`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
 
 module ibex_decoder #(
     parameter bit RV32E                = 0,
@@ -98,7 +98,7 @@ module ibex_decoder #(
     output logic                 branch_in_dec_o,
 
     // Floating point extensions IO
-    output fpnew_pkg::roundmode_e fp_rounding_mode_o,      // defines the rounding mode 
+    output fpnew_pkg::roundmode_e fp_rounding_mode_o,      // defines the rounding mode
 
     output logic [4:0]            fp_rf_raddr_a_o,
     output logic [4:0]            fp_rf_raddr_b_o,
@@ -132,7 +132,7 @@ module ibex_decoder #(
   import fpnew_pkg::*;
 
   logic        fp_invalid_rm;
- 
+
   logic        illegal_insn;
   logic        illegal_reg_rv32e;
   logic        csr_illegal;
@@ -281,7 +281,7 @@ module ibex_decoder #(
     use_fp_rs3_o          = 1'b0;
     use_fp_rd_o           = 1'b0;
     fp_load_o             = 1'b0;
-    fp_src_fmt_o          = FP32; 
+    fp_src_fmt_o          = FP32;
     fp_dst_fmt_o          = FP32;
     fp_swap_oprnds_o      = 1'b0;
     mv_instn_xw_o         = 1'b0;
@@ -705,7 +705,7 @@ module ibex_decoder #(
           end
           3'b010: begin // FSW
             illegal_insn = (RVF == RV32FDNone) ? 1'b1 : 1'b0;
-            fp_src_fmt_o = FP32; 
+            fp_src_fmt_o = FP32;
           end
           default: illegal_insn = 1'b1;
         endcase
@@ -718,7 +718,7 @@ module ibex_decoder #(
         rf_ren_a_o         = 1'b1;
         fp_rf_ren_b_o      = 1'b1;
 
-        use_fp_rd_o        = 1'b1; 
+        use_fp_rd_o        = 1'b1;
 
         unique case(instr[14:12])
           3'b011: begin // FLD
@@ -727,7 +727,7 @@ module ibex_decoder #(
           end
           3'b010: begin // FLW
             illegal_insn = (RVF == RV32FDNone) ? 1'b1 : 1'b0;
-            fp_src_fmt_o = FP32; 
+            fp_src_fmt_o = FP32;
           end
           default: illegal_insn = 1'b1;
         endcase
@@ -747,9 +747,9 @@ module ibex_decoder #(
         use_fp_rs1_o       = 1'b1;
         use_fp_rs2_o       = 1'b1;
         use_fp_rs3_o       = 1'b1;
-        use_fp_rd_o        = 1'b1; 
+        use_fp_rd_o        = 1'b1;
         fflags_en_id_o     = 1'b1;
-        
+
         unique case (instr[26:25])
           01: begin
             illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
@@ -768,7 +768,7 @@ module ibex_decoder #(
         is_fp_instr_o      = 1'b1;
         fflags_en_id_o     = 1'b1;
 
-        unique case (instr[31:25]) 
+        unique case (instr[31:25])
           7'b0000001,       // FADD.D
           7'b0000101: begin // FSUB.D
             fp_rf_ren_a_o      = 1'b1;
@@ -909,7 +909,7 @@ module ibex_decoder #(
             use_fp_rs1_o       = 1'b1;
             use_fp_rd_o        = 1'b1;
             fp_rf_ren_a_o      = 1'b1;
-            if (~|instr[24:20]) begin 
+            if (~|instr[24:20]) begin
               illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
               fp_src_fmt_o = FP64;
             end
@@ -963,8 +963,8 @@ module ibex_decoder #(
             rf_we            = 1'b1;  // write back in int_regfile
             use_fp_rs1_o     = 1'b1;
             fp_rf_ren_a_o    = 1'b1;
-            unique case ({instr[24:20],instr[14:12]}) 
-              {5'b00000,3'b001}: begin  
+            unique case ({instr[24:20],instr[14:12]})
+              {5'b00000,3'b001}: begin
                 illegal_insn = ((RVF == RV32DDouble) & (fp_invalid_rm)) ? 1'b0 : 1'b1;
                 fp_src_fmt_o = FP64;
               end
@@ -1038,7 +1038,7 @@ module ibex_decoder #(
       jump_set_o      = 1'b0;
       branch_in_dec_o = 1'b0;
       csr_access_o    = 1'b0;
-      
+
       // floating point
       fp_rf_we_o      = 1'b0;
     end
@@ -1611,7 +1611,7 @@ module ibex_decoder #(
         endcase
       end
 
-      OPCODE_NMADD_FP: begin //FNMADD.S, FNMADD.S     
+      OPCODE_NMADD_FP: begin //FNMADD.S, FNMADD.S
         unique case (instr[26:25])
           01: begin
             fp_alu_operator_o     = FNMSUB;
@@ -1697,7 +1697,7 @@ module ibex_decoder #(
             end
           end
           7'b0100001: begin // FCVT.D.S
-            if (~|instr[24:20]) begin 
+            if (~|instr[24:20]) begin
               fp_alu_operator_o     = F2F;
             end
           end
@@ -1729,11 +1729,11 @@ module ibex_decoder #(
               end
               default: ;
             endcase
-          end 
+          end
           7'b1100001: begin // // FCVT.W.D, FCVT.WU.D
             if (~|instr[24:21]) begin
               fp_alu_operator_o     = F2I;
-              
+
               if (instr[20])
                 fp_alu_op_mod_o     = 1'b1;
             end

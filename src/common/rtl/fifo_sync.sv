@@ -133,7 +133,7 @@ module fifo_sync #(
     if (Depth == 1) begin : gen_depth_eq1
       assign storage_rdata = storage[0];
 
-      always_ff @(posedge clk_i or negedge rst_ni)
+      always_ff @(posedge clk_i)
        // if (fifo_incr_wptr) begin
 	  if(~rst_ni) begin
 	    storage[0] <= '0;
@@ -146,7 +146,7 @@ module fifo_sync #(
     end else begin : gen_depth_gt1
       assign storage_rdata = storage[fifo_rptr[PTR_WIDTH-2:0]];
 
-      always_ff @(posedge clk_i or negedge rst_ni)
+      always_ff @(posedge clk_i)
       //  if (fifo_incr_wptr) begin
 	   if(~rst_ni) begin
 	     storage[fifo_wptr[PTR_WIDTH-2:0]] <='0;

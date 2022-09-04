@@ -2,16 +2,14 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-// Modified for the use in Azadi-SoC
-
 module rv_timer (
   input logic clk_i,
   input logic rst_ni,
 
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  input  tlul_pkg::tlul_h2d_t tl_i,
+  output tlul_pkg::tlul_d2h_t tl_o,
 
-  output logic intr_timer_expired_o
+  output logic irq_timer_o
 );
 
   localparam int N_HARTS  = 1;
@@ -62,7 +60,7 @@ module rv_timer (
   assign mtimecmp = '{'{{reg2hw.compare_upper0_0.q,reg2hw.compare_lower0_0.q}}};
   assign mtimecmp_update[0][0] = reg2hw.compare_upper0_0.qe | reg2hw.compare_lower0_0.qe;
 
-  assign intr_timer_expired_o = intr_out[0];
+  assign irq_timer_o              = intr_out[0];
   assign intr_timer_en            = reg2hw.intr_enable0[0].q;
   assign intr_timer_state_q       = reg2hw.intr_state0[0].q;
   assign intr_timer_test_q        = reg2hw.intr_test0[0].q;
@@ -122,5 +120,6 @@ module rv_timer (
 
     .devmode_i  (1'b1)
   );
+
 
 endmodule

@@ -17,8 +17,8 @@ module tlul_sram_adapter #(
   input   logic rst_ni,
 
   // TL-UL interface
-  input   tlul_pkg::tl_h2d_t  tl_i,
-  output  tlul_pkg::tl_d2h_t  tl_o,
+  input   tlul_pkg::tlul_h2d_t  tl_i,
+  output  tlul_pkg::tlul_d2h_t  tl_o,
 
   // SRAM interface
   output logic              req_o,
@@ -288,7 +288,8 @@ module tlul_sram_adapter #(
     .depth_o (),
     .rvalid_o(reqfifo_rvalid),
     .rready_i(reqfifo_rready),
-    .rdata_o (reqfifo_rdata)
+    .rdata_o (reqfifo_rdata),
+    .full_o ()
   );
 
   // sramreqfifo:
@@ -309,7 +310,8 @@ module tlul_sram_adapter #(
     .depth_o (),
     .rvalid_o(),
     .rready_i(sramreqfifo_rready),
-    .rdata_o (sramreqfifo_rdata)
+    .rdata_o (sramreqfifo_rdata),
+    .full_o  ()
   );
 
   // Rationale having #Outstanding depth in response FIFO.
@@ -332,7 +334,8 @@ module tlul_sram_adapter #(
     .depth_o (),
     .rvalid_o(rspfifo_rvalid),
     .rready_i(rspfifo_rready),
-    .rdata_o (rspfifo_rdata)
+    .rdata_o (rspfifo_rdata),
+    .full_o  ()
   );
 
 endmodule

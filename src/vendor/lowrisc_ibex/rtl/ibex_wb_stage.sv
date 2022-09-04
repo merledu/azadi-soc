@@ -11,7 +11,7 @@
  * a simple passthrough to write data direct to the register file.
  */
 
-`include "prim_assert.sv"
+`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
 
 module ibex_wb_stage #(
   parameter bit WritebackStage = 1'b0,
@@ -54,7 +54,7 @@ module ibex_wb_stage #(
   output logic                     instr_done_wb_o,
 
   // floating point
-  input  logic [FPU_WIDTH-1:0]     fp_rf_wdata_id_i, 
+  input  logic [FPU_WIDTH-1:0]     fp_rf_wdata_id_i,
   output logic                     fp_rf_write_wb_o,
   output logic                     fp_rf_wen_wb_o,
   output logic [4:0]               fp_rf_waddr_wb_o,
@@ -70,7 +70,7 @@ module ibex_wb_stage #(
   // 1 == RF write from LSU
   logic [31:0] rf_wdata_wb_mux[2];
   logic [1:0]  rf_wdata_wb_mux_we;
-  
+
   logic [31:0] fp_rf_wdata_wb_mux[2];
   logic [1:0]  fp_rf_wdata_wb_mux_we;
 
@@ -166,7 +166,7 @@ module ibex_wb_stage #(
       assign fp_rf_waddr_wb_o         = fp_rf_waddr_wb_q;
       assign fp_rf_wdata_wb_mux[0]    = fp_rf_wdata_wb_q;
       assign fp_rf_wdata_wb_mux_we[0] = fp_rf_we_wb_q & wb_valid_q;
-      
+
       // Instruction in writeback will be writing to register file if either rf_we is set or writeback
       // is awaiting load data. This is used for determining RF read hazards in ID/EX
       assign fp_rf_write_wb_o = wb_valid_q & (fp_rf_we_wb_q | (wb_instr_type_q == WB_INSTR_LOAD));
@@ -221,9 +221,9 @@ module ibex_wb_stage #(
     assign rf_wdata_wb_mux[1]     = rf_wdata_lsu_i;
 
     // FPU
-    if (RVF == RV32FSingle || RVF == RV32DDouble) begin          
+    if (RVF == RV32FSingle || RVF == RV32DDouble) begin
       assign fp_rf_waddr_wb_o          = rf_waddr_id_i;     // no seperate datapath for rd address
-      assign fp_rf_wdata_wb_mux[0]     = fp_rf_wdata_id_i;  
+      assign fp_rf_wdata_wb_mux[0]     = fp_rf_wdata_id_i;
       assign fp_rf_wdata_wb_mux_we[0]  = fp_rf_wen_id_i;
 
       assign fp_rf_wdata_wb_mux[1]    = rf_wdata_lsu_i;
@@ -242,11 +242,11 @@ module ibex_wb_stage #(
 
   // RF write data can come from ID results (all RF writes that aren't because of loads will come
   // from here) or the LSU (RF writes for load data)
-  assign rf_wdata_wb_o  = (rf_wdata_wb_mux_we[0]) ? rf_wdata_wb_mux[0] : 
+  assign rf_wdata_wb_o  = (rf_wdata_wb_mux_we[0]) ? rf_wdata_wb_mux[0] :
                           rf_wdata_wb_mux[1];
   assign rf_we_wb_o     = |rf_wdata_wb_mux_we;
-  
-  assign fp_rf_wdata_wb_o = fp_rf_wdata_wb_mux_we[0] ? fp_rf_wdata_wb_mux[0] : 
+
+  assign fp_rf_wdata_wb_o = fp_rf_wdata_wb_mux_we[0] ? fp_rf_wdata_wb_mux[0] :
                             fp_rf_wdata_wb_mux[1];
   assign fp_rf_wen_wb_o   = |fp_rf_wdata_wb_mux_we;
 

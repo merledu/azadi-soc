@@ -26,13 +26,13 @@ module ibex_core_top #(
   input  logic              clk_i,
   input  logic              rst_ni,
 
-  // instruction memory interface 
-  input  tlul_pkg::tl_d2h_t tl_i_i,
-  output tlul_pkg::tl_h2d_t tl_i_o,
+  // instruction memory interface
+  input  tlul_pkg::tlul_d2h_t tl_i_i,
+  output tlul_pkg::tlul_h2d_t tl_i_o,
 
-  // data memory interface 
-  input  tlul_pkg::tl_d2h_t tl_d_i,
-  output tlul_pkg::tl_h2d_t tl_d_o,
+  // data memory interface
+  input  tlul_pkg::tlul_d2h_t tl_d_i,
+  output tlul_pkg::tlul_h2d_t tl_d_o,
 
   input  logic              test_en_i,
 
@@ -78,24 +78,24 @@ module ibex_core_top #(
 
   ibex_core #(
     .PMPEnable        (PMPEnable),
-    .PMPGranularity   (PMPGranularity), 
-    .PMPNumRegions    (PMPNumRegions), 
-    .MHPMCounterNum   (MHPMCounterNum), 
-    .MHPMCounterWidth (MHPMCounterWidth), 
-    .RV32E            (RV32E), 
-    .RV32M            (RV32M), 
-    .RV32B            (RV32B), 
-    .RegFile          (RegFile), 
-    .BranchTargetALU  (BranchTargetALU), 
-    .WritebackStage   (WritebackStage), 
-    .ICache           (ICache), 
-    .ICacheECC        (ICacheECC), 
-    .BranchPredictor  (BranchPredictor), 
-    .DbgTriggerEn     (DbgTriggerEn), 
-    .DbgHwBreakNum    (DbgHwBreakNum), 
+    .PMPGranularity   (PMPGranularity),
+    .PMPNumRegions    (PMPNumRegions),
+    .MHPMCounterNum   (MHPMCounterNum),
+    .MHPMCounterWidth (MHPMCounterWidth),
+    .RV32E            (RV32E),
+    .RV32M            (RV32M),
+    .RV32B            (RV32B),
+    .RegFile          (RegFile),
+    .BranchTargetALU  (BranchTargetALU),
+    .WritebackStage   (WritebackStage),
+    .ICache           (ICache),
+    .ICacheECC        (ICacheECC),
+    .BranchPredictor  (BranchPredictor),
+    .DbgTriggerEn     (DbgTriggerEn),
+    .DbgHwBreakNum    (DbgHwBreakNum),
     .SecureIbex       (SecureIbex),
-    .DmHaltAddr       (DmHaltAddr), 
-    .DmExceptionAddr  (DmExceptionAddr) 
+    .DmHaltAddr       (DmHaltAddr),
+    .DmExceptionAddr  (DmExceptionAddr)
   ) u_ibex_core (
     // Clock and Reset
     .clk_i          ( clk_i        ),

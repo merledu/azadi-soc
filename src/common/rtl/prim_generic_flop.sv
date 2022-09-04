@@ -9,9 +9,9 @@ module prim_generic_flop # (
   localparam int WidthSubOne = Width-1,
   parameter logic [WidthSubOne:0] ResetValue = 0
 ) (
-  input logic clk_i,
-  input logic rst_ni,
-  input logic [Width-1:0] d_i,
+  input clk_i,
+  input rst_ni,
+  input [Width-1:0] d_i,
   output logic [Width-1:0] q_o
 );
 

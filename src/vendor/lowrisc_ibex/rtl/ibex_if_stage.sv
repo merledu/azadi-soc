@@ -10,7 +10,7 @@
  * the read instruction.
  */
 
-`include "prim_assert.sv"
+`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
 
 module ibex_if_stage #(
     parameter int unsigned DmHaltAddr        = 32'h1A110800,

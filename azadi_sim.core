@@ -4,12 +4,12 @@ description: "Azadi SoC simulation core file."
 filesets:
   azadi:
     depend:
-      - merl:azadi-II:azadi-prog_loader_pkg
       - merl:azadi-II:azadi-pkg
+      - merl:azadi-II:azadi_prog_loader_pkg
       - merl:azadi-II:azadi_rtl
   tb:
     files:
-      - verif/verilator/sim.cpp
+      - verif/src/sim.cpp
     file_type: cppSource
 
 targets:
@@ -26,8 +26,8 @@ targets:
         - done
     tools:
       verilator:
-        verilator_options: [--trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-LATCH, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER, --debug]
-    toplevel: azadi_top_verilator
+        verilator_options: [-Wno-LATCH, --trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER]
+    toplevel: azadi_top_sim
 parameters:
   HEX:
     datatype: str

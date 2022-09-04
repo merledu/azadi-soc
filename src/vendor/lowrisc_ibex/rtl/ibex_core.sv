@@ -7,7 +7,7 @@
   `define RVFI
 `endif
 
-`include "prim_assert.sv"
+`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
 
 /**
  * Top level module of the ibex RISC-V core
@@ -110,7 +110,7 @@ module ibex_core #(
     // output logic        rvfi_frs1_rvalid,
     // output logic        rvfi_frs2_rvalid,
     // output logic        rvfi_frs3_rvalid,
-    // output logic        rvfi_frd_wvalid, 
+    // output logic        rvfi_frd_wvalid,
     // output logic [31:0] rvfi_csr_fcsr_rmask,
     // output logic [31:0] rvfi_csr_fcsr_wmask,
     // output logic [31:0] rvfi_csr_fcsr_rdata,
@@ -127,7 +127,7 @@ module ibex_core #(
   import ibex_pkg::*;
 
   localparam FPU_WIDTH = fpu_width(RVF);
-                 
+
   localparam int unsigned PMP_NUM_CHAN      = 2;
   localparam bit          DataIndTiming     = SecureIbex;
   localparam bit          DummyInstructions = SecureIbex;
@@ -143,8 +143,8 @@ module ibex_core #(
 
   // FPU signals
   logic                   fp_flush;
-  logic                   in_ready_c2fpu;   // ready - from core to FPU 
-  logic                   in_valid_c2fpu;   // valid - from FPU to core 
+  logic                   in_ready_c2fpu;   // ready - from core to FPU
+  logic                   in_valid_c2fpu;   // valid - from FPU to core
   logic                   out_ready_fpu2c;  // ready - from FPU to core
   logic                   out_valid_fpu2c;  // valid - from core to FPU
   logic                   valid_id_fpu;     // select which valid signal will go to dec
@@ -152,7 +152,7 @@ module ibex_core #(
   logic                   fp_alu_op_mod;
   logic                   fp_rf_ren_a;
   logic                   fp_rf_ren_b;
-  logic                   fp_rf_ren_c;  
+  logic                   fp_rf_ren_c;
   logic [4:0]             fp_rf_raddr_a;
   logic [4:0]             fp_rf_raddr_b;
   logic [4:0]             fp_rf_raddr_c;
@@ -161,7 +161,7 @@ module ibex_core #(
   logic [FPU_WIDTH-1:0]   fp_rf_rdata_c;
   logic                   fp_rf_wen_id;
   logic                   is_fp_instr;
-  logic [2:0][FPU_WIDTH-1:0] fp_operands;   // three operands in fpu   
+  logic [2:0][FPU_WIDTH-1:0] fp_operands;   // three operands in fpu
   logic                   pref_fp_div;
   logic                   fp_busy;
   logic                   fpu_busy_idu;
@@ -599,8 +599,8 @@ module ibex_core #(
       .pc_id_i                      ( pc_id                    ),
 
       // Stalls
-      .ex_valid_i                   ( valid_id_fpu             ), // changed by zeeshan from 
-                                                                  // ex_valid to valid_id_fpu 
+      .ex_valid_i                   ( valid_id_fpu             ), // changed by zeeshan from
+                                                                  // ex_valid to valid_id_fpu
                                                                   // for ready selection
       .lsu_resp_valid_i             ( lsu_resp_valid           ),
 
@@ -709,7 +709,7 @@ module ibex_core #(
       .instr_id_done_o              ( instr_id_done            ),
 
       // Floating point extensions IO
-      .fp_rounding_mode_o              ( fp_rounding_mode      ),   // defines the rounding mode 
+      .fp_rounding_mode_o              ( fp_rounding_mode      ),   // defines the rounding mode
       .fp_rf_rdata_a_i                 ( fp_rf_rdata_a         ),
       .fp_rf_rdata_b_i                 ( fp_rf_rdata_b         ),
       .fp_rf_rdata_c_i                 ( fp_rf_rdata_c         ),
@@ -1494,9 +1494,9 @@ module ibex_core #(
             rvfi_stage_frs1_addr[i]  <= fp_rf_ren_a ? fp_rf_raddr_a : '0;
             rvfi_stage_frs2_addr[i]  <= fp_rf_ren_b ? fp_rf_raddr_b : '0;
             rvfi_stage_frs3_addr[i]  <= fp_rf_ren_c ? fp_rf_raddr_c : '0;
-            rvfi_stage_frs1_rdata[i] <= fp_rf_ren_a ? fp_swap_oprnds ? 
+            rvfi_stage_frs1_rdata[i] <= fp_rf_ren_a ? fp_swap_oprnds ?
                                                       fp_operands[1]: fp_operands[0]: '0;
-            rvfi_stage_frs2_rdata[i] <= fp_rf_ren_b ? fp_swap_oprnds ? 
+            rvfi_stage_frs2_rdata[i] <= fp_rf_ren_b ? fp_swap_oprnds ?
                                                       fp_operands[2]: fp_operands[1]: '0;
             rvfi_stage_frs3_rdata[i] <= fp_rf_ren_c ? fp_operands[2]: '0;
             rvfi_stage_frd_addr[i]   <= rvfi_frd_addr_d;

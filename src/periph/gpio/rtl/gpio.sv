@@ -7,8 +7,8 @@ module gpio (
   input logic rst_ni,
 
   // Below Regster interface can be changed
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  input  tlul_pkg::tlul_h2d_t tl_i,
+  output tlul_pkg::tlul_d2h_t tl_o,
 
   input  logic [31:0] cio_gpio_i,
   output logic [31:0] cio_gpio_o,

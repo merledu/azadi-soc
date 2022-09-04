@@ -46,10 +46,10 @@ module tlul_socket_1n #(
 ) (
   input  logic                   clk_i,
   input  logic                   rst_ni,
-  input  tlul_pkg::tl_h2d_t tl_h_i,
-  output tlul_pkg::tl_d2h_t tl_h_o,
-  output tlul_pkg::tl_h2d_t tl_d_o    [N],
-  input  tlul_pkg::tl_d2h_t tl_d_i    [N],
+  input  tlul_pkg::tlul_h2d_t tl_h_i,
+  output tlul_pkg::tlul_d2h_t tl_h_o,
+  output tlul_pkg::tlul_h2d_t tl_d_o    [N],
+  input  tlul_pkg::tlul_d2h_t tl_d_i    [N],
   input  logic [NWD-1:0]          dev_select_i
 );
 
@@ -61,8 +61,8 @@ module tlul_socket_1n #(
   // FIFO'd version of device select
   logic [NWD-1:0] dev_select_t;
 
-  tlul_pkg::tl_h2d_t   tl_t_o;
-  tlul_pkg::tl_d2h_t   tl_t_i;
+  tlul_pkg::tlul_h2d_t   tl_t_o;
+  tlul_pkg::tlul_d2h_t   tl_t_i;
 
   tlul_fifo_sync #(
     .ReqPass(HReqPass),
@@ -117,8 +117,8 @@ module tlul_socket_1n #(
   // Make N copies of 't' request side with modified reqvalid, call
   // them 'u[0]' .. 'u[n-1]'.
 
-  tlul_pkg::tl_h2d_t   tl_u_o [N+1];
-  tlul_pkg::tl_d2h_t   tl_u_i [N+1];
+  tlul_pkg::tlul_h2d_t   tl_u_o [N+1];
+  tlul_pkg::tlul_d2h_t   tl_u_i [N+1];
 
   for (genvar i = 0 ; i < N ; i++) begin : gen_u_o
     assign tl_u_o[i].a_valid   = tl_t_o.a_valid &
@@ -133,7 +133,7 @@ module tlul_socket_1n #(
     assign tl_u_o[i].a_data    = tl_t_o.a_data;
   end
 
-  tlul_pkg::tl_d2h_t tl_t_p ;
+  tlul_pkg::tlul_d2h_t tl_t_p ;
 
   // for the returning reqready, only look at the device we're addressing
   logic hfifo_reqready;

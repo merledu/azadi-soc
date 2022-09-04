@@ -9,11 +9,10 @@ filesets:
       - merl:azadi-II:azadi_ip
       - merl:azadi-II:azadi_common
     files:
-      - src/top/azadi_top_verilator.sv
+      - src/top/azadi_top_sim.sv
       - src/top/azadi_soc_top.sv
       - src/top/ibex_core_top.sv
-      - src/vendor/openram/rtl/sky130_sram_1kbyte_1rw1r_32x256_8.v
-    file_type : systemVerilogSource, VerilogSource
+    file_type : systemVerilogSource,
 targets:
   default: &default
     filesets: [azadi]

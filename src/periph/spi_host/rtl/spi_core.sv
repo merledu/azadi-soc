@@ -26,7 +26,7 @@ module spi_core
 
                                                
   // Internal signals
-  reg [15:0] divider;
+ reg [15:0] divider;
 	reg [15:0] ctrl;
 	reg [3:0] ss;
 	reg [31:0] wb_dat;

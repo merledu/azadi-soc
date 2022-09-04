@@ -1,0 +1,13 @@
+
+/home/uzain/projects/azadi-tsmc/verif/tests/gpio/test.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+10000000 <_stext>:
+10000000:	40001437          	lui	x8,0x40001
+10000004:	fff00613          	li	x12,-1
+10000008:	00c42e23          	sw	x12,28(x8) # 4000101c <_ebss+0x2000101c>
+1000000c:	00c42823          	sw	x12,16(x8)
+10000010:	00000613          	li	x12,0
+10000014:	00c42e23          	sw	x12,28(x8)

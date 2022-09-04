@@ -4,12 +4,13 @@ description: "Azadi SoC spi_host core files."
 filesets:
   azadi:
     files:
-      - rtl/spi_defines.v
+      - rtl/spi_controller_iccm.sv
+      - rtl/spi_defines.sv
       - rtl/spi_core.sv
       - rtl/spi_top.sv
-      - rtl/spi_clgen.v
-      - rtl/spi_shift.v
-    file_type : systemVerilogSource, VerilogSource
+      - rtl/spi_clgen.sv
+      - rtl/spi_shift.sv
+    file_type : systemVerilogSource
 targets:
   default: &default
     filesets: [azadi]

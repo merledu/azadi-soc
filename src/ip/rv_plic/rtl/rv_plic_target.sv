@@ -10,8 +10,6 @@
 // The module implements a binary tree to find the maximal entry. the solution
 // has O(N) area and O(log(N)) delay complexity, and thus scales well with
 // many input sources.
-//
-
 
 module rv_plic_target #(
   parameter int N_SOURCE = 37,

@@ -7,8 +7,8 @@ module tlul_adapter_reg import tlul_pkg::*; #(
   input logic rst_ni,
 
   // TL-UL interface
-  input  tl_h2d_t tl_i,
-  output tl_d2h_t tl_o,
+  input  tlul_h2d_t tl_i,
+  output tlul_d2h_t tl_o,
 
   // Register interface
   output logic             re_o,
@@ -16,8 +16,8 @@ module tlul_adapter_reg import tlul_pkg::*; #(
   output logic [RegAw-1:0] addr_o,
   output logic [RegDw-1:0] wdata_o,
   output logic [RegBw-1:0] be_o,
-  input  logic      [RegDw-1:0] rdata_i,
-  input  logic                  error_i
+  input  logic [RegDw-1:0] rdata_i,
+  input  logic             error_i
 );
 
   localparam int IW  = $bits(tl_i.a_source);
@@ -30,12 +30,11 @@ module tlul_adapter_reg import tlul_pkg::*; #(
   logic             error, err_internal;
 
   logic addr_align_err;     // Size and alignment
-//  logic malformed_meta_err; // User signal format error or unsupported
   logic tl_err;             // Common TL-UL error checker
 
-  logic [IW-1:0]  reqid;
-  logic [SZW-1:0] reqsz;
-  tlul_pkg::tl_d_m_op       rspop;
+  logic [IW-1:0]         reqid;
+  logic [SZW-1:0]        reqsz;
+  tlul_pkg::tlul_d_m_op  rspop;
 
   logic rd_req, wr_req;
 
@@ -97,10 +96,6 @@ module tlul_adapter_reg import tlul_pkg::*; #(
   ////////////////////
   assign err_internal = addr_align_err | tl_err ;
 
-  // malformed_meta_err
-  //    Raised if not supported feature is turned on or user signal has malformed
- // assign malformed_meta_err = (tl_i.a_user.parity_en == 1'b1);
-
   // addr_align_err
   //    Raised if addr isn't aligned with the size
   //    Read size error is checked in tlul_assert.sv
@@ -120,6 +115,5 @@ module tlul_adapter_reg import tlul_pkg::*; #(
     .tl_i (tl_i),
     .err_o (tl_err)
   );
-
 
 endmodule

@@ -4,7 +4,7 @@ description: "Azadi SoC rstmgr core files."
 filesets:
   azadi:
     files:
-      - rtl/rstmgr.sv
+      - rtl/clk_rst_mngr.sv
     file_type : systemVerilogSource
 targets:
   default: &default

@@ -1,0 +1,21 @@
+
+/home/zrafique/projects/azadi-tsmc/verif/tests/basic-test/test.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+10000000 <_start>:
+10000000:	0040006f          	j	10000004 <start>
+
+10000004 <start>:
+10000004:	00100093          	li	x1,1
+10000008:	00200113          	li	x2,2
+1000000c:	00300193          	li	x3,3
+10000010:	0080006f          	j	10000018 <pass>
+10000014:	00200f93          	li	x31,2
+
+10000018 <pass>:
+10000018:	00100f93          	li	x31,1
+
+1000001c <end>:
+1000001c:	0000006f          	j	1000001c <end>

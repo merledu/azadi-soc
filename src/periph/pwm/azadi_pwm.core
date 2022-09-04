@@ -5,10 +5,9 @@ filesets:
   azadi:
     files:
       - rtl/pwm_top.sv
-      - rtl/pwm_core.v
-      - rtl/pwm_channel.v
-      - rtl/pwm_clock.v
-    file_type : systemVerilogSource, VerilogSource
+      - rtl/pwm.sv
+      - rtl/pwm_channel.sv
+    file_type : systemVerilogSource
 targets:
   default: &default
     filesets: [azadi]
