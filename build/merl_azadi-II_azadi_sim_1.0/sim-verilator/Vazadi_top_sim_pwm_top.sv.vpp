@@ -1,0 +1,68 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_pwm_1.0/rtl/pwm_top.sv" 1
+
+module pwm_top #(
+  parameter int AW = 8,
+  parameter int DW = 32,
+
+`line 6 "../src/merl_azadi-II_azadi_pwm_1.0/rtl/pwm_top.sv" 0
+   
+  localparam int DBW = DW/8
+)(
+  input  logic                clk_i,
+  input  logic                rst_ni,
+  input  tlul_pkg::tlul_h2d_t tl_i,
+  output tlul_pkg::tlul_d2h_t tl_o,
+  output logic                pwm1_o,
+  output logic                pwm2_o,
+  output logic                pwm1_oe,
+  output logic                pwm2_oe
+);
+
+`line 19 "../src/merl_azadi-II_azadi_pwm_1.0/rtl/pwm_top.sv" 0
+  logic          re;
+  logic          we;
+  logic [AW-1:0] addr;
+  logic [DW-1:0] wdata;
+  logic [   3:0] be;
+  logic [DW-1:0] rdata;
+  logic          err;
+
+`line 27 "../src/merl_azadi-II_azadi_pwm_1.0/rtl/pwm_top.sv" 0
+  pwm pwm_core(
+    .clk_i   ( clk_i   ),
+    .rst_ni  ( rst_ni  ),												
+    .re_i    ( re      ),												
+    .we_i    ( we      ),												
+    .addr_i  ( addr    ),												
+    .wdata_i ( wdata   ),												
+    .be_i    ( be      ),
+    .rdata_o ( rdata   ),												
+    .o_pwm   ( pwm1_o  ),
+    .o_pwm_2 ( pwm2_o  ),
+    .oe_pwm1 ( pwm1_oe ),
+    .oe_pwm2 ( pwm2_oe )
+  );
+
+`line 42 "../src/merl_azadi-II_azadi_pwm_1.0/rtl/pwm_top.sv" 0
+  tlul_adapter_reg #(
+    .RegAw( AW ),
+    .RegDw( DW )
+  ) u_reg_if (
+    .clk_i   ( clk_i  ),
+    .rst_ni  ( rst_ni ),
+    .tl_i    ( tl_i   ),
+    .tl_o    ( tl_o   ),
+    .we_o    ( we     ),
+    .re_o    ( re     ),
+    .addr_o  ( addr   ),
+    .wdata_o ( wdata  ),
+    .be_o    ( be     ),
+    .rdata_i ( rdata  ),
+    .error_i ( 1'b0   )
+  );
+
+`line 59 "../src/merl_azadi-II_azadi_pwm_1.0/rtl/pwm_top.sv" 0
+endmodule
+
+`line 61 "../src/merl_azadi-II_azadi_pwm_1.0/rtl/pwm_top.sv" 2

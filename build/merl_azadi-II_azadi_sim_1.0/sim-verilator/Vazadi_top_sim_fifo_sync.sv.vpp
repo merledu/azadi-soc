@@ -1,0 +1,211 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 1
+ 
+ 
+ 
+
+`line 5 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+ 
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+ 
+
+`line 9 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+module fifo_sync #(
+  parameter int unsigned Width       = 16,
+  parameter bit Pass                 = 1'b1,  
+  parameter int unsigned Depth       = 4,
+  parameter bit OutputZeroIfEmpty    = 1'b1,  
+   
+  localparam int          DepthW     = prim_util_pkg::vbits(Depth+1)
+) (
+  input                   clk_i,
+  input                   rst_ni,
+   
+  input                   clr_i,
+   
+  input                   wvalid_i,
+  output                  wready_o,
+  input   [Width-1:0]     wdata_i,
+   
+  output                  rvalid_o,
+  input                   rready_i,
+  output  [Width-1:0]     rdata_o,
+   
+  output                  full_o,
+  output  [DepthW-1:0]    depth_o
+);
+
+
+`line 35 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+   
+  if (Depth == 0) begin : gen_passthru_fifo
+    
+
+`line 39 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    assign depth_o = 1'b0;  
+
+`line 41 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+     
+    assign rvalid_o = wvalid_i;
+    assign rdata_o = wdata_i;
+
+`line 45 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+     
+    assign wready_o = rready_i;
+    assign full_o = rready_i;
+
+`line 49 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+     
+    logic unused_clr;
+    assign unused_clr = clr_i;
+
+`line 53 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+   
+  end else begin : gen_normal_fifo
+
+`line 56 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    localparam int unsigned PTRV_W    = prim_util_pkg::vbits(Depth);
+    localparam int unsigned PTR_WIDTH = PTRV_W+1;
+
+`line 59 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    logic [PTR_WIDTH-1:0] fifo_wptr, fifo_rptr;
+    logic                 fifo_incr_wptr, fifo_incr_rptr, fifo_empty;
+
+`line 62 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+     
+    logic under_rst;
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni) begin
+        under_rst <= 1'b1;
+      end else if (under_rst) begin
+        under_rst <= ~under_rst;
+      end
+    end
+
+`line 72 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+     
+    logic  full, empty;
+    logic  wptr_msb;
+    logic  rptr_msb;
+    logic  [PTRV_W-1:0] wptr_value;
+    logic  [PTRV_W-1:0] rptr_value;
+
+`line 79 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    assign wptr_msb = fifo_wptr[PTR_WIDTH-1];
+    assign rptr_msb = fifo_rptr[PTR_WIDTH-1];
+    assign wptr_value = fifo_wptr[0+:PTRV_W];
+    assign rptr_value = fifo_rptr[0+:PTRV_W];
+    assign depth_o = (full)                 ? DepthW'(Depth) :
+                     (wptr_msb == rptr_msb) ? DepthW'(wptr_value) - DepthW'(rptr_value) :
+                     (DepthW'(Depth) - DepthW'(rptr_value) + DepthW'(wptr_value)) ;
+
+`line 87 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    assign fifo_incr_wptr = wvalid_i & wready_o & ~under_rst;
+    assign fifo_incr_rptr = rvalid_o & rready_i & ~under_rst;
+
+`line 90 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+     
+     
+     
+    assign wready_o = ~full & ~under_rst;
+    assign full_o   = full;
+    assign rvalid_o = ~empty & ~under_rst;
+
+`line 97 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni) begin
+        fifo_wptr <= '0;
+      end else if (clr_i) begin
+        fifo_wptr <= {(PTR_WIDTH){1'b0}};
+      end else if (fifo_incr_wptr) begin
+        if (fifo_wptr[PTR_WIDTH-2:0] == (PTR_WIDTH-1)'(Depth-1)) begin
+          fifo_wptr <= {~fifo_wptr[PTR_WIDTH-1],{(PTR_WIDTH-1){1'b0}}};
+        end else begin
+          fifo_wptr <= fifo_wptr + {{(PTR_WIDTH-1){1'b0}},1'b1};
+        end
+      end
+    end
+
+`line 111 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni) begin
+        fifo_rptr <= '0;
+      end else if (clr_i) begin
+        fifo_rptr <= {(PTR_WIDTH){1'b0}};
+      end else if (fifo_incr_rptr) begin
+        if (fifo_rptr[PTR_WIDTH-2:0] == (PTR_WIDTH-1)'(Depth-1)) begin
+          fifo_rptr <= {~fifo_rptr[PTR_WIDTH-1],{(PTR_WIDTH-1){1'b0}}};
+        end else begin
+          fifo_rptr <= fifo_rptr + {{(PTR_WIDTH-1){1'b0}},1'b1};
+        end
+      end
+    end
+
+`line 125 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    assign  full       = (fifo_wptr == (fifo_rptr ^ {1'b1,{(PTR_WIDTH-1){1'b0}}}));
+    assign  fifo_empty = (fifo_wptr ==  fifo_rptr);
+
+
+`line 129 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+     
+     
+    logic [Depth-1:0][Width-1:0] storage;
+    logic [Width-1:0] storage_rdata;
+    if (Depth == 1) begin : gen_depth_eq1
+      assign storage_rdata = storage[0];
+
+`line 136 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+      always_ff @(posedge clk_i)
+        
+	  if(~rst_ni) begin
+	    storage[0] <= '0;
+          end else if (fifo_incr_wptr) begin
+	    storage[0] <= wdata_i;
+	  end
+          
+        
+     
+    end else begin : gen_depth_gt1
+      assign storage_rdata = storage[fifo_rptr[PTR_WIDTH-2:0]];
+
+`line 149 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+      always_ff @(posedge clk_i)
+       
+	   if(~rst_ni) begin
+	     storage[fifo_wptr[PTR_WIDTH-2:0]] <='0;
+	   end else   if (fifo_incr_wptr) begin
+             storage[fifo_wptr[PTR_WIDTH-2:0]] <= wdata_i;
+	   end
+          
+        
+    end
+
+`line 160 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    logic [Width-1:0] rdata_int;
+    if (Pass == 1'b1) begin : gen_pass
+      assign rdata_int = (fifo_empty && wvalid_i) ? wdata_i : storage_rdata;
+      assign empty = fifo_empty & ~wvalid_i;
+    end else begin : gen_nopass
+      assign rdata_int = storage_rdata;
+      assign empty = fifo_empty;
+    end
+
+`line 169 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+    if (OutputZeroIfEmpty == 1'b1) begin : gen_output_zero
+      assign rdata_o = empty ? 'b0 : rdata_int;
+    end else begin : gen_no_output_zero
+      assign rdata_o = rdata_int;
+    end
+
+`line 175 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+  end  
+
+
+`line 178 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 0
+   
+   
+   
+endmodule
+
+`line 183 "../src/merl_azadi-II_azadi_common_1.0/rtl/fifo_sync.sv" 2

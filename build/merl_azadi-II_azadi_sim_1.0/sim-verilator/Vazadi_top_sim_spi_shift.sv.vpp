@@ -1,0 +1,81 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_spi_host_1.0/rtl/spi_shift.sv" 1
+ 
+
+`line 3 "../src/merl_azadi-II_azadi_spi_host_1.0/rtl/spi_shift.sv" 0
+module spi_shift (
+  input  wire                        clk_i,           
+  input  wire                        rst_ni,           
+  input  wire                        latch,         
+  input  wire                  [3:0] byte_sel,      
+  input  wire [5-1:0] len,           
+  input  wire                        lsb,           
+  input  wire                        go,            
+  input  wire                        pos_edge,      
+  input  wire                        neg_edge,      
+  input  wire                        rx_negedge,    
+  input  wire                        tx_negedge,    
+  output   reg                   tip,           
+  output wire                        last,          
+  input  wire                 [31:0] p_in,          
+  output wire    [32-1:0] p_out,         
+  input  wire                        s_clk,         
+  input  wire                        s_in,          
+  output   reg                   s_out,         
+  input  wire                        rx_en          
+);
+                                   
+  
+  
+                              
+ reg [5:0] cnt;
+	reg [31:0] data;
+	reg [31:0] data_rx;
+	wire [5:0] tx_bit_pos;
+	wire [5:0] rx_bit_pos;
+	wire rx_clk_i;
+	wire tx_clk_i;
+	assign p_out = data_rx;
+	assign tx_bit_pos = (lsb ? {!(|len), len} - cnt : cnt - {{5 {1'b0}}, 1'b1});
+	assign rx_bit_pos = (lsb ? {!(|len), len} - (rx_negedge ? cnt + {{5 {1'b0}}, 1'b1} : cnt) : (rx_negedge ? cnt : cnt - {{5 {1'b0}}, 1'b1}));
+	assign last = !(|cnt);
+	assign rx_clk_i = (rx_negedge ? neg_edge : pos_edge) && (!last || s_clk);
+	assign tx_clk_i = (tx_negedge ? neg_edge : pos_edge) && !last;
+	always @(posedge clk_i or negedge rst_ni)
+		if (~rst_ni)
+			cnt <= {6 {1'b0}};
+		else if (tip)
+			cnt <= (pos_edge ? cnt - {{5 {1'b0}}, 1'b1} : cnt);
+		else
+			cnt <= (!(|len) ? {1'b1, {5 {1'b0}}} : {1'b0, len});
+	always @(posedge clk_i or negedge rst_ni)
+		if (~rst_ni)
+			tip <= 1'b0;
+		else if (go && ~tip)
+			tip <= 1'b1;
+		else if ((tip && last) && pos_edge)
+			tip <= 1'b0;
+	always @(posedge clk_i or negedge rst_ni)
+		if (~rst_ni)
+			s_out <= 1'b0;
+		else
+			s_out <= (tx_clk_i || !tip ? data[tx_bit_pos[4:0]] : s_out);
+	always @(posedge clk_i)
+		if (~rst_ni)
+			data <= {32 {1'b0}};
+		else if (latch && !tip) begin
+			if (byte_sel[0])
+				data[7:0] <= p_in[7:0];
+			if (byte_sel[1])
+				data[15:8] <= p_in[15:8];
+			if (byte_sel[2])
+				data[23:16] <= p_in[23:16];
+			if (byte_sel[3])
+				data[31:24] <= p_in[31:24];
+		end
+		else if (rx_en && tip)
+			data_rx[rx_bit_pos[4:0]] <= (rx_clk_i ? s_in : data_rx[rx_bit_pos[4:0]]);
+endmodule
+
+
+`line 78 "../src/merl_azadi-II_azadi_spi_host_1.0/rtl/spi_shift.sv" 2

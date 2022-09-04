@@ -1,0 +1,185 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 1
+ 
+ 
+ 
+
+`line 5 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+ 
+ 
+
+`line 8 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+module pin_mux #(
+   
+  parameter int unsigned GPIO   = 24,
+   
+  parameter int unsigned UART   = 1,
+  parameter int unsigned SPI    = 1,
+  parameter int unsigned PWM    = 4,
+  parameter int unsigned PWM_CH = 2,
+
+`line 17 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+   
+  localparam int unsigned IO_PORTS = GPIO
+) (
+   
+  output logic            [GPIO-1:0] gpio_in_o,
+  input  logic            [GPIO-1:0] gpio_out_i,
+  input  logic            [GPIO-1:0] gpio_oe_i,
+
+`line 25 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+  input  logic            [UART-1:0] uart_tx_i,
+  output logic            [UART-1:0] uart_rx_o,
+  input  logic            [UART-1:0] uart_oe_i,
+
+`line 29 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+  input  logic             [SPI-1:0] spi_sck_i,
+  input  logic             [SPI-1:0] spi_ssb_i,
+  input  logic             [SPI-1:0] spi_tdo_i,
+  output logic             [SPI-1:0] spi_tdi_o,
+  input  logic             [SPI-1:0] spi_oeb_i,
+
+`line 35 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+  input  logic [PWM-1:0][PWM_CH-1:0] pwm_o_i,
+  input  logic [PWM-1:0][PWM_CH-1:0] pwm_oe_i,
+
+`line 38 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+   
+  input  logic        [IO_PORTS-1:0] io_in_i,
+  output logic        [IO_PORTS-1:0] io_out_o,
+  output logic        [IO_PORTS-1:0] io_oe_o
+);
+
+`line 44 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+   
+   
+   
+
+`line 48 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+  always_comb begin : pin_mux_logic
+     
+     
+    gpio_in_o[0] = io_in_i[0];
+    uart_rx_o[0] = io_in_i[0];
+    io_oe_o[0]   = gpio_oe_i[0];  
+    io_out_o[0]  = gpio_oe_i[0] ? gpio_out_i[0] : 0;  
+
+`line 56 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[1] = io_in_i[1];
+    io_oe_o[1]   = gpio_oe_i[1] | uart_oe_i[0];  
+    io_out_o[1]  = uart_oe_i[0] ? uart_tx_i[0] : gpio_oe_i[1] ? gpio_out_i[1] : 0;  
+
+`line 61 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+     
+    gpio_in_o[2] = io_in_i[2];
+    io_oe_o[2]   = gpio_oe_i[2] | spi_oeb_i[0];  
+    io_out_o[2]  = spi_oeb_i[0] ? spi_tdo_i[0] : gpio_oe_i[2] ? gpio_out_i[2] : 0;  
+
+`line 67 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[3] = io_in_i[3];
+    spi_tdi_o[0] = io_in_i[3];
+    io_oe_o[3]   = gpio_oe_i[3];  
+    io_out_o[3]  = gpio_oe_i[3] ? gpio_out_i[3] : 0;  
+
+`line 73 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[4] = io_in_i[4];
+    io_oe_o[4]   = gpio_oe_i[4] | spi_oeb_i[0];  
+    io_out_o[4]  = spi_oeb_i[0] ? spi_sck_i[0] : gpio_oe_i[4] ? gpio_out_i[4] : 0;  
+
+`line 78 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[5] = io_in_i[5];
+    io_oe_o[5]   = gpio_oe_i[5] | spi_oeb_i[0];  
+    io_out_o[5]  = spi_oeb_i[0] ? spi_ssb_i[0] : gpio_oe_i[5] ? gpio_out_i[5] : 0;  
+
+`line 83 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+     
+    gpio_in_o[6] = io_in_i[6];
+    io_oe_o[6]   = gpio_oe_i[6] | spi_oeb_i[1];  
+    io_out_o[6]  = spi_oeb_i[1] ? spi_tdo_i[1] : gpio_oe_i[6] ? gpio_out_i[6] : 0;  
+
+`line 89 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[7] = io_in_i[7];
+    spi_tdi_o[1] = io_in_i[7];
+    io_oe_o[7]   = gpio_oe_i[7];  
+    io_out_o[7]  = gpio_oe_i[7] ? gpio_out_i[7] : 0;  
+
+`line 95 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[8] = io_in_i[8];
+    io_oe_o[8]   = gpio_oe_i[8] | spi_oeb_i[1];  
+    io_out_o[8]  = spi_oeb_i[1] ? spi_sck_i[1] : gpio_oe_i[8] ? gpio_out_i[8] : 0;  
+
+`line 100 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[9] = io_in_i[9];
+    io_oe_o[9]   = gpio_oe_i[9] | spi_oeb_i[1];  
+    io_out_o[9]  = spi_oeb_i[1] ? spi_ssb_i[1] : gpio_oe_i[9] ? gpio_out_i[9] : 0;  
+
+`line 105 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[10] = io_in_i[10];
+    io_oe_o[10]   = gpio_oe_i[10] | pwm_oe_i[0][0];  
+    io_out_o[10]  = pwm_oe_i[0][0] ? pwm_o_i[0][0] : gpio_oe_i[10] ? gpio_out_i[10] : 0;  
+
+`line 110 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[11] = io_in_i[11];
+    io_oe_o[11]   = gpio_oe_i[11] | pwm_oe_i[0][1];  
+    io_out_o[11]  = pwm_oe_i[0][1] ? pwm_o_i[0][1] : gpio_oe_i[11] ? gpio_out_i[11] : 0;  
+
+`line 115 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[12] = io_in_i[12];
+    io_oe_o[12]   = gpio_oe_i[12] | pwm_oe_i[1][0];  
+    io_out_o[12]  = pwm_oe_i[1][0] ? pwm_o_i[1][0] : gpio_oe_i[12] ? gpio_out_i[12] : 0;  
+
+`line 120 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[13] = io_in_i[13];
+    io_oe_o[13]   = gpio_oe_i[13] | pwm_oe_i[1][1];  
+    io_out_o[13]  = pwm_oe_i[1][1] ? pwm_o_i[1][1] : gpio_oe_i[13] ? gpio_out_i[13] : 0;  
+
+`line 125 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[14] = io_in_i[14];
+    io_oe_o[14]   = gpio_oe_i[14] | pwm_oe_i[2][0];  
+    io_out_o[14]  = pwm_oe_i[2][0] ? pwm_o_i[2][0] : gpio_oe_i[14] ? gpio_out_i[14] : 0;  
+
+`line 130 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[15] = io_in_i[15];
+    io_oe_o[15]   = gpio_oe_i[15] | pwm_oe_i[2][1];  
+    io_out_o[15]  = pwm_oe_i[2][1] ? pwm_o_i[2][1] : gpio_oe_i[15] ? gpio_out_i[15] : 0;  
+
+`line 135 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[16] = io_in_i[16];
+    io_oe_o[16]   = gpio_oe_i[16] | pwm_oe_i[3][0];  
+    io_out_o[16]  = pwm_oe_i[3][0] ? pwm_o_i[3][0] : gpio_oe_i[16] ? gpio_out_i[16] : 0;  
+
+`line 140 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[17] = io_in_i[17];
+    io_oe_o[17]   = gpio_oe_i[17] | pwm_oe_i[3][1];  
+    io_out_o[17]  = pwm_oe_i[3][1] ? pwm_o_i[3][1] : gpio_oe_i[17] ? gpio_out_i[17] : 0;  
+
+`line 145 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+     
+    gpio_in_o[IO_PORTS-1:18] = io_in_i[IO_PORTS-1:18];
+    io_oe_o[IO_PORTS-1:18]   = gpio_oe_i[IO_PORTS-1:18];  
+    io_out_o[IO_PORTS-1:18]  = gpio_oe_i[IO_PORTS-1:18] ? gpio_out_i[IO_PORTS-1:18] : 0;  
+
+`line 150 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+  end : pin_mux_logic
+
+`line 152 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 0
+endmodule : pin_mux
+
+`line 154 "../src/merl_azadi-II_azadi_pin_mux_1.0/rtl/pin_mux.sv" 2

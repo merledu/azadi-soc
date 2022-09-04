@@ -1,0 +1,529 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 1
+ 
+ 
+ 
+ 
+
+
+`line 12 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+
+`line 12 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+
+`line 12 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+
+`line 12 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+
+`line 12 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+
+`line 12 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+ 
+
+`line 14 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+ 
+`line 14 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+`line 1 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 1
+ 
+`line 2 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+ 
+
+`line 5 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+ 
+ 
+
+`line 9 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+ 
+
+`line 12 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+  
+   
+     
+     
+       
+       
+    
+  
+
+
+
+
+
+
+
+`line 28 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+ 
+
+
+`line 32 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+`line 70 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+  
+ 
+  
+ 
+  
+  
+
+`line 78 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+  
+  
+
+
+
+
+
+
+
+`line 87 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+
+
+
+
+`line 92 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+
+
+
+
+`line 97 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+`line 110 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+
+
+
+
+
+
+`line 117 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+
+
+
+
+
+
+`line 124 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+ 
+
+
+
+
+`line 129 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 0
+  
+
+`line 131 "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv" 2
+`line 14 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+
+
+`line 16 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+module ibex_compressed_decoder (
+    input  logic        clk_i,
+    input  logic        rst_ni,
+    input  logic        valid_i,
+    input  logic [31:0] instr_i,
+    output logic [31:0] instr_o,
+    output logic        is_compressed_o,
+    output logic        illegal_instr_o
+);
+  import ibex_pkg::*;
+
+`line 27 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+   
+   
+  logic unused_valid;
+  assign unused_valid = valid_i;
+
+`line 32 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+   
+   
+   
+
+`line 36 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+  always_comb begin
+     
+    instr_o         = instr_i;
+    illegal_instr_o = 1'b0;
+
+`line 41 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+     
+    unique case (instr_i[1:0])
+       
+      2'b00: begin
+        unique case (instr_i[15:13])
+          3'b000: begin
+             
+            instr_o = {2'b0, instr_i[10:7], instr_i[12:11], instr_i[5],
+                       instr_i[6], 2'b00, 5'h02, 3'b000, 2'b01, instr_i[4:2], {OPCODE_OP_IMM}};
+            if (instr_i[12:5] == 8'b0)  illegal_instr_o = 1'b1;
+          end
+
+`line 53 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b010: begin
+             
+            instr_o = {5'b0, instr_i[5], instr_i[12:10], instr_i[6],
+                       2'b00, 2'b01, instr_i[9:7], 3'b010, 2'b01, instr_i[4:2], {OPCODE_LOAD}};
+          end
+
+`line 59 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b011: begin
+             
+            instr_o = {5'b0, instr_i[5], instr_i[12:10], instr_i[6],
+                       2'b00, 2'b01, instr_i[9:7], 3'b010, 2'b01, instr_i[4:2], {OPCODE_LOAD_FP}};
+          end
+
+`line 65 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b110: begin
+             
+            instr_o = {5'b0, instr_i[5], instr_i[12], 2'b01, instr_i[4:2],
+                       2'b01, instr_i[9:7], 3'b010, instr_i[11:10], instr_i[6],
+                       2'b00, {OPCODE_STORE}};
+          end
+
+`line 72 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b111: begin
+             
+            instr_o = {5'b0, instr_i[5], instr_i[12], 2'b01, instr_i[4:2],
+                       2'b01, instr_i[9:7], 3'b010, instr_i[11:10], instr_i[6],
+                       2'b00, {OPCODE_STORE_FP}};
+          end
+
+`line 79 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b001,
+          3'b100,
+          3'b101: begin
+            illegal_instr_o = 1'b1;
+          end
+
+`line 85 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          default: begin
+            illegal_instr_o = 1'b1;
+          end
+        endcase
+      end
+
+`line 91 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+       
+      
+       
+       
+       
+      2'b01: begin
+        unique case (instr_i[15:13])
+          3'b000: begin
+             
+             
+            instr_o = {{6 {instr_i[12]}}, instr_i[12], instr_i[6:2],
+                       instr_i[11:7], 3'b0, instr_i[11:7], {OPCODE_OP_IMM}};
+          end
+
+`line 105 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b001, 3'b101: begin
+             
+             
+            instr_o = {instr_i[12], instr_i[8], instr_i[10:9], instr_i[6],
+                       instr_i[7], instr_i[2], instr_i[11], instr_i[5:3],
+                       {9 {instr_i[12]}}, 4'b0, ~instr_i[15], {OPCODE_JAL}};
+          end
+
+`line 113 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b010: begin
+             
+             
+            instr_o = {{6 {instr_i[12]}}, instr_i[12], instr_i[6:2], 5'b0,
+                       3'b0, instr_i[11:7], {OPCODE_OP_IMM}};
+          end
+
+`line 120 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b011: begin
+             
+             
+            instr_o = {{15 {instr_i[12]}}, instr_i[6:2], instr_i[11:7], {OPCODE_LUI}};
+
+`line 125 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+            if (instr_i[11:7] == 5'h02) begin
+               
+              instr_o = {{3 {instr_i[12]}}, instr_i[4:3], instr_i[5], instr_i[2],
+                         instr_i[6], 4'b0, 5'h02, 3'b000, 5'h02, {OPCODE_OP_IMM}};
+            end
+
+`line 131 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+            if ({instr_i[12], instr_i[6:2]} == 6'b0) illegal_instr_o = 1'b1;
+          end
+
+`line 134 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b100: begin
+            unique case (instr_i[11:10])
+              2'b00,
+              2'b01: begin
+                 
+                 
+                 
+                instr_o = {1'b0, instr_i[10], 5'b0, instr_i[6:2], 2'b01, instr_i[9:7],
+                           3'b101, 2'b01, instr_i[9:7], {OPCODE_OP_IMM}};
+                if (instr_i[12] == 1'b1)  illegal_instr_o = 1'b1;
+              end
+
+`line 146 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+              2'b10: begin
+                 
+                instr_o = {{6 {instr_i[12]}}, instr_i[12], instr_i[6:2], 2'b01, instr_i[9:7],
+                           3'b111, 2'b01, instr_i[9:7], {OPCODE_OP_IMM}};
+              end
+
+`line 152 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+              2'b11: begin
+                unique case ({instr_i[12], instr_i[6:5]})
+                  3'b000: begin
+                     
+                    instr_o = {2'b01, 5'b0, 2'b01, instr_i[4:2], 2'b01, instr_i[9:7],
+                               3'b000, 2'b01, instr_i[9:7], {OPCODE_OP}};
+                  end
+
+`line 160 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+                  3'b001: begin
+                     
+                    instr_o = {7'b0, 2'b01, instr_i[4:2], 2'b01, instr_i[9:7], 3'b100,
+                               2'b01, instr_i[9:7], {OPCODE_OP}};
+                  end
+
+`line 166 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+                  3'b010: begin
+                     
+                    instr_o = {7'b0, 2'b01, instr_i[4:2], 2'b01, instr_i[9:7], 3'b110,
+                               2'b01, instr_i[9:7], {OPCODE_OP}};
+                  end
+
+`line 172 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+                  3'b011: begin
+                     
+                    instr_o = {7'b0, 2'b01, instr_i[4:2], 2'b01, instr_i[9:7], 3'b111,
+                               2'b01, instr_i[9:7], {OPCODE_OP}};
+                  end
+
+`line 178 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+                  3'b100,
+                  3'b101,
+                  3'b110,
+                  3'b111: begin
+                     
+                     
+                    illegal_instr_o = 1'b1;
+                  end
+
+`line 187 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+                  default: begin
+                    illegal_instr_o = 1'b1;
+                  end
+                endcase
+              end
+
+`line 193 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+              default: begin
+                illegal_instr_o = 1'b1;
+              end
+            endcase
+          end
+
+`line 199 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b110, 3'b111: begin
+             
+             
+            instr_o = {{4 {instr_i[12]}}, instr_i[6:5], instr_i[2], 5'b0, 2'b01,
+                       instr_i[9:7], 2'b00, instr_i[13], instr_i[11:10], instr_i[4:3],
+                       instr_i[12], {OPCODE_BRANCH}};
+          end
+
+`line 207 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          default: begin
+            illegal_instr_o = 1'b1;
+          end
+        endcase
+      end
+
+`line 213 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+       
+      
+       
+       
+       
+      2'b10: begin
+        unique case (instr_i[15:13])
+          3'b000: begin
+             
+             
+            instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b001, instr_i[11:7], {OPCODE_OP_IMM}};
+            if (instr_i[12] == 1'b1)  illegal_instr_o = 1'b1;  
+          end
+
+`line 227 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b010: begin
+             
+            instr_o = {4'b0, instr_i[3:2], instr_i[12], instr_i[6:4], 2'b00, 5'h02,
+                       3'b010, instr_i[11:7], OPCODE_LOAD};
+            if (instr_i[11:7] == 5'b0)  illegal_instr_o = 1'b1;
+          end
+
+`line 234 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b011: begin
+             
+            instr_o = {4'b0, instr_i[3:2], instr_i[12], instr_i[6:4], 2'b00, 5'h02,
+                       3'b010, instr_i[11:7], OPCODE_LOAD_FP};
+          end
+
+`line 240 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b100: begin
+            if (instr_i[12] == 1'b0) begin
+              if (instr_i[6:2] != 5'b0) begin
+                 
+                 
+                instr_o = {7'b0, instr_i[6:2], 5'b0, 3'b0, instr_i[11:7], {OPCODE_OP}};
+              end else begin
+                 
+                instr_o = {12'b0, instr_i[11:7], 3'b0, 5'b0, {OPCODE_JALR}};
+                if (instr_i[11:7] == 5'b0)  illegal_instr_o = 1'b1;
+              end
+            end else begin
+              if (instr_i[6:2] != 5'b0) begin
+                 
+                 
+                instr_o = {7'b0, instr_i[6:2], instr_i[11:7], 3'b0, instr_i[11:7], {OPCODE_OP}};
+              end else begin
+                if (instr_i[11:7] == 5'b0) begin
+                   
+                  instr_o = {32'h00_10_00_73};
+                end else begin
+                   
+                  instr_o = {12'b0, instr_i[11:7], 3'b000, 5'b00001, {OPCODE_JALR}};
+                end
+              end
+            end
+          end
+
+`line 268 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b110: begin
+             
+            instr_o = {4'b0, instr_i[8:7], instr_i[12], instr_i[6:2], 5'h02, 3'b010,
+                       instr_i[11:9], 2'b00, {OPCODE_STORE}};
+          end
+
+`line 274 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b111: begin
+             
+            instr_o = {4'b0, instr_i[8:7], instr_i[12], instr_i[6:2], 5'h02, 3'b010,
+                       instr_i[11:9], 2'b00, {OPCODE_STORE_FP}};
+          end
+
+`line 280 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          3'b001,
+          3'b101: begin
+            illegal_instr_o = 1'b1;
+          end
+
+`line 285 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+          default: begin
+            illegal_instr_o = 1'b1;
+          end
+        endcase
+      end
+
+`line 291 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+       
+      2'b11:;
+
+`line 294 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+      default: begin
+        illegal_instr_o = 1'b1;
+      end
+    endcase
+  end
+
+`line 300 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+  assign is_compressed_o = (instr_i[1:0] != 2'b11);
+
+`line 302 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+   
+   
+   
+
+`line 306 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+   
+  
+
+`line 309 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+  
+
+`line 311 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+  
+
+`line 313 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+  
+
+`line 315 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+  
+
+
+`line 318 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+  
+
+
+`line 321 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 0
+endmodule
+
+`line 323 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv" 2

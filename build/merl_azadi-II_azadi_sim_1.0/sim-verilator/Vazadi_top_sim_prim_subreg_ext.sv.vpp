@@ -1,0 +1,33 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg_ext.sv" 1
+
+
+`line 3 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg_ext.sv" 0
+module prim_subreg_ext #(
+  parameter int unsigned DW = 32
+) (
+  input logic         re,
+  input logic         we,
+  input logic [DW-1:0] wd,
+
+`line 10 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg_ext.sv" 0
+  input logic [DW-1:0] d,
+
+`line 12 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg_ext.sv" 0
+   
+  output logic          qe,
+  output logic          qre,
+  output logic [DW-1:0] q,
+  output logic [DW-1:0] qs
+);
+
+`line 19 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg_ext.sv" 0
+  assign qs = d;
+  assign q = wd;
+  assign qe = we;
+  assign qre = re;
+
+`line 24 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg_ext.sv" 0
+endmodule
+
+`line 26 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg_ext.sv" 2

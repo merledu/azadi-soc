@@ -1,0 +1,53 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 1
+ 
+ 
+ 
+
+`line 5 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 0
+ 
+ 
+ 
+
+`line 9 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 0
+module prim_generic_flop_2sync #(
+  parameter int Width       = 16,
+  localparam int WidthSubOne = Width-1,  
+  parameter logic [WidthSubOne:0] ResetValue = '0
+) (
+  input                    clk_i,        
+  input                    rst_ni,
+  input        [Width-1:0] d_i,
+  output logic [Width-1:0] q_o
+);
+
+`line 20 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 0
+  logic [Width-1:0] intq;
+
+`line 22 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 0
+  prim_generic_flop #(
+    .Width(Width),
+    .ResetValue(ResetValue)
+  ) u_sync_1 (
+    .clk_i,
+    .rst_ni,
+    .d_i,
+    .q_o(intq)
+  );
+
+`line 32 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 0
+  prim_generic_flop #(
+    .Width(Width),
+    .ResetValue(ResetValue)
+  ) u_sync_2 (
+    .clk_i,
+    .rst_ni,
+    .d_i(intq),
+    .q_o
+  );
+
+
+`line 43 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 0
+endmodule
+
+`line 45 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop_2sync.sv" 2

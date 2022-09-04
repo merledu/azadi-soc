@@ -1,0 +1,112 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 1
+ 
+ 
+
+`line 4 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+ 
+ 
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+ 
+ 
+ 
+ 
+
+`line 12 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+ 
+ 
+ 
+ 
+ 
+
+`line 18 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+module tlul_host_adapter #(
+    parameter int unsigned MAX_REQS = 1
+) (
+    input logic clk_i,
+    input logic rst_ni,
+ 
+    input                               req_i,
+    output logic                        gnt_o,
+    input logic [tlul_pkg::TL_AW-1:0]  addr_i,
+    input logic                         we_i,
+    input logic [tlul_pkg::TL_DW-1:0]  wdata_i,
+    input logic [tlul_pkg::TL_DBW-1:0] be_i,
+    output logic                        valid_o,
+    output logic [tlul_pkg::TL_DW-1:0] rdata_o,
+    output logic                        err_o,
+ 
+    output tlul_pkg::tlul_h2d_t          tl_h_c_a,  
+    input  tlul_pkg::tlul_d2h_t          tl_h_c_d   
+);
+
+`line 38 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+    localparam int WordSize = $clog2(tlul_pkg::TL_DBW);
+
+`line 40 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+    logic [tlul_pkg::TL_AIW-1:0] tl_source;
+    logic [tlul_pkg::TL_DBW-1:0] tl_be;
+
+`line 43 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+    if(MAX_REQS == 1) begin
+        assign tl_source = '0;
+    end else begin
+        localparam int ReqNumW = $clog2(MAX_REQS);
+        logic [ReqNumW-1:0] source_d, source_q;
+
+`line 49 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+        always_ff @(posedge clk_i) begin
+            if(!rst_ni) begin
+                source_q <= '0;
+            end else begin
+                source_q <= source_d;
+            end
+        end
+    
+
+`line 58 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+        always_comb begin
+            source_d = source_q;
+
+`line 61 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+            if(req_i && gnt_o) begin
+                if(source_q == MAX_REQS -1) source_d = '0;
+                else source_d = source_q + 1;
+            end
+        end
+        assign tl_source = tlul_pkg::TL_AIW'(source_q);
+    end
+
+`line 69 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+ 
+ 
+    assign tl_be = ~we_i ? {tlul_pkg::TL_DBW{1'b1}} : be_i;
+
+`line 73 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+    assign tl_h_c_a = '{
+        a_valid:    req_i,
+        a_opcode:   (~we_i) ? tlul_pkg::Get         :   
+                    (&be_i) ? tlul_pkg::PutFullData :
+                              tlul_pkg::PutPartialData,
+        a_param:    3'h0,
+        a_size:     tlul_pkg::TL_SZW'(WordSize),
+        a_mask:     tl_be,
+        a_source:   tl_source,
+        a_address:  {addr_i[31:WordSize], {WordSize{1'b0}}},
+        a_data:     wdata_i,
+        d_ready:    1'b1
+    };
+
+`line 87 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+    assign gnt_o = tl_h_c_d.a_ready;
+     
+    assign err_o   = tl_h_c_d.d_error;
+    assign valid_o = tl_h_c_d.d_valid;
+    logic [31:0] rddata;
+    assign rddata = tl_h_c_d.d_data;
+    assign rdata_o = rddata;
+
+`line 95 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 0
+endmodule
+`line 96 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_host_adapter.sv" 2

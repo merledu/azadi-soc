@@ -1,0 +1,62 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 1
+
+
+`line 3 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 0
+module prim_intr_hw # (
+  parameter int unsigned Width = 1,
+  parameter bit FlopOutput = 1
+) (
+   
+  input logic clk_i,
+  input logic rst_ni,
+  input logic [Width-1:0]  event_intr_i,
+
+`line 12 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 0
+   
+  input logic [Width-1:0]  reg2hw_intr_enable_q_i,
+  input logic [Width-1:0]  reg2hw_intr_test_q_i,
+  input logic              reg2hw_intr_test_qe_i,
+  input logic [Width-1:0]  reg2hw_intr_state_q_i,
+  output logic             hw2reg_intr_state_de_o,
+  output logic [Width-1:0]  hw2reg_intr_state_d_o,
+
+`line 20 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 0
+   
+  output logic [Width-1:0]  intr_o
+);
+
+`line 24 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 0
+  logic  [Width-1:0]    new_event;
+  assign new_event =
+             (({Width{reg2hw_intr_test_qe_i}} & reg2hw_intr_test_q_i) | event_intr_i);
+  assign hw2reg_intr_state_de_o = |new_event;
+   
+   
+  assign hw2reg_intr_state_d_o  =  new_event | reg2hw_intr_state_q_i;
+
+`line 32 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 0
+  if (FlopOutput == 1) begin : gen_flop_intr_output
+     
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni) begin
+        intr_o <= 1'b0;
+      end else begin
+        intr_o <= reg2hw_intr_state_q_i & reg2hw_intr_enable_q_i;
+      end
+    end
+
+`line 42 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 0
+  end else begin : gen_intr_passthrough_output
+    logic unused_clk;
+    logic unused_rst_n;
+    assign unused_clk = clk_i;
+    assign unused_rst_n = rst_ni;
+    assign intr_o = reg2hw_intr_state_q_i & reg2hw_intr_enable_q_i;
+  end
+
+
+`line 51 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 0
+endmodule
+
+`line 53 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_intr_hw.sv" 2

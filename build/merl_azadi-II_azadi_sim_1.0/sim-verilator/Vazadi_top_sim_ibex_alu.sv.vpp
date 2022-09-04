@@ -1,0 +1,1471 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 1
+ 
+ 
+ 
+ 
+
+
+`line 8 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+
+`line 8 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+ 
+module ibex_alu #(
+  parameter ibex_pkg::rv32b_e RV32B = ibex_pkg::RV32BNone
+) (
+    input  ibex_pkg::alu_op_e operator_i,
+    input  logic [31:0]       operand_a_i,
+    input  logic [31:0]       operand_b_i,
+
+`line 16 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    input  logic              instr_first_cycle_i,
+
+`line 18 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    input  logic [32:0]       multdiv_operand_a_i,
+    input  logic [32:0]       multdiv_operand_b_i,
+
+`line 21 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    input  logic              multdiv_sel_i,
+
+`line 23 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    input  logic [31:0]       imd_val_q_i[2],
+    output logic [31:0]       imd_val_d_o[2],
+    output logic [1:0]        imd_val_we_o,
+
+`line 27 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    output logic [31:0]       adder_result_o,
+    output logic [33:0]       adder_result_ext_o,
+
+`line 30 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    output logic [31:0]       result_o,
+    output logic              comparison_result_o,
+    output logic              is_equal_result_o
+);
+  import ibex_pkg::*;
+
+`line 36 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic [31:0] operand_a_rev;
+  logic [32:0] operand_b_neg;
+
+`line 39 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  for (genvar k = 0; k < 32; k++) begin : gen_rev_operand_a
+    assign operand_a_rev[k] = operand_a_i[31-k];
+  end
+
+`line 44 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+
+`line 48 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic        adder_op_b_negate;
+  logic [32:0] adder_in_a, adder_in_b;
+  logic [31:0] adder_result;
+
+`line 52 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  always_comb begin
+    adder_op_b_negate = 1'b0;
+    unique case (operator_i)
+       
+      ALU_SUB,
+
+`line 58 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_EQ,   ALU_NE,
+      ALU_GE,   ALU_GEU,
+      ALU_LT,   ALU_LTU,
+      ALU_SLT,  ALU_SLTU,
+
+`line 64 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_MIN,  ALU_MINU,
+      ALU_MAX,  ALU_MAXU: adder_op_b_negate = 1'b1;
+
+`line 68 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      default:;
+    endcase
+  end
+
+`line 72 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  assign adder_in_a    = multdiv_sel_i ? multdiv_operand_a_i : {operand_a_i,1'b1};
+
+`line 75 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  assign operand_b_neg = {operand_b_i,1'b0} ^ {33{1'b1}};
+  always_comb begin
+    unique case(1'b1)
+      multdiv_sel_i:     adder_in_b = multdiv_operand_b_i;
+      adder_op_b_negate: adder_in_b = operand_b_neg;
+      default :          adder_in_b = {operand_b_i, 1'b0};
+    endcase
+  end
+
+`line 85 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  assign adder_result_ext_o = $unsigned(adder_in_a) + $unsigned(adder_in_b);
+
+`line 88 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign adder_result       = adder_result_ext_o[32:1];
+
+`line 90 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign adder_result_o     = adder_result;
+
+`line 92 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+
+`line 96 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic is_equal;
+  logic is_greater_equal;   
+  logic cmp_signed;
+
+`line 100 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  always_comb begin
+    unique case (operator_i)
+      ALU_GE,
+      ALU_LT,
+      ALU_SLT,
+       
+      ALU_MIN,
+      ALU_MAX: cmp_signed = 1'b1;
+
+`line 109 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      default: cmp_signed = 1'b0;
+    endcase
+  end
+
+`line 113 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign is_equal = (adder_result == 32'b0);
+  assign is_equal_result_o = is_equal;
+
+`line 116 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  always_comb begin
+    if ((operand_a_i[31] ^ operand_b_i[31]) == 1'b0) begin
+      is_greater_equal = (adder_result[31] == 1'b0);
+    end else begin
+      is_greater_equal = operand_a_i[31] ^ (cmp_signed);
+    end
+  end
+
+`line 125 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+   
+   
+
+`line 131 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+   
+   
+
+`line 137 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  logic cmp_result;
+
+`line 140 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  always_comb begin
+    unique case (operator_i)
+      ALU_EQ:             cmp_result =  is_equal;
+      ALU_NE:             cmp_result = ~is_equal;
+      ALU_GE,   ALU_GEU,
+      ALU_MAX,  ALU_MAXU: cmp_result = is_greater_equal;  
+      ALU_LT,   ALU_LTU,
+      ALU_MIN,  ALU_MINU,  
+      ALU_SLT,  ALU_SLTU: cmp_result = ~is_greater_equal;
+
+`line 150 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      default: cmp_result = is_equal;
+    endcase
+  end
+
+`line 154 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign comparison_result_o = cmp_result;
+
+`line 156 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+
+`line 160 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+   
+  
+   
+   
+   
+   
+   
+   
+  
+   
+   
+  
+   
+   
+   
+   
+  
+   
+   
+   
+   
+  
+   
+   
+   
+   
+   
+  
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+  
+   
+   
+   
+
+`line 211 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+   
+  
+   
+   
+  
+   
+   
+   
+
+`line 223 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic       shift_left;
+  logic       shift_ones;
+  logic       shift_arith;
+  logic       shift_funnel;
+  logic       shift_sbmode;
+  logic [5:0] shift_amt;
+  logic [5:0] shift_amt_compl;  
+
+`line 231 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic [31:0] shift_operand;
+  logic [32:0] shift_result_ext;
+  logic        unused_shift_result_ext;
+  logic [31:0] shift_result;
+  logic [31:0] shift_result_rev;
+
+`line 237 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  logic bfp_op;
+  logic [4:0]  bfp_len;
+  logic [4:0]  bfp_off;
+  logic [31:0] bfp_mask;
+  logic [31:0] bfp_mask_rev;
+  logic [31:0] bfp_result;
+
+`line 245 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  assign bfp_op = (RV32B != RV32BNone) ? (operator_i == ALU_BFP) : 1'b0;
+  assign bfp_len = {~(|operand_b_i[27:24]), operand_b_i[27:24]};  
+  assign bfp_off = operand_b_i[20:16];
+  assign bfp_mask = (RV32B != RV32BNone) ? ~(32'hffff_ffff << bfp_len) : '0;
+  for (genvar i=0; i<32; i++) begin : gen_rev_bfp_mask
+    assign bfp_mask_rev[i] = bfp_mask[31-i];
+  end
+
+`line 254 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign bfp_result =(RV32B != RV32BNone) ?
+      (~shift_result & operand_a_i) | ((operand_b_i & bfp_mask) << bfp_off) : '0;
+
+`line 257 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+  assign shift_amt[5] = operand_b_i[5] & shift_funnel;
+  assign shift_amt_compl = 32 - operand_b_i[4:0];
+
+`line 262 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  always_comb begin
+    if (bfp_op) begin
+      shift_amt[4:0] = bfp_off ;  
+    end else begin
+      shift_amt[4:0] = instr_first_cycle_i ?
+          (operand_b_i[5] && shift_funnel ? shift_amt_compl[4:0] : operand_b_i[4:0]) :
+          (operand_b_i[5] && shift_funnel ? operand_b_i[4:0] : shift_amt_compl[4:0]);
+    end
+  end
+
+`line 272 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  assign shift_sbmode = (RV32B != RV32BNone) ?
+      (operator_i == ALU_SBSET) | (operator_i == ALU_SBCLR) | (operator_i == ALU_SBINV) : 1'b0;
+
+`line 276 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+   
+   
+   
+   
+   
+  always_comb begin
+    unique case (operator_i)
+      ALU_SLL: shift_left = 1'b1;
+      ALU_SLO,
+      ALU_BFP: shift_left = (RV32B != RV32BNone) ? 1'b1 : 1'b0;
+      ALU_ROL: shift_left = (RV32B != RV32BNone) ? instr_first_cycle_i : 0;
+      ALU_ROR: shift_left = (RV32B != RV32BNone) ? ~instr_first_cycle_i : 0;
+      ALU_FSL: shift_left = (RV32B != RV32BNone) ?
+        (shift_amt[5] ? ~instr_first_cycle_i : instr_first_cycle_i) : 1'b0;
+      ALU_FSR: shift_left = (RV32B != RV32BNone) ?
+          (shift_amt[5] ? instr_first_cycle_i : ~instr_first_cycle_i) : 1'b0;
+      default: shift_left = 1'b0;
+    endcase
+    if (shift_sbmode) begin
+      shift_left = 1'b1;
+    end
+  end
+
+`line 302 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign shift_arith  = (operator_i == ALU_SRA);
+  assign shift_ones   =
+      (RV32B != RV32BNone) ? (operator_i == ALU_SLO) | (operator_i == ALU_SRO) : 1'b0;
+  assign shift_funnel =
+      (RV32B != RV32BNone) ? (operator_i == ALU_FSL) | (operator_i == ALU_FSR) : 1'b0;
+
+`line 308 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+  always_comb begin
+     
+     
+    if (RV32B == RV32BNone) begin
+      shift_operand = shift_left ? operand_a_rev : operand_a_i;
+    end else begin
+      unique case (1'b1)
+        bfp_op:       shift_operand = bfp_mask_rev;
+        shift_sbmode: shift_operand = 32'h8000_0000;
+        default:      shift_operand = shift_left ? operand_a_rev : operand_a_i;
+      endcase
+    end
+
+`line 322 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    shift_result_ext =
+        $unsigned($signed({shift_ones | (shift_arith & shift_operand[31]), shift_operand}) >>>
+                  shift_amt[4:0]);
+
+`line 326 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    shift_result            = shift_result_ext[31:0];
+    unused_shift_result_ext = shift_result_ext[32];
+
+`line 329 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    for (int unsigned i=0; i<32; i++) begin
+      shift_result_rev[i] = shift_result[31-i];
+    end
+
+`line 333 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    shift_result = shift_left ? shift_result_rev : shift_result;
+
+`line 335 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  end
+
+`line 337 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+
+`line 341 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic bwlogic_or;
+  logic bwlogic_and;
+  logic [31:0] bwlogic_operand_b;
+  logic [31:0] bwlogic_or_result;
+  logic [31:0] bwlogic_and_result;
+  logic [31:0] bwlogic_xor_result;
+  logic [31:0] bwlogic_result;
+
+`line 349 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic bwlogic_op_b_negate;
+
+`line 351 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  always_comb begin
+    unique case (operator_i)
+       
+      ALU_XNOR,
+      ALU_ORN,
+      ALU_ANDN: bwlogic_op_b_negate = (RV32B != RV32BNone) ? 1'b1 : 1'b0;
+      ALU_CMIX: bwlogic_op_b_negate = (RV32B != RV32BNone) ? ~instr_first_cycle_i : 1'b0;
+      default:  bwlogic_op_b_negate = 1'b0;
+    endcase
+  end
+
+`line 362 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign bwlogic_operand_b = bwlogic_op_b_negate ? operand_b_neg[32:1] : operand_b_i;
+
+`line 364 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign bwlogic_or_result  = operand_a_i | bwlogic_operand_b;
+  assign bwlogic_and_result = operand_a_i & bwlogic_operand_b;
+  assign bwlogic_xor_result = operand_a_i ^ bwlogic_operand_b;
+
+`line 368 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  assign bwlogic_or  = (operator_i == ALU_OR)  | (operator_i == ALU_ORN);
+  assign bwlogic_and = (operator_i == ALU_AND) | (operator_i == ALU_ANDN);
+
+`line 371 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  always_comb begin
+    unique case (1'b1)
+      bwlogic_or:  bwlogic_result = bwlogic_or_result;
+      bwlogic_and: bwlogic_result = bwlogic_and_result;
+      default:     bwlogic_result = bwlogic_xor_result;
+    endcase
+  end
+
+`line 379 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic [5:0]  bitcnt_result;
+  logic [31:0] minmax_result;
+  logic [31:0] pack_result;
+  logic [31:0] sext_result;
+  logic [31:0] singlebit_result;
+  logic [31:0] rev_result;
+  logic [31:0] shuffle_result;
+  logic [31:0] butterfly_result;
+  logic [31:0] invbutterfly_result;
+  logic [31:0] clmul_result;
+  logic [31:0] multicycle_result;
+
+`line 391 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  if (RV32B != RV32BNone) begin : g_alu_rvb
+
+`line 393 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+
+`line 397 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+     
+
+`line 402 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    logic        zbe_op;
+    logic        bitcnt_ctz;
+    logic        bitcnt_clz;
+    logic        bitcnt_cz;
+    logic [31:0] bitcnt_bits;
+    logic [31:0] bitcnt_mask_op;
+    logic [31:0] bitcnt_bit_mask;
+    logic [ 5:0] bitcnt_partial [32];
+    logic [31:0] bitcnt_partial_lsb_d;
+    logic [31:0] bitcnt_partial_msb_d;
+
+
+`line 414 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    assign bitcnt_ctz    = operator_i == ALU_CTZ;
+    assign bitcnt_clz    = operator_i == ALU_CLZ;
+    assign bitcnt_cz     = bitcnt_ctz | bitcnt_clz;
+    assign bitcnt_result = bitcnt_partial[31];
+
+`line 419 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+     
+    assign bitcnt_mask_op = bitcnt_clz ? operand_a_rev : operand_a_i;
+
+`line 425 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    always_comb begin
+      bitcnt_bit_mask = bitcnt_mask_op;
+      bitcnt_bit_mask |= bitcnt_bit_mask << 1;
+      bitcnt_bit_mask |= bitcnt_bit_mask << 2;
+      bitcnt_bit_mask |= bitcnt_bit_mask << 4;
+      bitcnt_bit_mask |= bitcnt_bit_mask << 8;
+      bitcnt_bit_mask |= bitcnt_bit_mask << 16;
+      bitcnt_bit_mask = ~bitcnt_bit_mask;
+    end
+
+`line 435 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    assign zbe_op = (operator_i == ALU_BEXT) | (operator_i == ALU_BDEP);
+
+`line 437 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    always_comb begin
+      case(1'b1)
+        zbe_op:      bitcnt_bits = operand_b_i;
+        bitcnt_cz:   bitcnt_bits = bitcnt_bit_mask & ~bitcnt_mask_op;  
+        default:     bitcnt_bits = operand_a_i;  
+      endcase
+    end
+
+`line 445 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+    
+     
+    
+     
+    
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+
+`line 486 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    always_comb begin
+      bitcnt_partial = '{default: '0};
+       
+      for (int unsigned i=1; i<32; i+=2) begin
+        bitcnt_partial[i] = {5'h0, bitcnt_bits[i]} + {5'h0, bitcnt_bits[i-1]};
+      end
+       
+      for (int unsigned i=3; i<32; i+=4) begin
+        bitcnt_partial[i] = bitcnt_partial[i-2] + bitcnt_partial[i];
+      end
+       
+      for (int unsigned i=7; i<32; i+=8) begin
+        bitcnt_partial[i] = bitcnt_partial[i-4] + bitcnt_partial[i];
+      end
+       
+      for (int unsigned i=15; i <32; i+=16) begin
+        bitcnt_partial[i] = bitcnt_partial[i-8] + bitcnt_partial[i];
+      end
+       
+      bitcnt_partial[31] = bitcnt_partial[15] + bitcnt_partial[31];
+       
+       
+       
+      bitcnt_partial[23] = bitcnt_partial[15] + bitcnt_partial[23];
+
+`line 511 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      for (int unsigned i=11; i<32; i+=8) begin
+        bitcnt_partial[i] = bitcnt_partial[i-4] + bitcnt_partial[i];
+      end
+
+`line 516 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      for (int unsigned i=5; i<32; i+=4) begin
+        bitcnt_partial[i] = bitcnt_partial[i-2] + bitcnt_partial[i];
+      end
+       
+      bitcnt_partial[0] = {5'h0, bitcnt_bits[0]};
+      for (int unsigned i=2; i<32; i+=2) begin
+        bitcnt_partial[i] = bitcnt_partial[i-1] + {5'h0, bitcnt_bits[i]};
+      end
+    end
+
+`line 527 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+
+`line 531 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    assign minmax_result = cmp_result ? operand_a_i : operand_b_i;
+
+`line 533 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+
+`line 537 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    logic packu;
+    logic packh;
+    assign packu = operator_i == ALU_PACKU;
+    assign packh = operator_i == ALU_PACKH;
+
+`line 542 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    always_comb begin
+      unique case (1'b1)
+        packu:   pack_result = {operand_b_i[31:16], operand_a_i[31:16]};
+        packh:   pack_result = {16'h0, operand_b_i[7:0], operand_a_i[7:0]};
+        default: pack_result = {operand_b_i[15:0], operand_a_i[15:0]};
+      endcase
+    end
+
+`line 550 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+
+`line 554 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    assign sext_result = (operator_i == ALU_SEXTB) ?
+        { {24{operand_a_i[7]}}, operand_a_i[7:0]} : { {16{operand_a_i[15]}}, operand_a_i[15:0]};
+
+`line 557 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+
+`line 561 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    always_comb begin
+      unique case (operator_i)
+        ALU_SBSET: singlebit_result = operand_a_i | shift_result;
+        ALU_SBCLR: singlebit_result = operand_a_i & ~shift_result;
+        ALU_SBINV: singlebit_result = operand_a_i ^ shift_result;
+        default:   singlebit_result = {31'h0, shift_result[0]};  
+      endcase
+    end
+
+`line 570 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+
+`line 574 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+
+`line 578 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    logic [4:0] zbp_shift_amt;
+    logic gorc_op;
+
+`line 581 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    assign gorc_op = (operator_i == ALU_GORC);
+    assign zbp_shift_amt[2:0] = (RV32B == RV32BFull) ? shift_amt[2:0] : {3{&shift_amt[2:0]}};
+    assign zbp_shift_amt[4:3] = (RV32B == RV32BFull) ? shift_amt[4:3] : {2{&shift_amt[4:3]}};
+
+`line 585 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    always_comb begin
+      rev_result = operand_a_i;
+
+`line 588 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      if (zbp_shift_amt[0]) begin
+        rev_result = (gorc_op ? rev_result : 32'h0)       |
+                     ((rev_result & 32'h5555_5555) <<  1) |
+                     ((rev_result & 32'haaaa_aaaa) >>  1);
+      end
+
+`line 594 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      if (zbp_shift_amt[1]) begin
+        rev_result = (gorc_op ? rev_result : 32'h0)       |
+                     ((rev_result & 32'h3333_3333) <<  2) |
+                     ((rev_result & 32'hcccc_cccc) >>  2);
+      end
+
+`line 600 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      if (zbp_shift_amt[2]) begin
+        rev_result = (gorc_op ? rev_result : 32'h0)       |
+                     ((rev_result & 32'h0f0f_0f0f) <<  4) |
+                     ((rev_result & 32'hf0f0_f0f0) >>  4);
+      end
+
+`line 606 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      if (zbp_shift_amt[3]) begin
+        rev_result = (gorc_op & (RV32B == RV32BFull) ? rev_result : 32'h0) |
+                     ((rev_result & 32'h00ff_00ff) <<  8) |
+                     ((rev_result & 32'hff00_ff00) >>  8);
+      end
+
+`line 612 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      if (zbp_shift_amt[4]) begin
+        rev_result = (gorc_op & (RV32B == RV32BFull) ? rev_result : 32'h0) |
+                     ((rev_result & 32'h0000_ffff) << 16) |
+                     ((rev_result & 32'hffff_0000) >> 16);
+      end
+    end
+
+`line 619 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    logic crc_hmode;
+    logic crc_bmode;
+    logic [31:0] clmul_result_rev;
+
+`line 623 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    if (RV32B == RV32BFull) begin : gen_alu_rvb_full
+
+`line 625 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+       
+
+`line 629 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      localparam logic [31:0] SHUFFLE_MASK_L [4] =
+          '{32'h00ff_0000, 32'h0f00_0f00, 32'h3030_3030, 32'h4444_4444};
+      localparam logic [31:0] SHUFFLE_MASK_R [4] =
+          '{32'h0000_ff00, 32'h00f0_00f0, 32'h0c0c_0c0c, 32'h2222_2222};
+
+`line 634 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      localparam logic [31:0] FLIP_MASK_L [4] =
+          '{32'h2200_1100, 32'h0044_0000, 32'h4411_0000, 32'h1100_0000};
+      localparam logic [31:0] FLIP_MASK_R [4] =
+          '{32'h0088_0044, 32'h0000_2200, 32'h0000_8822, 32'h0000_0088};
+
+`line 639 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic [31:0] SHUFFLE_MASK_NOT [4];
+      for(genvar i = 0; i < 4; i++) begin : gen_shuffle_mask_not
+        assign SHUFFLE_MASK_NOT[i] = ~(SHUFFLE_MASK_L[i] | SHUFFLE_MASK_R[i]);
+      end
+
+`line 644 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic shuffle_flip;
+      assign shuffle_flip = operator_i == ALU_UNSHFL;
+
+`line 647 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic [3:0] shuffle_mode;
+
+`line 649 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      always_comb begin
+        shuffle_result = operand_a_i;
+
+`line 652 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        if (shuffle_flip) begin
+          shuffle_mode[3] = shift_amt[0];
+          shuffle_mode[2] = shift_amt[1];
+          shuffle_mode[1] = shift_amt[2];
+          shuffle_mode[0] = shift_amt[3];
+        end else begin
+          shuffle_mode = shift_amt[3:0];
+        end
+
+`line 661 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        if (shuffle_flip) begin
+          shuffle_result = (shuffle_result & 32'h8822_4411) |
+              ((shuffle_result << 6)  & FLIP_MASK_L[0]) |
+              ((shuffle_result >> 6)  & FLIP_MASK_R[0]) |
+              ((shuffle_result << 9)  & FLIP_MASK_L[1]) |
+              ((shuffle_result >> 9)  & FLIP_MASK_R[1]) |
+              ((shuffle_result << 15) & FLIP_MASK_L[2]) |
+              ((shuffle_result >> 15) & FLIP_MASK_R[2]) |
+              ((shuffle_result << 21) & FLIP_MASK_L[3]) |
+              ((shuffle_result >> 21) & FLIP_MASK_R[3]);
+        end
+
+`line 673 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        if (shuffle_mode[3]) begin
+          shuffle_result = (shuffle_result & SHUFFLE_MASK_NOT[0]) |
+              (((shuffle_result << 8) & SHUFFLE_MASK_L[0]) |
+              ((shuffle_result >> 8) & SHUFFLE_MASK_R[0]));
+        end
+        if (shuffle_mode[2]) begin
+          shuffle_result = (shuffle_result & SHUFFLE_MASK_NOT[1]) |
+              (((shuffle_result << 4) & SHUFFLE_MASK_L[1]) |
+              ((shuffle_result >> 4) & SHUFFLE_MASK_R[1]));
+        end
+        if (shuffle_mode[1]) begin
+          shuffle_result = (shuffle_result & SHUFFLE_MASK_NOT[2]) |
+              (((shuffle_result << 2) & SHUFFLE_MASK_L[2]) |
+              ((shuffle_result >> 2) & SHUFFLE_MASK_R[2]));
+        end
+        if (shuffle_mode[0]) begin
+          shuffle_result = (shuffle_result & SHUFFLE_MASK_NOT[3]) |
+              (((shuffle_result << 1) & SHUFFLE_MASK_L[3]) |
+              ((shuffle_result >> 1) & SHUFFLE_MASK_R[3]));
+        end
+
+`line 694 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        if (shuffle_flip) begin
+          shuffle_result = (shuffle_result & 32'h8822_4411) |
+              ((shuffle_result << 6)  & FLIP_MASK_L[0]) |
+              ((shuffle_result >> 6)  & FLIP_MASK_R[0]) |
+              ((shuffle_result << 9)  & FLIP_MASK_L[1]) |
+              ((shuffle_result >> 9)  & FLIP_MASK_R[1]) |
+              ((shuffle_result << 15) & FLIP_MASK_L[2]) |
+              ((shuffle_result >> 15) & FLIP_MASK_R[2]) |
+              ((shuffle_result << 21) & FLIP_MASK_L[3]) |
+              ((shuffle_result >> 21) & FLIP_MASK_R[3]);
+        end
+      end
+
+`line 707 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+       
+
+`line 711 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+       
+       
+       
+       
+       
+       
+      
+       
+       
+       
+
+`line 724 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+       
+       
+      
+       
+       
+       
+       
+      
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+
+`line 759 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic [ 5:0] bitcnt_partial_q [32];
+
+`line 761 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+      for (genvar i=0; i<32; i++) begin : gen_bitcnt_reg_in_lsb
+        assign bitcnt_partial_lsb_d[i] = bitcnt_partial[i][0];
+      end
+
+`line 767 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<16; i++) begin : gen_bitcnt_reg_in_b1
+        assign bitcnt_partial_msb_d[i] = bitcnt_partial[2*i+1][1];
+      end
+
+`line 771 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<8; i++) begin : gen_bitcnt_reg_in_b2
+        assign bitcnt_partial_msb_d[16+i] = bitcnt_partial[4*i+3][2];
+      end
+
+`line 775 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<4; i++) begin : gen_bitcnt_reg_in_b3
+        assign bitcnt_partial_msb_d[24+i] = bitcnt_partial[8*i+7][3];
+      end
+
+`line 779 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<2; i++) begin : gen_bitcnt_reg_in_b4
+        assign bitcnt_partial_msb_d[28+i] = bitcnt_partial[16*i+15][4];
+      end
+
+`line 783 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      assign bitcnt_partial_msb_d[30] = bitcnt_partial[31][5];
+      assign bitcnt_partial_msb_d[31] = 1'b0;  
+
+`line 786 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+      always_comb begin
+        bitcnt_partial_q = '{default: '0};
+
+`line 791 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        for (int unsigned i=0; i<32; i++) begin : gen_bitcnt_reg_out_lsb
+          bitcnt_partial_q[i][0] = imd_val_q_i[0][i];
+        end
+
+`line 795 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        for (int unsigned i=0; i<16; i++) begin : gen_bitcnt_reg_out_b1
+          bitcnt_partial_q[2*i+1][1] = imd_val_q_i[1][i];
+        end
+
+`line 799 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        for (int unsigned i=0; i<8; i++) begin : gen_bitcnt_reg_out_b2
+          bitcnt_partial_q[4*i+3][2] = imd_val_q_i[1][16+i];
+        end
+
+`line 803 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        for (int unsigned i=0; i<4; i++) begin : gen_bitcnt_reg_out_b3
+          bitcnt_partial_q[8*i+7][3] = imd_val_q_i[1][24+i];
+        end
+
+`line 807 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        for (int unsigned i=0; i<2; i++) begin : gen_bitcnt_reg_out_b4
+          bitcnt_partial_q[16*i+15][4] = imd_val_q_i[1][28+i];
+        end
+
+`line 811 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        bitcnt_partial_q[31][5] = imd_val_q_i[1][30];
+      end
+
+`line 814 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic [31:0] butterfly_mask_l[5];
+      logic [31:0] butterfly_mask_r[5];
+      logic [31:0] butterfly_mask_not[5];
+      logic [31:0] lrotc_stage [5];  
+
+`line 819 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+
+`line 822 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      for (genvar stg=0; stg<5; stg++) begin : gen_butterfly_ctrl_stage
+         
+        for (genvar seg=0; seg<2**stg; seg++) begin : gen_butterfly_ctrl
+
+`line 827 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+          assign lrotc_stage[stg][2*(16 >> stg)*(seg+1)-1 : 2*(16 >> stg)*seg] =
+              {{(16 >> stg){1'b0}},{(16 >> stg){1'b1}}} <<
+                bitcnt_partial_q[(16 >> stg)*(2*seg+1)-1][$clog2((16 >> stg)):0];
+
+`line 831 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+          assign butterfly_mask_l[stg][(16 >> stg)*(2*seg+2)-1 : (16 >> stg)*(2*seg+1)]
+                   = ~lrotc_stage[stg][(16 >> stg)*(2*seg+2)-1 : (16 >> stg)*(2*seg+1)];
+
+`line 834 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+          assign butterfly_mask_r[stg][(16 >> stg)*(2*seg+1)-1 : (16 >> stg)*(2*seg)]
+                   = ~lrotc_stage[stg][(16 >> stg)*(2*seg+2)-1 : (16 >> stg)*(2*seg+1)];
+
+`line 837 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+          assign butterfly_mask_l[stg][(16 >> stg)*(2*seg+1)-1 : (16 >> stg)*(2*seg)]   = '0;
+          assign butterfly_mask_r[stg][(16 >> stg)*(2*seg+2)-1 : (16 >> stg)*(2*seg+1)] = '0;
+        end
+      end
+       
+
+`line 843 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar stg=0; stg<5; stg++) begin : gen_butterfly_not
+        assign butterfly_mask_not[stg] =
+            ~(butterfly_mask_l[stg] | butterfly_mask_r[stg]);
+      end
+
+`line 848 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      always_comb begin
+        butterfly_result = operand_a_i;
+
+`line 851 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        butterfly_result = butterfly_result & butterfly_mask_not[0] |
+            ((butterfly_result & butterfly_mask_l[0]) >> 16)|
+            ((butterfly_result & butterfly_mask_r[0]) << 16);
+
+`line 855 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        butterfly_result = butterfly_result & butterfly_mask_not[1] |
+            ((butterfly_result & butterfly_mask_l[1]) >> 8)|
+            ((butterfly_result & butterfly_mask_r[1]) << 8);
+
+`line 859 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        butterfly_result = butterfly_result & butterfly_mask_not[2] |
+            ((butterfly_result & butterfly_mask_l[2]) >> 4)|
+            ((butterfly_result & butterfly_mask_r[2]) << 4);
+
+`line 863 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        butterfly_result = butterfly_result & butterfly_mask_not[3] |
+            ((butterfly_result & butterfly_mask_l[3]) >> 2)|
+            ((butterfly_result & butterfly_mask_r[3]) << 2);
+
+`line 867 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        butterfly_result = butterfly_result & butterfly_mask_not[4] |
+            ((butterfly_result & butterfly_mask_l[4]) >> 1)|
+            ((butterfly_result & butterfly_mask_r[4]) << 1);
+
+`line 871 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        butterfly_result = butterfly_result & operand_b_i;
+      end
+
+`line 874 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      always_comb begin
+        invbutterfly_result = operand_a_i & operand_b_i;
+
+`line 877 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        invbutterfly_result = invbutterfly_result & butterfly_mask_not[4] |
+            ((invbutterfly_result & butterfly_mask_l[4]) >> 1)|
+            ((invbutterfly_result & butterfly_mask_r[4]) << 1);
+
+`line 881 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        invbutterfly_result = invbutterfly_result & butterfly_mask_not[3] |
+            ((invbutterfly_result & butterfly_mask_l[3]) >> 2)|
+            ((invbutterfly_result & butterfly_mask_r[3]) << 2);
+
+`line 885 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        invbutterfly_result = invbutterfly_result & butterfly_mask_not[2] |
+            ((invbutterfly_result & butterfly_mask_l[2]) >> 4)|
+            ((invbutterfly_result & butterfly_mask_r[2]) << 4);
+
+`line 889 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        invbutterfly_result = invbutterfly_result & butterfly_mask_not[1] |
+            ((invbutterfly_result & butterfly_mask_l[1]) >> 8)|
+            ((invbutterfly_result & butterfly_mask_r[1]) << 8);
+
+`line 893 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        invbutterfly_result = invbutterfly_result & butterfly_mask_not[0] |
+            ((invbutterfly_result & butterfly_mask_l[0]) >> 16)|
+            ((invbutterfly_result & butterfly_mask_r[0]) << 16);
+      end
+
+`line 898 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+       
+
+`line 902 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+      
+       
+      
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+      
+       
+       
+       
+       
+       
+      
+      
+       
+      
+       
+       
+       
+       
+       
+      
+       
+      
+       
+      
+       
+       
+      
+       
+      
+       
+       
+      
+       
+       
+       
+      
+       
+       
+       
+       
+      
+       
+       
+
+`line 959 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic clmul_rmode;
+      logic clmul_hmode;
+      logic [31:0] clmul_op_a;
+      logic [31:0] clmul_op_b;
+      logic [31:0] operand_b_rev;
+      logic [31:0] clmul_and_stage[32];
+      logic [31:0] clmul_xor_stage1[16];
+      logic [31:0] clmul_xor_stage2[8];
+      logic [31:0] clmul_xor_stage3[4];
+      logic [31:0] clmul_xor_stage4[2];
+
+`line 970 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic [31:0] clmul_result_raw;
+
+`line 972 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<32; i++) begin: gen_rev_operand_b
+        assign operand_b_rev[i] = operand_b_i[31-i];
+      end
+
+`line 976 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      assign clmul_rmode = operator_i == ALU_CLMULR;
+      assign clmul_hmode = operator_i == ALU_CLMULH;
+
+`line 979 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      localparam logic [31:0] CRC32_POLYNOMIAL = 32'h04c1_1db7;
+      localparam logic [31:0] CRC32_MU_REV = 32'hf701_1641;
+
+`line 983 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      localparam logic [31:0] CRC32C_POLYNOMIAL = 32'h1edc_6f41;
+      localparam logic [31:0] CRC32C_MU_REV = 32'hdea7_13f1;
+
+`line 986 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic crc_op;
+
+`line 988 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic crc_cpoly;
+
+`line 990 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      logic [31:0] crc_operand;
+      logic [31:0] crc_poly;
+      logic [31:0] crc_mu_rev;
+
+`line 994 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      assign crc_op = (operator_i == ALU_CRC32C_W) | (operator_i == ALU_CRC32_W) |
+                      (operator_i == ALU_CRC32C_H) | (operator_i == ALU_CRC32_H) |
+                      (operator_i == ALU_CRC32C_B) | (operator_i == ALU_CRC32_B);
+
+`line 998 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      assign crc_cpoly = (operator_i == ALU_CRC32C_W) |
+                         (operator_i == ALU_CRC32C_H) |
+                         (operator_i == ALU_CRC32C_B);
+
+`line 1002 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      assign crc_hmode = (operator_i == ALU_CRC32_H) | (operator_i == ALU_CRC32C_H);
+      assign crc_bmode = (operator_i == ALU_CRC32_B) | (operator_i == ALU_CRC32C_B);
+
+`line 1005 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      assign crc_poly   = crc_cpoly ? CRC32C_POLYNOMIAL : CRC32_POLYNOMIAL;
+      assign crc_mu_rev = crc_cpoly ? CRC32C_MU_REV : CRC32_MU_REV;
+
+`line 1008 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      always_comb begin
+        unique case(1'b1)
+          crc_bmode: crc_operand = {operand_a_i[7:0], 24'h0};
+          crc_hmode: crc_operand = {operand_a_i[15:0], 16'h0};
+          default:   crc_operand = operand_a_i;
+        endcase
+      end
+
+`line 1016 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      always_comb begin
+        if (crc_op) begin
+          clmul_op_a = instr_first_cycle_i ? crc_operand : imd_val_q_i[0];
+          clmul_op_b = instr_first_cycle_i ? crc_mu_rev : crc_poly;
+        end else begin
+          clmul_op_a = clmul_rmode | clmul_hmode ? operand_a_rev : operand_a_i;
+          clmul_op_b = clmul_rmode | clmul_hmode ? operand_b_rev : operand_b_i;
+        end
+      end
+
+`line 1027 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<32; i++) begin : gen_clmul_and_op
+        assign clmul_and_stage[i] = clmul_op_b[i] ? clmul_op_a << i : '0;
+      end
+
+`line 1031 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<16; i++) begin : gen_clmul_xor_op_l1
+        assign clmul_xor_stage1[i] = clmul_and_stage[2*i] ^ clmul_and_stage[2*i+1];
+      end
+
+`line 1035 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<8; i++) begin : gen_clmul_xor_op_l2
+        assign clmul_xor_stage2[i] = clmul_xor_stage1[2*i] ^ clmul_xor_stage1[2*i+1];
+      end
+
+`line 1039 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<4; i++) begin : gen_clmul_xor_op_l3
+        assign clmul_xor_stage3[i] = clmul_xor_stage2[2*i] ^ clmul_xor_stage2[2*i+1];
+      end
+
+`line 1043 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<2; i++) begin : gen_clmul_xor_op_l4
+        assign clmul_xor_stage4[i] = clmul_xor_stage3[2*i] ^ clmul_xor_stage3[2*i+1];
+      end
+
+`line 1047 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      assign clmul_result_raw = clmul_xor_stage4[0] ^ clmul_xor_stage4[1];
+
+`line 1049 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      for (genvar i=0; i<32; i++) begin : gen_rev_clmul_result
+        assign clmul_result_rev[i] = clmul_result_raw[31-i];
+      end
+
+`line 1053 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+       
+      always_comb begin
+        case(1'b1)
+          clmul_rmode: clmul_result = clmul_result_rev;
+          clmul_hmode: clmul_result = {1'b0, clmul_result_rev[31:1]};
+          default:     clmul_result = clmul_result_raw;
+        endcase
+      end
+    end else begin : gen_alu_rvb_notfull
+      logic [31:0] unused_imd_val_q_1;
+      assign unused_imd_val_q_1   = imd_val_q_i[1];
+      assign shuffle_result       = '0;
+      assign butterfly_result     = '0;
+      assign invbutterfly_result  = '0;
+      assign clmul_result         = '0;
+       
+      assign bitcnt_partial_lsb_d = '0;
+      assign bitcnt_partial_msb_d = '0;
+      assign clmul_result_rev     = '0;
+      assign crc_bmode            = '0;
+      assign crc_hmode            = '0;
+    end
+
+`line 1077 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+     
+     
+     
+     
+     
+     
+
+`line 1084 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    always_comb begin
+      unique case (operator_i)
+        ALU_CMOV: begin
+          multicycle_result = (operand_b_i == 32'h0) ? operand_a_i : imd_val_q_i[0];
+          imd_val_d_o = '{operand_a_i, 32'h0};
+          if (instr_first_cycle_i) begin
+            imd_val_we_o = 2'b01;
+          end else begin
+            imd_val_we_o = 2'b00;
+          end
+        end
+
+`line 1096 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        ALU_CMIX: begin
+          multicycle_result = imd_val_q_i[0] | bwlogic_and_result;
+          imd_val_d_o = '{bwlogic_and_result, 32'h0};
+          if (instr_first_cycle_i) begin
+            imd_val_we_o = 2'b01;
+          end else begin
+            imd_val_we_o = 2'b00;
+          end
+        end
+
+`line 1106 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        ALU_FSR, ALU_FSL,
+        ALU_ROL, ALU_ROR: begin
+          if (shift_amt[4:0] == 5'h0) begin
+            multicycle_result = shift_amt[5] ? operand_a_i : imd_val_q_i[0];
+          end else begin
+            multicycle_result = imd_val_q_i[0] | shift_result;
+          end
+          imd_val_d_o = '{shift_result, 32'h0};
+          if (instr_first_cycle_i) begin
+            imd_val_we_o = 2'b01;
+          end else begin
+            imd_val_we_o = 2'b00;
+          end
+        end
+
+`line 1121 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        ALU_CRC32_W, ALU_CRC32C_W,
+        ALU_CRC32_H, ALU_CRC32C_H,
+        ALU_CRC32_B, ALU_CRC32C_B: begin
+          if (RV32B == RV32BFull) begin
+            unique case(1'b1)
+              crc_bmode: multicycle_result = clmul_result_rev ^ (operand_a_i >> 8);
+              crc_hmode: multicycle_result = clmul_result_rev ^ (operand_a_i >> 16);
+              default:   multicycle_result = clmul_result_rev;
+            endcase
+            imd_val_d_o = '{clmul_result_rev, 32'h0};
+            if (instr_first_cycle_i) begin
+              imd_val_we_o = 2'b01;
+            end else begin
+              imd_val_we_o = 2'b00;
+            end
+          end else begin
+            imd_val_d_o = '{operand_a_i, 32'h0};
+            imd_val_we_o = 2'b00;
+            multicycle_result = '0;
+          end
+        end
+
+`line 1143 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        ALU_BEXT, ALU_BDEP: begin
+          if (RV32B == RV32BFull) begin
+            multicycle_result = (operator_i == ALU_BDEP) ? butterfly_result : invbutterfly_result;
+            imd_val_d_o = '{bitcnt_partial_lsb_d, bitcnt_partial_msb_d};
+            if (instr_first_cycle_i) begin
+              imd_val_we_o = 2'b11;
+            end else begin
+              imd_val_we_o = 2'b00;
+            end
+          end else begin
+            imd_val_d_o = '{operand_a_i, 32'h0};
+            imd_val_we_o = 2'b00;
+            multicycle_result = '0;
+          end
+        end
+
+`line 1159 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+        default: begin
+          imd_val_d_o = '{operand_a_i, 32'h0};
+          imd_val_we_o = 2'b00;
+          multicycle_result = '0;
+        end
+      endcase
+    end
+
+
+`line 1168 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  end else begin : g_no_alu_rvb
+    logic [31:0] unused_imd_val_q[2];
+    assign unused_imd_val_q           = imd_val_q_i;
+    logic [31:0] unused_butterfly_result;
+    assign unused_butterfly_result    = butterfly_result;
+    logic [31:0] unused_invbutterfly_result;
+    assign unused_invbutterfly_result = invbutterfly_result;
+     
+    assign bitcnt_result       = '0;
+    assign minmax_result       = '0;
+    assign pack_result         = '0;
+    assign sext_result         = '0;
+    assign singlebit_result    = '0;
+    assign rev_result          = '0;
+    assign shuffle_result      = '0;
+    assign butterfly_result    = '0;
+    assign invbutterfly_result = '0;
+    assign clmul_result        = '0;
+    assign multicycle_result   = '0;
+     
+    assign imd_val_d_o         = '{default: '0};
+    assign imd_val_we_o        = '{default: '0};
+  end
+
+`line 1192 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+   
+   
+   
+
+`line 1196 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  always_comb begin
+    result_o   = '0;
+
+`line 1199 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+    unique case (operator_i)
+       
+      ALU_XOR,  ALU_XNOR,
+      ALU_OR,   ALU_ORN,
+      ALU_AND,  ALU_ANDN: result_o = bwlogic_result;
+
+`line 1205 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_ADD,  ALU_SUB: result_o = adder_result;
+
+`line 1208 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_SLL,  ALU_SRL,
+      ALU_SRA,
+       
+      ALU_SLO,  ALU_SRO: result_o = shift_result;
+
+`line 1214 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_SHFL, ALU_UNSHFL: result_o = shuffle_result;
+
+`line 1217 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_EQ,   ALU_NE,
+      ALU_GE,   ALU_GEU,
+      ALU_LT,   ALU_LTU,
+      ALU_SLT,  ALU_SLTU: result_o = {31'h0,cmp_result};
+
+`line 1223 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_MIN,  ALU_MAX,
+      ALU_MINU, ALU_MAXU: result_o = minmax_result;
+
+`line 1227 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_CLZ, ALU_CTZ,
+      ALU_PCNT: result_o = {26'h0, bitcnt_result};
+
+`line 1231 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_PACK, ALU_PACKH,
+      ALU_PACKU: result_o = pack_result;
+
+`line 1235 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_SEXTB, ALU_SEXTH: result_o = sext_result;
+
+`line 1238 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_CMIX, ALU_CMOV,
+      ALU_FSL,  ALU_FSR,
+       
+      ALU_ROL, ALU_ROR,
+       
+      ALU_CRC32_W, ALU_CRC32C_W,
+      ALU_CRC32_H, ALU_CRC32C_H,
+      ALU_CRC32_B, ALU_CRC32C_B,
+       
+      ALU_BEXT, ALU_BDEP: result_o = multicycle_result;
+
+`line 1250 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_SBSET, ALU_SBCLR,
+      ALU_SBINV, ALU_SBEXT: result_o = singlebit_result;
+
+`line 1254 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_GREV, ALU_GORC: result_o = rev_result;
+
+`line 1257 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_BFP: result_o = bfp_result;
+
+`line 1260 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+       
+      ALU_CLMUL, ALU_CLMULR,
+      ALU_CLMULH: result_o = clmul_result;
+
+`line 1264 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+      default: ;
+    endcase
+  end
+
+`line 1268 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+  logic unused_shift_amt_compl;
+  assign unused_shift_amt_compl = shift_amt_compl[5];
+
+`line 1271 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 0
+endmodule
+
+`line 1273 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_alu.sv" 2

@@ -1,0 +1,31 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_ibex_core:1.0"
+description: "Azadi SoC ibex core files."
+filesets:
+  azadi:
+    files:
+      - src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv
+      - src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_filter_ctr.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_counter.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_csr.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_cs_registers.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_register_file_ff.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_alu.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_multdiv_fast.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_multdiv_slow.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_controller.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_decoder.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_load_store_unit.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_compressed_decoder.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_wb_stage.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_fetch_fifo.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_prefetch_buffer.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_if_stage.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_id_stage.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_ex_block.sv
+      - src/vendor/lowrisc_ibex/rtl/ibex_core.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

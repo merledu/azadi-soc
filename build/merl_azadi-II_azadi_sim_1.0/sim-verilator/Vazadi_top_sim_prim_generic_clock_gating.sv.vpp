@@ -1,0 +1,38 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_clock_gating.sv" 1
+ 
+ 
+ 
+
+`line 5 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_clock_gating.sv" 0
+ 
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_clock_gating.sv" 0
+module prim_generic_clock_gating (
+  input        clk_i,
+  input        en_i,
+  input        test_en_i,
+  output logic clk_o
+);
+
+`line 14 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_clock_gating.sv" 0
+ 
+  
+   
+   
+      
+          
+    
+  
+       
+ 
+        
+
+`line 26 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_clock_gating.sv" 0
+  LATQ_X3M_A12TR clock_gate(.Q(clk_o), .D(clk_i), .G(en_i));
+
+
+`line 29 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_clock_gating.sv" 0
+endmodule
+
+`line 31 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_clock_gating.sv" 2

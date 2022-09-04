@@ -1,0 +1,74 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 1
+
+
+`line 3 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+module prim_subreg #(
+  parameter int            DW       = 32  ,
+  parameter                SWACCESS = "RW",   
+  parameter logic [DW-1:0] RESVAL   = '0      
+) (
+  input logic clk_i,
+  input logic rst_ni,
+
+`line 11 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+   
+   
+  input logic         we,
+  input logic [DW-1:0] wd,
+
+`line 16 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+   
+  input logic         de,
+  input logic [DW-1:0] d,
+
+`line 20 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+   
+  output logic          qe,
+  output logic [DW-1:0] q,
+  output logic [DW-1:0] qs
+);
+
+`line 26 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+  logic          wr_en;
+  logic [DW-1:0] wr_data;
+
+`line 29 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+  prim_subreg_arb #(
+    .DW       ( DW       ),
+    .SWACCESS ( SWACCESS )
+  ) wr_en_data_arb (
+    .we	    (we),
+    .wd	    (wd),
+    .de	    (de),
+    .d	    (d),
+    .q	    (q),
+    .wr_en  (wr_en),
+    .wr_data(wr_data)
+  );
+
+`line 42 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      qe <= 1'b0;
+    end else begin
+      qe <= we;
+    end
+  end
+
+`line 50 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      q <= RESVAL;
+    end else if (wr_en) begin
+      q <= wr_data;
+    end
+  end
+
+`line 58 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+  assign qs = q;
+
+`line 60 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 0
+endmodule
+
+`line 62 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_subreg.sv" 2

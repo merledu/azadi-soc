@@ -1,0 +1,212 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 1
+ 
+ 
+ 
+
+`line 5 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+ 
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+module tlul_xbar_periph (
+
+`line 9 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  input logic clk_i,
+  input logic rst_ni,
+
+`line 12 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+   
+  input  tlul_pkg::tlul_h2d_t tl_periph_i,
+  output tlul_pkg::tlul_d2h_t tl_periph_o,
+
+`line 16 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+   
+  output tlul_pkg::tlul_h2d_t tl_gpio_o,
+  input  tlul_pkg::tlul_d2h_t tl_gpio_i,
+
+`line 20 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_uart0_o,
+  input  tlul_pkg::tlul_d2h_t tl_uart0_i,
+
+`line 23 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_uart1_o,
+  input  tlul_pkg::tlul_d2h_t tl_uart1_i,
+
+`line 26 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_uart2_o,
+  input  tlul_pkg::tlul_d2h_t tl_uart2_i,
+
+`line 29 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_uart3_o,
+  input  tlul_pkg::tlul_d2h_t tl_uart3_i,
+
+`line 32 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_spi0_o,
+  input  tlul_pkg::tlul_d2h_t tl_spi0_i,
+
+`line 35 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_spi1_o,
+  input  tlul_pkg::tlul_d2h_t tl_spi1_i,
+
+`line 38 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_spi2_o,
+  input  tlul_pkg::tlul_d2h_t tl_spi2_i,
+
+`line 41 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_spi3_o,
+  input  tlul_pkg::tlul_d2h_t tl_spi3_i,
+
+`line 44 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_pwm0_o,
+  input  tlul_pkg::tlul_d2h_t tl_pwm0_i,
+
+`line 47 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_pwm1_o,
+  input  tlul_pkg::tlul_d2h_t tl_pwm1_i,
+
+`line 50 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_pwm2_o,
+  input  tlul_pkg::tlul_d2h_t tl_pwm2_i,
+
+`line 53 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  output tlul_pkg::tlul_h2d_t tl_pwm3_o,
+  input  tlul_pkg::tlul_d2h_t tl_pwm3_i
+);
+
+`line 57 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  import tlul_pkg::*;
+  import tlul_xbar_periph_pkg::*;
+
+`line 60 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+   
+  tlul_pkg::tlul_h2d_t h0_dv_o[13];
+  tlul_pkg::tlul_d2h_t h0_dv_i[13];
+  tlul_pkg::tlul_h2d_t xbar_main_to_s1n;
+  tlul_pkg::tlul_d2h_t s1n_to_xbar_main;
+  logic [3:0]          device_sel_xbar_main;
+
+`line 67 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign xbar_main_to_s1n = tl_periph_i;
+  assign tl_periph_o      = s1n_to_xbar_main;
+  
+   
+  assign tl_gpio_o  = h0_dv_o[0];
+  assign h0_dv_i[0] = tl_gpio_i;
+
+`line 74 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_uart0_o  = h0_dv_o[1];
+  assign h0_dv_i[1] = tl_uart0_i;
+
+`line 77 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_uart1_o  = h0_dv_o[2];
+  assign h0_dv_i[2] = tl_uart1_i;
+
+`line 80 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_uart2_o  = h0_dv_o[3];
+  assign h0_dv_i[3] = tl_uart2_i;
+
+`line 83 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_uart3_o  = h0_dv_o[4];
+  assign h0_dv_i[4] = tl_uart3_i;
+
+`line 86 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_spi0_o  = h0_dv_o[5];
+  assign h0_dv_i[5] = tl_spi0_i;
+
+`line 89 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_spi1_o  = h0_dv_o[6];
+  assign h0_dv_i[6] = tl_spi1_i;
+
+`line 92 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_spi2_o  = h0_dv_o[7];
+  assign h0_dv_i[7] = tl_spi2_i;
+
+`line 95 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_spi3_o  = h0_dv_o[8];
+  assign h0_dv_i[8] = tl_spi3_i;
+
+`line 98 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_pwm0_o  = h0_dv_o[9];
+  assign h0_dv_i[9] = tl_pwm0_i;
+
+`line 101 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_pwm1_o  = h0_dv_o[10];
+  assign h0_dv_i[10] = tl_pwm1_i;
+
+`line 104 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_pwm2_o  = h0_dv_o[11];
+  assign h0_dv_i[11] = tl_pwm2_i;
+
+`line 107 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+  assign tl_pwm3_o  = h0_dv_o[12];
+  assign h0_dv_i[12] = tl_pwm3_i;
+
+`line 110 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+   
+  always_comb begin 
+    device_sel_xbar_main = 4'd13;
+
+`line 114 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_GPIO)) == ADDR_SPACE_GPIO) begin
+      device_sel_xbar_main = 4'd0; 
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_UART0)) == ADDR_SPACE_UART0) begin
+      device_sel_xbar_main = 4'd1;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_UART1)) == ADDR_SPACE_UART1) begin
+      device_sel_xbar_main = 4'd2;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_UART2)) == ADDR_SPACE_UART2) begin
+      device_sel_xbar_main = 4'd3;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_UART3)) == ADDR_SPACE_UART3) begin
+      device_sel_xbar_main = 4'd4;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_SPI0)) == ADDR_SPACE_SPI0) begin
+      device_sel_xbar_main = 4'd5;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_SPI1)) == ADDR_SPACE_SPI1) begin
+      device_sel_xbar_main = 4'd6;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_SPI2)) == ADDR_SPACE_SPI2) begin
+      device_sel_xbar_main = 4'd7;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_SPI3)) == ADDR_SPACE_SPI3) begin
+      device_sel_xbar_main = 4'd8;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_PWM0)) == ADDR_SPACE_PWM0) begin
+      device_sel_xbar_main = 4'd9;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_PWM1)) == ADDR_SPACE_PWM1) begin
+      device_sel_xbar_main = 4'd10;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_PWM2)) == ADDR_SPACE_PWM2) begin
+      device_sel_xbar_main = 4'd11;
+    end else 
+    if ((xbar_main_to_s1n.a_address & ~(ADDR_MASK_PWM3)) == ADDR_SPACE_PWM3) begin
+      device_sel_xbar_main = 4'd12;
+    end
+  end
+
+`line 155 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+   
+  tlul_socket_1n #(
+    .HReqDepth (4'h0),
+    .HRspDepth (4'h0),
+    .DReqDepth (36'h0),
+    .DRspDepth (36'h0),
+    .N         (13)
+  ) host_periph (
+    .clk_i        ( clk_i                ),
+    .rst_ni       ( rst_ni               ),
+    .tl_h_i       ( xbar_main_to_s1n     ),
+    .tl_h_o       ( s1n_to_xbar_main     ),
+    .tl_d_o       ( h0_dv_o              ),
+    .tl_d_i       ( h0_dv_i              ),
+    .dev_select_i ( device_sel_xbar_main )
+  );
+
+`line 172 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 0
+endmodule
+
+`line 174 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_xbar_periph.sv" 2

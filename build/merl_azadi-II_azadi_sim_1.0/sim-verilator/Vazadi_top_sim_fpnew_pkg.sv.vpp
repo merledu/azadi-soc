@@ -1,0 +1,559 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 1
+ 
+
+`line 3 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 12 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+ 
+
+`line 14 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+package fpnew_pkg;
+
+`line 16 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+
+`line 28 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef struct packed {
+    int unsigned exp_bits;
+    int unsigned man_bits;
+  } fp_encoding_t;
+
+`line 34 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam int unsigned NUM_FP_FORMATS = 5;  
+  localparam int unsigned FP_FORMAT_BITS = $clog2(NUM_FP_FORMATS);
+
+`line 37 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef enum logic [FP_FORMAT_BITS-1:0] {
+    FP32    = 'd0,
+    FP64    = 'd1,
+    FP16    = 'd2,
+    FP8     = 'd3,
+    FP16ALT = 'd4
+     
+  } fp_format_e;
+
+`line 47 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  localparam fp_encoding_t [0:NUM_FP_FORMATS-1] FP_ENCODINGS  = '{
+    '{8,  23},  
+    '{11, 52},  
+    '{5,  10},  
+    '{5,  2},   
+    '{8,  7}    
+     
+  };
+
+`line 57 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  typedef logic [0:NUM_FP_FORMATS-1]       fmt_logic_t;     
+  typedef logic [0:NUM_FP_FORMATS-1][31:0] fmt_unsigned_t;  
+
+`line 60 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fmt_logic_t CPK_FORMATS = 5'b11000;  
+
+`line 62 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+
+`line 73 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam int unsigned NUM_INT_FORMATS = 4;  
+  localparam int unsigned INT_FORMAT_BITS = $clog2(NUM_INT_FORMATS);
+
+`line 76 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef enum logic [INT_FORMAT_BITS-1:0] {
+    INT8,
+    INT16,
+    INT32,
+    INT64
+     
+  } int_format_e;
+
+`line 85 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned int_width(int_format_e ifmt);
+    unique case (ifmt)
+      INT8:  return 8;
+      INT16: return 16;
+      INT32: return 32;
+      INT64: return 64;
+      default: begin
+         
+        $fatal(1, "Invalid INT format supplied");
+         
+         
+         
+        return INT8;
+      end
+    endcase
+  endfunction
+
+`line 103 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  typedef logic [0:NUM_INT_FORMATS-1] ifmt_logic_t;  
+
+`line 105 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+  localparam int unsigned NUM_OPGROUPS = 4;
+
+`line 110 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef enum logic [1:0] {
+    ADDMUL, DIVSQRT, NONCOMP, CONV
+  } opgroup_e;
+
+`line 115 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam int unsigned OP_BITS = 4;
+
+`line 117 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  typedef enum logic [OP_BITS-1:0] {
+    FMADD, FNMSUB, ADD, MUL,      
+    DIV, SQRT,                    
+    SGNJ, MINMAX, CMP, CLASSIFY,  
+    F2F, F2I, I2F, CPKAB, CPKCD   
+  } operation_e;
+
+`line 124 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+   
+  typedef enum logic [2:0] {
+    RNE = 3'b000,
+    RTZ = 3'b001,
+    RDN = 3'b010,
+    RUP = 3'b011,
+    RMM = 3'b100,
+    DYN = 3'b111
+  } roundmode_e;
+
+`line 137 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef struct packed {
+    logic NV;  
+    logic DZ;  
+    logic OF;  
+    logic UF;  
+    logic NX;  
+  } status_t;
+
+`line 146 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef struct packed {
+    logic is_normal;      
+    logic is_subnormal;   
+    logic is_zero;        
+    logic is_inf;         
+    logic is_nan;         
+    logic is_signalling;  
+    logic is_quiet;       
+    logic is_boxed;       
+  } fp_info_t;
+
+`line 158 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef enum logic [9:0] {
+    NEGINF     = 10'b00_0000_0001,
+    NEGNORM    = 10'b00_0000_0010,
+    NEGSUBNORM = 10'b00_0000_0100,
+    NEGZERO    = 10'b00_0000_1000,
+    POSZERO    = 10'b00_0001_0000,
+    POSSUBNORM = 10'b00_0010_0000,
+    POSNORM    = 10'b00_0100_0000,
+    POSINF     = 10'b00_1000_0000,
+    SNAN       = 10'b01_0000_0000,
+    QNAN       = 10'b10_0000_0000
+  } classmask_e;
+
+`line 172 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+   
+  typedef enum logic [1:0] {
+    BEFORE,      
+    AFTER,       
+    INSIDE,      
+    DISTRIBUTED  
+  } pipe_config_t;
+
+`line 183 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef enum logic [1:0] {
+    DISABLED,  
+    PARALLEL,  
+    MERGED     
+  } unit_type_t;
+
+`line 190 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef unit_type_t [0:NUM_FP_FORMATS-1] fmt_unit_types_t;
+
+`line 193 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef fmt_unit_types_t [0:NUM_OPGROUPS-1] opgrp_fmt_unit_types_t;
+   
+  typedef fmt_unsigned_t [0:NUM_OPGROUPS-1] opgrp_fmt_unsigned_t;
+
+`line 198 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef struct packed {
+    int unsigned Width;
+    logic        EnableVectors;
+    logic        EnableNanBox;
+    fmt_logic_t  FpFmtMask;
+    ifmt_logic_t IntFmtMask;
+  } fpu_features_t;
+
+`line 207 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_features_t RV64D = '{
+    Width:         64,
+    EnableVectors: 1'b0,
+    EnableNanBox:  1'b1,
+    FpFmtMask:     5'b11000,
+    IntFmtMask:    4'b0011
+  };
+
+`line 215 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_features_t RV32D = '{
+    Width:         64,
+    EnableVectors: 1'b1,
+    EnableNanBox:  1'b1,
+    FpFmtMask:     5'b11000,
+    IntFmtMask:    4'b0010
+  };
+
+`line 223 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_features_t RV32F = '{
+    Width:         32,
+    EnableVectors: 1'b0,
+    EnableNanBox:  1'b1,
+    FpFmtMask:     5'b10000,
+    IntFmtMask:    4'b0010
+  };
+
+`line 231 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_features_t RV64D_Xsflt = '{
+    Width:         64,
+    EnableVectors: 1'b1,
+    EnableNanBox:  1'b1,
+    FpFmtMask:     5'b11111,
+    IntFmtMask:    4'b1111
+  };
+
+`line 239 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_features_t RV32F_Xsflt = '{
+    Width:         32,
+    EnableVectors: 1'b1,
+    EnableNanBox:  1'b1,
+    FpFmtMask:     5'b10111,
+    IntFmtMask:    4'b1110
+  };
+
+`line 247 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_features_t RV32F_Xf16alt_Xfvec = '{
+    Width:         32,
+    EnableVectors: 1'b1,
+    EnableNanBox:  1'b1,
+    FpFmtMask:     5'b10001,
+    IntFmtMask:    4'b0110
+  };
+
+
+`line 256 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  typedef struct packed {
+    opgrp_fmt_unsigned_t   PipeRegs;
+    opgrp_fmt_unit_types_t UnitTypes;
+    pipe_config_t          PipeConfig;
+  } fpu_implementation_t;
+
+`line 263 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_implementation_t DEFAULT_NOREGS = '{
+    PipeRegs:   '{default: 0},
+    UnitTypes:  '{'{default: PARALLEL},  
+                  '{default: MERGED},    
+                  '{default: PARALLEL},  
+                  '{default: MERGED}},   
+    PipeConfig: BEFORE
+  };
+
+`line 272 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  localparam fpu_implementation_t DEFAULT_SNITCH = '{
+    PipeRegs:   '{default: 1},
+    UnitTypes:  '{'{default: PARALLEL},  
+                  '{default: DISABLED},  
+                  '{default: PARALLEL},  
+                  '{default: MERGED}},   
+    PipeConfig: BEFORE
+  };
+
+`line 281 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+  localparam logic DONT_CARE = 1'b1;  
+
+`line 286 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+  function automatic int minimum(int a, int b);
+    return (a < b) ? a : b;
+  endfunction
+
+`line 293 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  function automatic int maximum(int a, int b);
+    return (a > b) ? a : b;
+  endfunction
+
+`line 297 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+   
+  function automatic int unsigned fp_width(fp_format_e fmt);
+    return FP_ENCODINGS[fmt].exp_bits + FP_ENCODINGS[fmt].man_bits + 1;
+  endfunction
+
+`line 305 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned max_fp_width(fmt_logic_t cfg);
+    automatic int unsigned res = 0;
+    for (int unsigned i = 0; i < NUM_FP_FORMATS; i++)
+      if (cfg[i])
+        res = unsigned'(maximum(res, fp_width(fp_format_e'(i))));
+    return res;
+  endfunction
+
+`line 314 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned min_fp_width(fmt_logic_t cfg);
+    automatic int unsigned res = max_fp_width(cfg);
+    for (int unsigned i = 0; i < NUM_FP_FORMATS; i++)
+      if (cfg[i])
+        res = unsigned'(minimum(res, fp_width(fp_format_e'(i))));
+    return res;
+  endfunction
+
+`line 323 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned exp_bits(fp_format_e fmt);
+    return FP_ENCODINGS[fmt].exp_bits;
+  endfunction
+
+`line 328 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned man_bits(fp_format_e fmt);
+    return FP_ENCODINGS[fmt].man_bits;
+  endfunction
+
+`line 333 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned bias(fp_format_e fmt);
+    return unsigned'(2**(FP_ENCODINGS[fmt].exp_bits-1)-1);  
+  endfunction
+
+`line 338 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+  function automatic fp_encoding_t super_format(fmt_logic_t cfg);
+    automatic fp_encoding_t res;
+    res = '0;
+    for (int unsigned fmt = 0; fmt < NUM_FP_FORMATS; fmt++)
+      if (cfg[fmt]) begin  
+        res.exp_bits = unsigned'(maximum(res.exp_bits, exp_bits(fp_format_e'(fmt))));
+        res.man_bits = unsigned'(maximum(res.man_bits, man_bits(fp_format_e'(fmt))));
+      end
+    return res;
+  endfunction
+
+`line 349 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+   
+  function automatic int unsigned max_int_width(ifmt_logic_t cfg);
+    automatic int unsigned res = 0;
+    for (int ifmt = 0; ifmt < NUM_INT_FORMATS; ifmt++) begin
+      if (cfg[ifmt]) res = maximum(res, int_width(int_format_e'(ifmt)));
+    end
+    return res;
+  endfunction
+
+`line 361 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+   
+   
+   
+  function automatic opgroup_e get_opgroup(operation_e op);
+    unique case (op)
+      FMADD, FNMSUB, ADD, MUL:     return ADDMUL;
+      DIV, SQRT:                   return DIVSQRT;
+      SGNJ, MINMAX, CMP, CLASSIFY: return NONCOMP;
+      F2F, F2I, I2F, CPKAB, CPKCD: return CONV;
+      default:                     return NONCOMP;
+    endcase
+  endfunction
+
+`line 375 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned num_operands(opgroup_e grp);
+    unique case (grp)
+      ADDMUL:  return 3;
+      DIVSQRT: return 2;
+      NONCOMP: return 2;
+      CONV:    return 3;  
+      default: return 0;
+    endcase
+  endfunction
+
+`line 386 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned num_lanes(int unsigned width, fp_format_e fmt, logic vec);
+    return vec ? width / fp_width(fmt) : 1;  
+  endfunction
+
+`line 391 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned max_num_lanes(int unsigned width, fmt_logic_t cfg, logic vec);
+    return vec ? width / min_fp_width(cfg) : 1;  
+  endfunction
+
+`line 396 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic fmt_logic_t get_lane_formats(int unsigned width,
+                                                  fmt_logic_t cfg,
+                                                  int unsigned lane_no);
+    automatic fmt_logic_t res;
+    for (int unsigned fmt = 0; fmt < NUM_FP_FORMATS; fmt++)
+       
+      res[fmt] = cfg[fmt] & (width / fp_width(fp_format_e'(fmt)) > lane_no);
+    return res;
+  endfunction
+
+`line 407 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic ifmt_logic_t get_lane_int_formats(int unsigned width,
+                                                       fmt_logic_t cfg,
+                                                       ifmt_logic_t icfg,
+                                                       int unsigned lane_no);
+    automatic ifmt_logic_t res;
+    automatic fmt_logic_t lanefmts;
+    res = '0;
+    lanefmts = get_lane_formats(width, cfg, lane_no);
+
+`line 417 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+    for (int unsigned ifmt = 0; ifmt < NUM_INT_FORMATS; ifmt++)
+      for (int unsigned fmt = 0; fmt < NUM_FP_FORMATS; fmt++)
+         
+        if ((fp_width(fp_format_e'(fmt)) == int_width(int_format_e'(ifmt))))
+          res[ifmt] |= icfg[ifmt] && lanefmts[fmt];
+    return res;
+  endfunction
+
+`line 425 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic fmt_logic_t get_conv_lane_formats(int unsigned width,
+                                                       fmt_logic_t cfg,
+                                                       int unsigned lane_no);
+    automatic fmt_logic_t res;
+    for (int unsigned fmt = 0; fmt < NUM_FP_FORMATS; fmt++)
+       
+      res[fmt] = cfg[fmt] && ((width / fp_width(fp_format_e'(fmt)) > lane_no) ||
+                             (CPK_FORMATS[fmt] && (lane_no < 2)));
+    return res;
+  endfunction
+
+`line 437 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic ifmt_logic_t get_conv_lane_int_formats(int unsigned width,
+                                                            fmt_logic_t cfg,
+                                                            ifmt_logic_t icfg,
+                                                            int unsigned lane_no);
+    automatic ifmt_logic_t res;
+    automatic fmt_logic_t lanefmts;
+    res = '0;
+    lanefmts = get_conv_lane_formats(width, cfg, lane_no);
+
+`line 447 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+    for (int unsigned ifmt = 0; ifmt < NUM_INT_FORMATS; ifmt++)
+      for (int unsigned fmt = 0; fmt < NUM_FP_FORMATS; fmt++)
+         
+        res[ifmt] |= icfg[ifmt] && lanefmts[fmt] &&
+                     (fp_width(fp_format_e'(fmt)) == int_width(int_format_e'(ifmt)));
+    return res;
+  endfunction
+
+`line 455 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic logic any_enabled_multi(fmt_unit_types_t types, fmt_logic_t cfg);
+    for (int unsigned i = 0; i < NUM_FP_FORMATS; i++)
+      if (cfg[i] && types[i] == MERGED)
+        return 1'b1;
+      return 1'b0;
+  endfunction
+
+`line 463 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic logic is_first_enabled_multi(fp_format_e fmt,
+                                                  fmt_unit_types_t types,
+                                                  fmt_logic_t cfg);
+    for (int unsigned i = 0; i < NUM_FP_FORMATS; i++) begin
+      if (cfg[i] && types[i] == MERGED) return (fp_format_e'(i) == fmt);
+    end
+    return 1'b0;
+  endfunction
+
+`line 473 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic fp_format_e get_first_enabled_multi(fmt_unit_types_t types, fmt_logic_t cfg);
+    for (int unsigned i = 0; i < NUM_FP_FORMATS; i++)
+      if (cfg[i] && types[i] == MERGED)
+        return fp_format_e'(i);
+      return fp_format_e'(0);
+  endfunction
+
+`line 481 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+   
+  function automatic int unsigned get_num_regs_multi(fmt_unsigned_t regs,
+                                                     fmt_unit_types_t types,
+                                                     fmt_logic_t cfg);
+    automatic int unsigned res = 0;
+    for (int unsigned i = 0; i < NUM_FP_FORMATS; i++) begin
+      if (cfg[i] && types[i] == MERGED) res = maximum(res, regs[i]);
+    end
+    return res;
+  endfunction
+
+`line 492 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 0
+endpackage
+
+`line 494 "../src/merl_azadi-II_azadi-pkg_1.0/src/vendor/pulp_fpnew/src/fpnew_pkg.sv" 2

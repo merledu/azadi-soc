@@ -5,7 +5,7 @@ filesets:
   azadi:
     depend:
       - merl:azadi-II:azadi-pkg
-      - merl:azadi-II:azadi_prog_loader_pkg
+      - merl:azadi-II:azadi_verif
       - merl:azadi-II:azadi_rtl
   tb:
     files:
@@ -26,7 +26,7 @@ targets:
         - done
     tools:
       verilator:
-        verilator_options: [-Wno-LATCH, --trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER]
+        verilator_options: [-timescale 1ns/1ps , -Wno-LATCH, --trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER, --debug]
     toplevel: azadi_top_sim
 parameters:
   HEX:

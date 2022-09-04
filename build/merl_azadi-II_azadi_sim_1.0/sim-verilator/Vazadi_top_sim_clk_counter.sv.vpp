@@ -1,0 +1,33 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_qspi_1.0/rtl/clk_counter.sv" 1
+`timescale 1ns/1ps
+
+`line 3 "../src/merl_azadi-II_azadi_qspi_1.0/rtl/clk_counter.sv" 0
+module clk_counter (
+  input logic clk_i,
+  input logic rst_ni,
+
+`line 7 "../src/merl_azadi-II_azadi_qspi_1.0/rtl/clk_counter.sv" 0
+  input logic enable_i,
+  input logic clear_i,
+  input logic [5:0] max_count_i,
+
+`line 11 "../src/merl_azadi-II_azadi_qspi_1.0/rtl/clk_counter.sv" 0
+  output logic [5:0] clk_count_o
+);
+
+`line 14 "../src/merl_azadi-II_azadi_qspi_1.0/rtl/clk_counter.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if(!rst_ni) begin
+      clk_count_o <= '0;
+    end else begin
+      if(enable_i) begin
+        clk_count_o <= clk_count_o + 6'b1;
+      end else if (clear_i) begin
+        clk_count_o <= '0;
+      end
+    end
+  end
+endmodule
+
+`line 27 "../src/merl_azadi-II_azadi_qspi_1.0/rtl/clk_counter.sv" 2

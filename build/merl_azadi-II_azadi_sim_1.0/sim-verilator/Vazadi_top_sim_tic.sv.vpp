@@ -1,0 +1,125 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 1
+ 
+ 
+ 
+
+`line 5 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+ 
+
+`line 7 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+module tic(
+  input logic clk_i,
+  input logic rst_ni,
+
+`line 11 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+  input logic         re_i,
+  input logic         we_i,
+  input logic  [3:0]  be_i,
+  input logic  [3:0]  addr_i,
+  input logic  [31:0] wdata_i,
+  output logic [31:0] rdata_o,
+
+`line 18 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+  input logic  [3:0]  int_src,
+  output logic        intr_o
+);
+
+`line 22 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+  localparam CC_ADDR  = 8;
+  localparam INTR_ENB = 4;
+
+`line 26 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+  logic [3:0] ia;        
+  logic [3:0] ip;        
+  logic [3:0] claim;   
+  logic [3:0] complete; 
+  logic [3:0] irq_id;    
+  logic       intr_enb;
+
+`line 33 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+   
+   
+ always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      ip <= '0;
+    end else begin
+      ip <= (ip | (irq_id & ~ia & ~ip)) & (~(ip & claim));
+    end
+  end
+
+`line 44 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+   
+   
+   
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      ia <= '0;
+    end else begin
+      ia <= (ia | (irq_id & ~ia)) & (~(ia & complete & ~ip));
+    end
+  end
+
+`line 56 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if(!rst_ni) begin
+      irq_id <= '0;
+    end else begin
+      if(int_src[3]) begin
+        irq_id <= 4'd8;
+      end else if(int_src[2] && ~int_src[3]) begin
+        irq_id <= 4'd4;
+      end else if(int_src[1] && ~int_src[3] && ~int_src[2]) begin
+        irq_id <= 4'd2;
+      end else if ((addr_i == CC_ADDR) && we_i) begin
+        irq_id <= wdata_i[3:0];
+      end
+    end
+  end
+
+`line 73 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if(!rst_ni) begin
+      intr_enb <= '0;
+    end else begin
+      if((addr_i == INTR_ENB) && we_i) begin
+        intr_enb <= wdata_i[0];
+      end else if(|complete) begin
+        intr_enb <= '0;
+      end
+    end
+  end
+
+`line 86 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if(!rst_ni) begin
+      complete <= '0;
+      claim    <= '0;
+    end else begin
+      complete[1] <= (addr_i == CC_ADDR) & we_i & irq_id[1];
+      complete[2] <= (addr_i == CC_ADDR) & we_i & irq_id[2];
+      complete[3] <= (addr_i == CC_ADDR) & we_i & irq_id[3];
+      
+      claim[1]    <= (addr_i == CC_ADDR) & re_i & irq_id[1];
+      claim[2]    <= (addr_i == CC_ADDR) & re_i & irq_id[2];
+      claim[3]    <= (addr_i == CC_ADDR) & re_i & irq_id[3];
+    end
+  end
+
+`line 102 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+  assign rdata_o = ((addr_i == CC_ADDR) && re_i) ? {28'b0, irq_id} : '0;
+
+`line 105 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+   
+  assign intr_o = (|ip) & intr_enb;
+
+`line 108 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 0
+endmodule
+`line 109 "../src/merl_azadi-II_azadi_tic_1.0/rtl/tic.sv" 2

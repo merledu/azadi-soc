@@ -1,0 +1,685 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 1
+ 
+
+`line 3 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 12 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+ 
+
+`line 14 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+ 
+
+`line 16 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+module fpnew_noncomp #(
+  parameter fpnew_pkg::fp_format_e   FpFormat    = fpnew_pkg::fp_format_e'(0),
+  parameter int unsigned             NumPipeRegs = 0,
+  parameter fpnew_pkg::pipe_config_t PipeConfig  = fpnew_pkg::BEFORE,
+  parameter type                     TagType     = logic,
+  parameter type                     AuxType     = logic,
+
+`line 23 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  localparam int unsigned WIDTH = fpnew_pkg::fp_width(FpFormat)  
+) (
+  input logic                  clk_i,
+  input logic                  rst_ni,
+   
+  input logic [1:0][WIDTH-1:0]     operands_i,  
+  input logic [1:0]                is_boxed_i,  
+  input fpnew_pkg::roundmode_e     rnd_mode_i,
+  input fpnew_pkg::operation_e     op_i,
+  input logic                      op_mod_i,
+  input TagType                    tag_i,
+  input AuxType                    aux_i,
+   
+  input  logic                     in_valid_i,
+  output logic                     in_ready_o,
+  input  logic                     flush_i,
+   
+  output logic [WIDTH-1:0]         result_o,
+  output fpnew_pkg::status_t       status_o,
+  output logic                     extension_bit_o,
+  output fpnew_pkg::classmask_e    class_mask_o,
+  output logic                     is_class_o,
+  output TagType                   tag_o,
+  output AuxType                   aux_o,
+   
+  output logic                     out_valid_o,
+  input  logic                     out_ready_i,
+   
+  output logic                     busy_o
+);
+
+`line 54 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  localparam int unsigned EXP_BITS = fpnew_pkg::exp_bits(FpFormat);
+  localparam int unsigned MAN_BITS = fpnew_pkg::man_bits(FpFormat);
+   
+  localparam NUM_INP_REGS = (PipeConfig == fpnew_pkg::BEFORE || PipeConfig == fpnew_pkg::INSIDE)
+                            ? NumPipeRegs
+                            : (PipeConfig == fpnew_pkg::DISTRIBUTED
+                               ? ((NumPipeRegs + 1) / 2)  
+                               : 0);  
+  localparam NUM_OUT_REGS = PipeConfig == fpnew_pkg::AFTER
+                            ? NumPipeRegs
+                            : (PipeConfig == fpnew_pkg::DISTRIBUTED
+                               ? (NumPipeRegs / 2)  
+                               : 0);  
+
+`line 71 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  typedef struct packed {
+    logic                sign;
+    logic [EXP_BITS-1:0] exponent;
+    logic [MAN_BITS-1:0] mantissa;
+  } fp_t;
+
+`line 80 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+   
+  logic                  [0:NUM_INP_REGS][1:0][WIDTH-1:0] inp_pipe_operands_q;
+  logic                  [0:NUM_INP_REGS][1:0]            inp_pipe_is_boxed_q;
+  fpnew_pkg::roundmode_e [0:NUM_INP_REGS]                 inp_pipe_rnd_mode_q;
+  fpnew_pkg::operation_e [0:NUM_INP_REGS]                 inp_pipe_op_q;
+  logic                  [0:NUM_INP_REGS]                 inp_pipe_op_mod_q;
+  TagType                [0:NUM_INP_REGS]                 inp_pipe_tag_q;
+  AuxType                [0:NUM_INP_REGS]                 inp_pipe_aux_q;
+  logic                  [0:NUM_INP_REGS]                 inp_pipe_valid_q;
+   
+  logic [0:NUM_INP_REGS] inp_pipe_ready;
+
+`line 95 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  assign inp_pipe_operands_q[0] = operands_i;
+  assign inp_pipe_is_boxed_q[0] = is_boxed_i;
+  assign inp_pipe_rnd_mode_q[0] = rnd_mode_i;
+  assign inp_pipe_op_q[0]       = op_i;
+  assign inp_pipe_op_mod_q[0]   = op_mod_i;
+  assign inp_pipe_tag_q[0]      = tag_i;
+  assign inp_pipe_aux_q[0]      = aux_i;
+  assign inp_pipe_valid_q[0]    = in_valid_i;
+   
+  assign in_ready_o = inp_pipe_ready[0];
+   
+  for (genvar i = 0; i < NUM_INP_REGS; i++) begin : gen_input_pipeline
+     
+    logic reg_ena;
+     
+     
+     
+    assign inp_pipe_ready[i] = inp_pipe_ready[i+1] | ~inp_pipe_valid_q[i+1];
+     
+    
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+                            
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+                             
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+                            
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge (clk_i) or negedge (rst_ni)) begin                 
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                                                   
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_valid_q[i+1] <= (1'b0);                                              
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                                         
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_valid_q[i+1] <= (flush_i) ? (1'b0) : (inp_pipe_ready[i]) ? (inp_pipe_valid_q[i]) : (inp_pipe_valid_q[i+1]);       
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                                                    
+`line 115 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+     
+    assign reg_ena = inp_pipe_ready[i] & inp_pipe_valid_q[i];
+     
+    
+`line 119 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 119 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 119 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_operands_q[i+1] <= ('0);                        
+`line 119 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 119 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_operands_q[i+1] <= (reg_ena) ? (inp_pipe_operands_q[i]) : (inp_pipe_operands_q[i+1]);               
+`line 119 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 119 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 120 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 120 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 120 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_is_boxed_q[i+1] <= ('0);                        
+`line 120 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 120 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_is_boxed_q[i+1] <= (reg_ena) ? (inp_pipe_is_boxed_q[i]) : (inp_pipe_is_boxed_q[i+1]);               
+`line 120 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 120 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_rnd_mode_q[i+1] <= (fpnew_pkg::RNE);                        
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_rnd_mode_q[i+1] <= (reg_ena) ? (inp_pipe_rnd_mode_q[i]) : (inp_pipe_rnd_mode_q[i+1]);               
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 122 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 122 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 122 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_op_q[i+1] <= (fpnew_pkg::FMADD);                        
+`line 122 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 122 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_op_q[i+1] <= (reg_ena) ? (inp_pipe_op_q[i]) : (inp_pipe_op_q[i+1]);               
+`line 122 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 122 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 123 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 123 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 123 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_op_mod_q[i+1] <= ('0);                        
+`line 123 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 123 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_op_mod_q[i+1] <= (reg_ena) ? (inp_pipe_op_mod_q[i]) : (inp_pipe_op_mod_q[i+1]);               
+`line 123 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 123 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 124 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 124 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 124 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_tag_q[i+1] <= (TagType'('0));                        
+`line 124 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 124 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_tag_q[i+1] <= (reg_ena) ? (inp_pipe_tag_q[i]) : (inp_pipe_tag_q[i+1]);               
+`line 124 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 124 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 125 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 125 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 125 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_aux_q[i+1] <= (AuxType'('0));                        
+`line 125 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 125 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      inp_pipe_aux_q[i+1] <= (reg_ena) ? (inp_pipe_aux_q[i]) : (inp_pipe_aux_q[i+1]);               
+`line 125 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 125 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+  end
+
+`line 128 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  fpnew_pkg::fp_info_t [1:0] info_q;
+
+`line 133 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  fpnew_classifier #(
+    .FpFormat    ( FpFormat ),
+    .NumOperands ( 2        )
+    ) i_class_a (
+    .operands_i ( inp_pipe_operands_q[NUM_INP_REGS] ),
+    .is_boxed_i ( inp_pipe_is_boxed_q[NUM_INP_REGS] ),
+    .info_o     ( info_q                            )
+  );
+
+`line 143 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  fp_t                 operand_a, operand_b;
+  fpnew_pkg::fp_info_t info_a,    info_b;
+
+`line 146 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  assign operand_a = inp_pipe_operands_q[NUM_INP_REGS][0];
+  assign operand_b = inp_pipe_operands_q[NUM_INP_REGS][1];
+  assign info_a    = info_q[0];
+  assign info_b    = info_q[1];
+
+`line 152 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  logic any_operand_inf;
+  logic any_operand_nan;
+  logic signalling_nan;
+
+`line 156 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  assign any_operand_inf = (| {info_a.is_inf,        info_b.is_inf});
+  assign any_operand_nan = (| {info_a.is_nan,        info_b.is_nan});
+  assign signalling_nan  = (| {info_a.is_signalling, info_b.is_signalling});
+
+`line 161 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  logic operands_equal, operand_a_smaller;
+
+`line 163 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  assign operands_equal    = (operand_a == operand_b) || (info_a.is_zero && info_b.is_zero);
+   
+  assign operand_a_smaller = (operand_a < operand_b) ^ (operand_a.sign || operand_b.sign);
+
+`line 168 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  fp_t                sgnj_result;
+  fpnew_pkg::status_t sgnj_status;
+  logic               sgnj_extension_bit;
+
+`line 175 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+  always_comb begin : sign_injections
+    logic sign_a, sign_b;  
+     
+    sgnj_result = operand_a;  
+
+`line 182 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+     
+    if (!info_a.is_boxed) sgnj_result = '{sign: 1'b0, exponent: '1, mantissa: 2**(MAN_BITS-1)};
+
+`line 185 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+     
+    sign_a = operand_a.sign & info_a.is_boxed;
+    sign_b = operand_b.sign & info_b.is_boxed;
+
+`line 189 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+     
+    unique case (inp_pipe_rnd_mode_q[NUM_INP_REGS])
+      fpnew_pkg::RNE: sgnj_result.sign = sign_b;           
+      fpnew_pkg::RTZ: sgnj_result.sign = ~sign_b;          
+      fpnew_pkg::RDN: sgnj_result.sign = sign_a ^ sign_b;  
+      fpnew_pkg::RUP: sgnj_result      = operand_a;        
+      default: sgnj_result = '{default: fpnew_pkg::DONT_CARE};  
+    endcase
+  end
+
+`line 199 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  assign sgnj_status = '0;         
+
+`line 201 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  assign sgnj_extension_bit = inp_pipe_op_mod_q[NUM_INP_REGS] ? sgnj_result.sign : 1'b1;
+
+`line 204 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  fp_t                minmax_result;
+  fpnew_pkg::status_t minmax_status;
+  logic               minmax_extension_bit;
+
+`line 211 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+  always_comb begin : min_max
+     
+    minmax_status = '0;
+
+`line 217 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+     
+    minmax_status.NV = signalling_nan;
+
+`line 220 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+     
+    if (info_a.is_nan && info_b.is_nan)
+      minmax_result = '{sign: 1'b0, exponent: '1, mantissa: 2**(MAN_BITS-1)};  
+     
+    else if (info_a.is_nan) minmax_result = operand_b;
+    else if (info_b.is_nan) minmax_result = operand_a;
+     
+    else begin
+      unique case (inp_pipe_rnd_mode_q[NUM_INP_REGS])
+        fpnew_pkg::RNE: minmax_result = operand_a_smaller ? operand_a : operand_b;  
+        fpnew_pkg::RTZ: minmax_result = operand_a_smaller ? operand_b : operand_a;  
+        default: minmax_result = '{default: fpnew_pkg::DONT_CARE};  
+      endcase
+    end
+  end
+
+`line 236 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  assign minmax_extension_bit = 1'b1;  
+
+`line 238 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  fp_t                cmp_result;
+  fpnew_pkg::status_t cmp_status;
+  logic               cmp_extension_bit;
+
+`line 245 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  always_comb begin : comparisons
+     
+    cmp_result = '0;  
+    cmp_status = '0;  
+
+`line 253 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+     
+    if (signalling_nan) cmp_status.NV = 1'b1;  
+     
+    else begin
+      unique case (inp_pipe_rnd_mode_q[NUM_INP_REGS])
+        fpnew_pkg::RNE: begin  
+          if (any_operand_nan) cmp_status.NV = 1'b1;  
+          else cmp_result = (operand_a_smaller | operands_equal) ^ inp_pipe_op_mod_q[NUM_INP_REGS];
+        end
+        fpnew_pkg::RTZ: begin  
+          if (any_operand_nan) cmp_status.NV = 1'b1;  
+          else cmp_result = (operand_a_smaller & ~operands_equal) ^ inp_pipe_op_mod_q[NUM_INP_REGS];
+        end
+        fpnew_pkg::RDN: begin  
+          if (any_operand_nan) cmp_result = inp_pipe_op_mod_q[NUM_INP_REGS];  
+          else cmp_result = operands_equal ^ inp_pipe_op_mod_q[NUM_INP_REGS];
+        end
+        default: cmp_result = '{default: fpnew_pkg::DONT_CARE};  
+      endcase
+    end
+  end
+
+`line 275 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  assign cmp_extension_bit = 1'b0;  
+
+`line 277 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  fpnew_pkg::status_t    class_status;
+  logic                  class_extension_bit;
+  fpnew_pkg::classmask_e class_mask_d;  
+
+`line 284 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  always_comb begin : classify
+    if (info_a.is_normal) begin
+      class_mask_d = operand_a.sign       ? fpnew_pkg::NEGNORM    : fpnew_pkg::POSNORM;
+    end else if (info_a.is_subnormal) begin
+      class_mask_d = operand_a.sign       ? fpnew_pkg::NEGSUBNORM : fpnew_pkg::POSSUBNORM;
+    end else if (info_a.is_zero) begin
+      class_mask_d = operand_a.sign       ? fpnew_pkg::NEGZERO    : fpnew_pkg::POSZERO;
+    end else if (info_a.is_inf) begin
+      class_mask_d = operand_a.sign       ? fpnew_pkg::NEGINF     : fpnew_pkg::POSINF;
+    end else if (info_a.is_nan) begin
+      class_mask_d = info_a.is_signalling ? fpnew_pkg::SNAN       : fpnew_pkg::QNAN;
+    end else begin
+      class_mask_d = fpnew_pkg::QNAN;  
+    end
+  end
+
+`line 301 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  assign class_status        = '0;    
+  assign class_extension_bit = 1'b0;  
+
+`line 304 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+  fp_t                   result_d;
+  fpnew_pkg::status_t    status_d;
+  logic                  extension_bit_d;
+  logic                  is_class_d;
+
+`line 312 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  always_comb begin : select_result
+    unique case (inp_pipe_op_q[NUM_INP_REGS])
+      fpnew_pkg::SGNJ: begin
+        result_d        = sgnj_result;
+        status_d        = sgnj_status;
+        extension_bit_d = sgnj_extension_bit;
+      end
+      fpnew_pkg::MINMAX: begin
+        result_d        = minmax_result;
+        status_d        = minmax_status;
+        extension_bit_d = minmax_extension_bit;
+      end
+      fpnew_pkg::CMP: begin
+        result_d        = cmp_result;
+        status_d        = cmp_status;
+        extension_bit_d = cmp_extension_bit;
+      end
+      fpnew_pkg::CLASSIFY: begin
+        result_d        = '{default: fpnew_pkg::DONT_CARE};  
+        status_d        = class_status;
+        extension_bit_d = class_extension_bit;
+      end
+      default: begin
+        result_d        = '{default: fpnew_pkg::DONT_CARE};  
+        status_d        = '{default: fpnew_pkg::DONT_CARE};  
+        extension_bit_d = fpnew_pkg::DONT_CARE;              
+      end
+    endcase
+  end
+
+`line 343 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  assign is_class_d = (inp_pipe_op_q[NUM_INP_REGS] == fpnew_pkg::CLASSIFY);
+
+`line 345 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+   
+   
+   
+  fp_t                   [0:NUM_OUT_REGS] out_pipe_result_q;
+  fpnew_pkg::status_t    [0:NUM_OUT_REGS] out_pipe_status_q;
+  logic                  [0:NUM_OUT_REGS] out_pipe_extension_bit_q;
+  fpnew_pkg::classmask_e [0:NUM_OUT_REGS] out_pipe_class_mask_q;
+  logic                  [0:NUM_OUT_REGS] out_pipe_is_class_q;
+  TagType                [0:NUM_OUT_REGS] out_pipe_tag_q;
+  AuxType                [0:NUM_OUT_REGS] out_pipe_aux_q;
+  logic                  [0:NUM_OUT_REGS] out_pipe_valid_q;
+   
+  logic [0:NUM_OUT_REGS] out_pipe_ready;
+
+`line 360 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+   
+  assign out_pipe_result_q[0]        = result_d;
+  assign out_pipe_status_q[0]        = status_d;
+  assign out_pipe_extension_bit_q[0] = extension_bit_d;
+  assign out_pipe_class_mask_q[0]    = class_mask_d;
+  assign out_pipe_is_class_q[0]      = is_class_d;
+  assign out_pipe_tag_q[0]           = inp_pipe_tag_q[NUM_INP_REGS];
+  assign out_pipe_aux_q[0]           = inp_pipe_aux_q[NUM_INP_REGS];
+  assign out_pipe_valid_q[0]         = inp_pipe_valid_q[NUM_INP_REGS];
+   
+  assign inp_pipe_ready[NUM_INP_REGS] = out_pipe_ready[0];
+   
+  for (genvar i = 0; i < NUM_OUT_REGS; i++) begin : gen_output_pipeline
+     
+    logic reg_ena;
+     
+     
+     
+    assign out_pipe_ready[i] = out_pipe_ready[i+1] | ~out_pipe_valid_q[i+1];
+     
+    
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+                            
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+                             
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+                            
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge (clk_i) or negedge (rst_ni)) begin                 
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                                                   
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_valid_q[i+1] <= (1'b0);                                              
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                                         
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_valid_q[i+1] <= (flush_i) ? (1'b0) : (out_pipe_ready[i]) ? (out_pipe_valid_q[i]) : (out_pipe_valid_q[i+1]);       
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                                                    
+`line 380 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+     
+    assign reg_ena = out_pipe_ready[i] & out_pipe_valid_q[i];
+     
+    
+`line 384 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 384 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 384 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_result_q[i+1] <= ('0);                        
+`line 384 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 384 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_result_q[i+1] <= (reg_ena) ? (out_pipe_result_q[i]) : (out_pipe_result_q[i+1]);               
+`line 384 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 384 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 385 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 385 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 385 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_status_q[i+1] <= ('0);                        
+`line 385 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 385 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_status_q[i+1] <= (reg_ena) ? (out_pipe_status_q[i]) : (out_pipe_status_q[i+1]);               
+`line 385 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 385 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 386 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 386 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 386 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_extension_bit_q[i+1] <= ('0);                        
+`line 386 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 386 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_extension_bit_q[i+1] <= (reg_ena) ? (out_pipe_extension_bit_q[i]) : (out_pipe_extension_bit_q[i+1]);               
+`line 386 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 386 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 387 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 387 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 387 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_class_mask_q[i+1] <= (fpnew_pkg::QNAN);                        
+`line 387 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 387 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_class_mask_q[i+1] <= (reg_ena) ? (out_pipe_class_mask_q[i]) : (out_pipe_class_mask_q[i+1]);               
+`line 387 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 387 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 388 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 388 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 388 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_is_class_q[i+1] <= ('0);                        
+`line 388 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 388 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_is_class_q[i+1] <= (reg_ena) ? (out_pipe_is_class_q[i]) : (out_pipe_is_class_q[i+1]);               
+`line 388 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 388 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 389 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 389 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 389 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_tag_q[i+1] <= (TagType'('0));                        
+`line 389 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 389 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_tag_q[i+1] <= (reg_ena) ? (out_pipe_tag_q[i]) : (out_pipe_tag_q[i+1]);               
+`line 389 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 389 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+    
+`line 390 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin 
+`line 390 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    if (!rst_ni) begin                               
+`line 390 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_aux_q[i+1] <= (AuxType'('0));                        
+`line 390 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end else begin                                   
+`line 390 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+      out_pipe_aux_q[i+1] <= (reg_ena) ? (out_pipe_aux_q[i]) : (out_pipe_aux_q[i+1]);               
+`line 390 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+    end                                              
+`line 390 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 0
+  end
+  end
+   
+  assign out_pipe_ready[NUM_OUT_REGS] = out_ready_i;
+   
+  assign result_o        = out_pipe_result_q[NUM_OUT_REGS];
+  assign status_o        = out_pipe_status_q[NUM_OUT_REGS];
+  assign extension_bit_o = out_pipe_extension_bit_q[NUM_OUT_REGS];
+  assign class_mask_o    = out_pipe_class_mask_q[NUM_OUT_REGS];
+  assign is_class_o      = out_pipe_is_class_q[NUM_OUT_REGS];
+  assign tag_o           = out_pipe_tag_q[NUM_OUT_REGS];
+  assign aux_o           = out_pipe_aux_q[NUM_OUT_REGS];
+  assign out_valid_o     = out_pipe_valid_q[NUM_OUT_REGS];
+  assign busy_o          = (| {inp_pipe_valid_q, out_pipe_valid_q});
+endmodule
+
+`line 406 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv" 2

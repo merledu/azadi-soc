@@ -1,0 +1,279 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 1
+ 
+
+`line 3 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+ 
+ 
+ 
+module azadi_top_sim
+  import prog_image_loader_pkg::*;
+(
+ 
+  input logic clk_i,
+  input logic rst_ni,
+  input logic por_ni,
+  input logic pll_lock,
+  input logic boot_sel
+
+`line 16 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+);
+   
+   
+   
+  string     HEX;
+  string     ROM_BIN;
+  integer    fd;
+  bit [7:0]  prog_image [int];
+  bit [7:0]  w_byte;
+  bit        tx_done;
+  bit        tx_en;
+  int        index;
+  bit [3:0]  qspi_i;
+  bit [3:0]  qspi_o;
+  bit [3:0]  qspi_oe;
+  bit        qspi_clk;
+  bit        qspi_csb;
+  bit [31:0] vcc;
+  wire [3:0] q_io;
+  logic      clk_enb;
+
+`line 37 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  logic sck_tb;
+  logic sdi_tb;
+  logic csb_tb;
+  logic sdo_tb;
+  logic tx_ready;
+
+`line 44 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+   
+  logic [4:0]  wreg_addr;
+  logic [31:0] wreg_data;
+  logic        wreg_wen;
+
+`line 50 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+ 
+   
+   
+   
+   
+   
+
+`line 57 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+         
+        
+        
+      
+      
+        
+    
+
+`line 66 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+      
+    
+      
+    
+        
+      
+
+`line 73 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+        
+             
+       
+         
+    
+         
+      
+        
+      
+        
+          
+         
+      
+    
+  
+
+`line 90 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+      
+
+
+`line 93 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+  initial begin
+     
+    if ($value$plusargs("ROM_BIN=%s", ROM_BIN))
+      $display("Reading ROM bin: %s", ROM_BIN);
+    $readmemb(ROM_BIN, u_azadi_soc_top.u_rom_top.u_rom.mem);
+
+`line 99 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+    if ($value$plusargs("HEX=%s", HEX))
+      $display("Reading hex: %s", HEX);
+    read_hex(HEX, prog_image);
+  end
+
+`line 105 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  initial fd = $fopen("expected.result", "w");
+  final $fclose(fd);
+
+`line 109 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+  always @ (posedge clk_i) begin
+    wreg_addr <= u_azadi_soc_top.u_ibex_core_top.u_ibex_core.gen_regfile_ff.register_file_i.waddr_a_i;
+    wreg_data <= u_azadi_soc_top.u_ibex_core_top.u_ibex_core.gen_regfile_ff.register_file_i.rf_reg[31];
+    wreg_wen  <= u_azadi_soc_top.u_ibex_core_top.u_ibex_core.gen_regfile_ff.register_file_i.we_a_i;
+
+`line 114 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+    if (wreg_wen && (wreg_addr == 5'h1F)) begin
+      $display("Writing Final Value of reg 'x31' to expected.result file to compare!");
+      $display("Reg[31] is equals to 0x%8x", wreg_data);
+      $fstrobeh(fd, wreg_data);
+    end
+  end
+
+`line 121 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  logic [31:0] gpio_in;
+  logic [31:0] gpio_out;
+  logic [31:0] gpio_oe;
+
+`line 126 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  logic [3:0] uart_tx;
+  logic [3:0] uart_rx;
+  logic [3:0] uart_oe;
+
+`line 131 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  logic [3:0] ss_o;
+  logic [3:0] sclk_o;
+  logic [3:0] sd_o;
+  logic [3:0] sd_oe;
+  logic [3:0] sd_i;
+
+`line 138 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  logic [3:0] pwm1_o;
+  logic [3:0] pwm2_o;
+  logic [3:0] pwm1_oe;
+  logic [3:0] pwm2_oe;
+
+`line 144 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  azadi_soc_top u_azadi_soc_top (
+    .clk_main_i ( clk_i    ),
+    .rst_ni     ( rst_ni   ),
+    .por_ni     ( por_ni   ),
+    .pll_lock_i ( pll_lock ),
+    .boot_sel_i ( boot_sel ),
+    .led_alive_o( ),
+
+`line 153 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+    .hk_sck_i   ( sck_tb   ),
+    .hk_sdi_i   ( sdi_tb   ),
+    .hk_csb_i   ( csb_tb   ),
+    .hk_sdo_o   ( sdo_tb   ),
+
+`line 159 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+    .gpio_in_i  ( gpio_in  ),
+    .gpio_out_o ( gpio_out ),
+    .gpio_oe_o  ( gpio_oe  ),
+
+`line 164 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+    .uart_tx_o  ( uart_tx  ),
+    .uart_rx_i  ( uart_rx  ),
+    .uart_oe_o  ( uart_oe  ),
+
+`line 169 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+    .ss_o       ( ss_o     ),
+    .sclk_o     ( sclk_o   ),
+    .sd_o       ( sd_o     ),
+    .sd_oe_o    ( sd_oe    ),
+    .sd_i       ( sd_i     ),
+
+`line 176 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+    .pwm1_o     ( pwm1_o   ),
+    .pwm2_o     ( pwm2_o   ),
+    .pwm1_oe_o  ( pwm1_oe  ),
+    .pwm2_oe_o  ( pwm2_oe  ),
+
+`line 182 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+     
+    .qspi_sdi_i ( qspi_i   ),
+    .qspi_oe_o  ( qspi_o   ),
+    .qspi_sdo_o ( qspi_oe  ),
+    .qspi_clk_o ( qspi_csb ),
+    .qspi_csb_o ( qspi_clk )
+     
+    ,.clk_enb_o ( clk_enb  )
+    
+  );
+
+`line 193 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+  SPI_Master #(
+    .SPI_MODE (1),
+    .CLKS_PER_HALF_BIT (2)
+  ) u_SPI_Master (
+     
+    .i_Rst_L    ( rst_ni   ),
+    .i_Clk      ( clk_i    ),
+     
+    .i_TX_Byte  ( w_byte   ),
+    .i_TX_DV    ( tx_en    ),
+    .o_TX_Ready ( tx_ready ),
+     
+    .o_RX_DV    (          ),
+    .o_RX_Byte  (          ),
+     
+    .o_SPI_Clk  ( sck_tb   ),
+    .i_SPI_MISO ( '0       ),
+    .o_SPI_MOSI ( sdi_tb   )
+  );
+
+`line 214 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+
+`line 225 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+   
+   
+   
+   
+
+`line 230 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+  always_ff @ (posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      w_byte <= '0;
+      tx_en  <= '0;
+      index  <=  0;
+    end
+    else if (!csb_tb && !tx_en && tx_ready && !boot_sel) begin
+      tx_en <= 1;
+      w_byte <= prog_image[index];
+      index  <= index + 1;
+      $display("prog_image[%x] = 0x%x",index, prog_image[index]);
+    end else
+      tx_en  <= 0;
+  end
+
+`line 245 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 0
+endmodule
+
+`line 247 "../src/merl_azadi-II_azadi_rtl_1.0/src/top/azadi_top_sim.sv" 2

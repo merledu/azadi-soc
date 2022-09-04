@@ -1,0 +1,53 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_spi_host_1.0/rtl/spi_clgen.sv" 1
+ 
+ 
+
+`line 4 "../src/merl_azadi-II_azadi_spi_host_1.0/rtl/spi_clgen.sv" 0
+module spi_clgen (
+  input    wire                        clk_i,    
+  input    wire                        rst_ni,       
+  input    wire                        enable,    
+  input    wire                        go,        
+  input    wire                        last_clk,  
+  input    wire [16-1:0] divider,   
+  output    reg                    clk_out,   
+  output    reg                    pos_edge,  
+  output    reg                    neg_edge  
+
+`line 15 "../src/merl_azadi-II_azadi_spi_host_1.0/rtl/spi_clgen.sv" 0
+); 
+                            
+   
+   
+   
+  reg [15:0] cnt;                          
+  wire cnt_zero;
+	wire cnt_one;
+	assign cnt_zero = cnt == {16 {1'b0}};
+	assign cnt_one = cnt == {{15 {1'b0}}, 1'b1};
+	always @(posedge clk_i or negedge rst_ni)
+		if (~rst_ni)
+			cnt <= {16 {1'b1}};
+		else if (!enable || cnt_zero)
+			cnt <= divider;
+		else
+			cnt <= cnt - {{15 {1'b0}}, 1'b1};
+	always @(posedge clk_i or negedge rst_ni)
+		if (~rst_ni)
+			clk_out <= 1'b0;
+		else
+			clk_out <= ((enable && cnt_zero) && (!last_clk || clk_out) ? ~clk_out : clk_out);
+	always @(posedge clk_i or negedge rst_ni)
+		if (~rst_ni) begin
+			pos_edge <= 1'b0;
+			neg_edge <= 1'b0;
+		end
+		else begin
+			pos_edge <= (((enable && !clk_out) && cnt_one) || (!(|divider) && clk_out)) || ((!(|divider) && go) && !enable);
+			neg_edge <= ((enable && clk_out) && cnt_one) || ((!(|divider) && !clk_out) && enable);
+		end
+endmodule
+ 
+
+`line 49 "../src/merl_azadi-II_azadi_spi_host_1.0/rtl/spi_clgen.sv" 2

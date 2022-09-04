@@ -1,0 +1,34 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop.sv" 1
+ 
+ 
+ 
+
+`line 5 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop.sv" 0
+ 
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop.sv" 0
+module prim_generic_flop # (
+  parameter int Width      = 1,
+  localparam int WidthSubOne = Width-1,
+  parameter logic [WidthSubOne:0] ResetValue = 0
+) (
+  input clk_i,
+  input rst_ni,
+  input [Width-1:0] d_i,
+  output logic [Width-1:0] q_o
+);
+
+`line 18 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      q_o <= ResetValue;
+    end else begin
+      q_o <= d_i;
+    end
+  end
+
+`line 26 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop.sv" 0
+endmodule  
+
+`line 28 "../src/merl_azadi-II_azadi_common_1.0/rtl/prim_generic_flop.sv" 2

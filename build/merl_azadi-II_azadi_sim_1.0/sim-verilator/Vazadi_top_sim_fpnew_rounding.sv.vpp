@@ -1,0 +1,87 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 1
+ 
+
+`line 3 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 12 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+ 
+
+`line 14 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+module fpnew_rounding #(
+  parameter int unsigned AbsWidth=2  
+) (
+   
+  input logic [AbsWidth-1:0]   abs_value_i,              
+  input logic                  sign_i,
+   
+  input logic [1:0]            round_sticky_bits_i,      
+  input fpnew_pkg::roundmode_e rnd_mode_i,
+  input logic                  effective_subtraction_i,  
+   
+  output logic [AbsWidth-1:0]  abs_rounded_o,            
+  output logic                 sign_o,
+   
+  output logic                 exact_zero_o,             
+   
+  input fpnew_pkg::operation_e op_i
+);
+
+`line 33 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+  logic round_up;  
+
+`line 35 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+   
+   
+   
+   
+   
+   
+   
+   
+   
+  always_comb begin : rounding_decision
+    unique case (rnd_mode_i)
+      fpnew_pkg::RNE:  
+        unique case (round_sticky_bits_i)
+          2'b00,
+          2'b01: round_up = 1'b0;            
+          2'b10: round_up = abs_value_i[0];  
+          2'b11: round_up = 1'b1;            
+          default: round_up = fpnew_pkg::DONT_CARE;
+        endcase
+      fpnew_pkg::RTZ: round_up = 1'b0;  
+      fpnew_pkg::RDN: round_up = (| round_sticky_bits_i) ? sign_i  : 1'b0;  
+      fpnew_pkg::RUP: round_up = (| round_sticky_bits_i) ? ~sign_i : 1'b0;  
+      fpnew_pkg::RMM: round_up = round_sticky_bits_i[1];  
+      default: round_up = fpnew_pkg::DONT_CARE;  
+    endcase
+  end
+
+`line 62 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+   
+  assign abs_rounded_o = abs_value_i + round_up;
+
+`line 65 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+   
+  assign exact_zero_o = (abs_value_i == '0) && (round_sticky_bits_i == '0);
+
+`line 68 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+   
+   
+  assign sign_o = (exact_zero_o && effective_subtraction_i)
+                  ? ((rnd_mode_i == fpnew_pkg::RDN) & (op_i != fpnew_pkg::MUL))
+                  : sign_i;
+
+`line 74 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 0
+endmodule
+
+`line 76 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/fpnew_rounding.sv" 2

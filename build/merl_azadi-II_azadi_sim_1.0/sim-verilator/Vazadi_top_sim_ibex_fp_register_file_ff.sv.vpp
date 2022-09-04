@@ -1,0 +1,90 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 1
+ 
+ 
+ 
+ 
+ 
+
+
+`line 13 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+
+`line 13 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+
+`line 13 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+
+`line 13 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+
+`line 13 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+
+`line 13 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+ 
+
+`line 15 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+module ibex_fp_register_file_ff #(
+    parameter int unsigned       DataWidth = 32
+    ) (
+     
+    input  logic                 clk_i,
+    input  logic                 rst_ni,
+
+`line 22 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+     
+    input  logic [4:0]           raddr_a_i,
+    output logic [DataWidth-1:0] rdata_a_o,
+
+`line 26 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+     
+    input  logic [4:0]           raddr_b_i,
+    output logic [DataWidth-1:0] rdata_b_o,
+
+`line 30 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+     
+    input  logic [4:0]           raddr_c_i,
+    output logic [DataWidth-1:0] rdata_c_o,
+
+
+`line 35 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+     
+    input  logic [4:0]           waddr_a_i,
+    input  logic [DataWidth-1:0] wdata_a_i,
+    input  logic                 we_a_i
+
+`line 40 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+);
+  localparam NUM_WORDS = 32;
+  
+  logic [NUM_WORDS-1:0][DataWidth-1:0] rf_reg;
+  logic [NUM_WORDS-1:0][DataWidth-1:0] rf_reg_q;
+  logic [NUM_WORDS-1:0]                we_a_dec;
+
+`line 47 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+  always_comb begin : we_a_decoder
+    for (int unsigned i = 0; i < NUM_WORDS; i++) begin
+      we_a_dec[i] = (waddr_a_i == 5'(i)) ?  we_a_i : 1'b0;
+    end
+  end
+
+`line 53 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+  for (genvar i = 0; i < NUM_WORDS; i++) begin : g_rf_flops
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni) begin
+        rf_reg_q[i] <= '0;
+      end else if(we_a_dec[i]) begin
+        rf_reg_q[i] <= wdata_a_i;
+      end
+    end
+  end
+
+`line 63 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+  assign rf_reg[NUM_WORDS-1:0] = rf_reg_q[NUM_WORDS-1:0];
+
+`line 65 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+  assign rdata_a_o = rf_reg[raddr_a_i];
+  assign rdata_b_o = rf_reg[raddr_b_i];
+  assign rdata_c_o = rf_reg[raddr_c_i];
+
+`line 69 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 0
+endmodule
+
+`line 71 "../src/merl_azadi-II_azadi_ibex_core_1.0/src/vendor/lowrisc_ibex/rtl/ibex_fp_register_file_ff.sv" 2

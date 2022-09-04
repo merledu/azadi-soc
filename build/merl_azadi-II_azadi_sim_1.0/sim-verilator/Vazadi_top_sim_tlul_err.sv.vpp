@@ -1,0 +1,108 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 1
+
+
+`line 3 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+module tlul_err import tlul_pkg::*; (
+
+`line 5 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  input tlul_h2d_t tl_i,
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  output logic err_o
+);
+
+`line 10 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  localparam int IW  = $bits(tl_i.a_source);
+  localparam int SZW = $bits(tl_i.a_size);
+  localparam int DW  = $bits(tl_i.a_data);
+  localparam int MW  = $bits(tl_i.a_mask);
+  localparam int SubAW = $clog2(DW/8);
+
+`line 16 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  logic opcode_allowed, a_config_allowed;
+
+`line 18 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  logic op_full, op_partial, op_get;
+  assign op_full    = (tl_i.a_opcode == PutFullData);
+  assign op_partial = (tl_i.a_opcode == PutPartialData);
+  assign op_get     = (tl_i.a_opcode == Get);
+
+`line 23 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+   
+  assign err_o = ~(opcode_allowed & a_config_allowed);
+
+`line 26 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+   
+  assign opcode_allowed = (tl_i.a_opcode == PutFullData)
+                        | (tl_i.a_opcode == PutPartialData)
+                        | (tl_i.a_opcode == Get);
+
+`line 31 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+   
+  logic addr_sz_chk;     
+  logic mask_chk;        
+  logic fulldata_chk;    
+
+`line 36 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  logic [MW-1:0] mask;
+
+`line 38 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  assign mask = (1 << tl_i.a_address[SubAW-1:0]);
+
+`line 40 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  always_comb begin
+    addr_sz_chk  = 1'b0;
+    mask_chk     = 1'b0;
+    fulldata_chk = 1'b0;  
+
+`line 45 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+    if (tl_i.a_valid) begin
+      unique case (tl_i.a_size)
+        'h0: begin  
+          addr_sz_chk  = 1'b1;
+          mask_chk     = ~|(tl_i.a_mask & ~mask);
+          fulldata_chk = |(tl_i.a_mask & mask);
+        end
+
+`line 53 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+        'h1: begin  
+          addr_sz_chk  = ~tl_i.a_address[0];
+           
+          mask_chk     = (tl_i.a_address[1]) ? ~|(tl_i.a_mask & 4'b0011)
+                       : ~|(tl_i.a_mask & 4'b1100);
+          fulldata_chk = (tl_i.a_address[1]) ? &tl_i.a_mask[3:2] : &tl_i.a_mask[1:0] ;
+        end
+
+`line 61 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+        'h2: begin  
+          addr_sz_chk  = ~|tl_i.a_address[SubAW-1:0];
+          mask_chk     = 1'b1;
+          fulldata_chk = &tl_i.a_mask[3:0];
+        end
+
+`line 67 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+        default: begin  
+          addr_sz_chk  = 1'b0;
+          mask_chk     = 1'b0;
+          fulldata_chk = 1'b0;
+        end
+      endcase
+    end else begin
+      addr_sz_chk  = 1'b0;
+      mask_chk     = 1'b0;
+      fulldata_chk = 1'b0;
+    end
+  end
+
+`line 80 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+  assign a_config_allowed = addr_sz_chk
+                          & mask_chk
+                          & (op_get | op_partial | fulldata_chk) ;
+
+
+`line 85 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 0
+endmodule
+
+
+`line 88 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_err.sv" 2

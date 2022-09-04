@@ -13,9 +13,6 @@ ${AZADI_ROOT}/src/common/rtl/tlul_xbar_main_pkg.sv
 ${AZADI_ROOT}/verif/src/prog_image_loader_pkg.sv
 ${AZADI_ROOT}/src/common/rtl/tlul_xbar_periph_pkg.sv
 
-${AZADI_ROOT}/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv
-
-
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv
 ${AZADI_ROOT}/src/periph/spi_host/rtl/spi_defines.sv
 ${AZADI_ROOT}/verif/src/SPI_Master.sv
@@ -50,7 +47,6 @@ ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/src/lzc.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/norm_div_sqrt_mvp.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/nrbd_nrsc_mvp.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/preprocess_mvp.sv
-${AZADI_ROOT}/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_filter_ctr.sv
 ${AZADI_ROOT}/src/common/rtl/prim_generic_clock_gating.sv
 ${AZADI_ROOT}/src/common/rtl/prim_generic_flop_2sync.sv
 ${AZADI_ROOT}/src/common/rtl/prim_clock_gating.sv
@@ -98,7 +94,8 @@ ${AZADI_ROOT}/src/ip/qspi/rtl/qspi_transmitter.sv
 ${AZADI_ROOT}/src/ip/qspi/rtl/qspi_receiver.sv
 ${AZADI_ROOT}/src/ip/qspi/rtl/clk_counter.sv
 
-
+${AZADI_ROOT}/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv
+${AZADI_ROOT}/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_filter_ctr.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_counter.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_csr.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_cs_registers.sv

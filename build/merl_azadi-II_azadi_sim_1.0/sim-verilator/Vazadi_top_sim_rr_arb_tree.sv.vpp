@@ -1,0 +1,384 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 1
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+`line 11 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+ 
+ 
+ 
+ 
+
+`line 16 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+module rr_arb_tree #(
+   
+  parameter int unsigned NumIn      = 64,
+   
+  parameter int unsigned DataWidth  = 32,
+   
+  parameter type         DataType   = logic [DataWidth-1:0],
+   
+   
+   
+   
+   
+   
+  parameter bit          ExtPrio    = 1'b0,
+   
+   
+   
+   
+   
+   
+  parameter bit          AxiVldRdy  = 1'b0,
+   
+   
+   
+   
+   
+   
+  parameter bit          LockIn     = 1'b0,
+   
+   
+   
+  parameter bit          FairArb    = 1'b1,
+   
+   
+  parameter int unsigned IdxWidth   = (NumIn > 32'd1) ? unsigned'($clog2(NumIn)) : 32'd1,
+   
+   
+  parameter type         idx_t      = logic [IdxWidth-1:0]
+) (
+   
+  input  logic                clk_i,
+   
+  input  logic                rst_ni,
+   
+  input  logic                flush_i,
+   
+  input  idx_t                rr_i,
+   
+  input  logic    [NumIn-1:0] req_i,
+  /*verilator lint_off UNOPTFLAT*/ 
+   
+  output logic    [NumIn-1:0] gnt_o,
+  /*verilator lint_on UNOPTFLAT*/ 
+   
+  input  DataType [NumIn-1:0] data_i,
+   
+  output logic                req_o,
+   
+  input  logic                gnt_i,
+   
+  output DataType             data_o,
+   
+  output idx_t                idx_o
+);
+
+`line 112 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+   
+   
+   
+  
+       
+  
+  
+   
+
+`line 121 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+   
+  if (NumIn == unsigned'(1)) begin : gen_pass_through
+    assign req_o    = req_i[0];
+    assign gnt_o[0] = gnt_i;
+    assign data_o   = data_i[0];
+    assign idx_o    = '0;
+   
+  end else begin : gen_arbiter
+    localparam int unsigned NumLevels = unsigned'($clog2(NumIn));
+
+`line 131 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+    /*verilator lint_off UNOPTFLAT*/ 
+    idx_t    [2**NumLevels-2:0] index_nodes;  
+    DataType [2**NumLevels-2:0] data_nodes;   
+    logic    [2**NumLevels-2:0] gnt_nodes;    
+    logic    [2**NumLevels-2:0] req_nodes;    
+     
+    idx_t                       rr_q;
+    logic [NumIn-1:0]           req_d;
+
+`line 140 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+     
+    assign req_o        = req_nodes[0];
+    assign data_o       = data_nodes[0];
+    assign idx_o        = index_nodes[0];
+
+`line 145 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+    if (ExtPrio) begin : gen_ext_rr
+      assign rr_q       = rr_i;
+      assign req_d      = req_i;
+    end else begin : gen_int_rr
+      idx_t rr_d;
+
+`line 151 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+      if (LockIn) begin : gen_lock
+        logic  lock_d, lock_q;
+        logic [NumIn-1:0] req_q;
+
+`line 156 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+        assign lock_d     = req_o & ~gnt_i;
+        assign req_d      = (lock_q) ? req_q : req_i;
+
+`line 159 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+        always_ff @(posedge clk_i or negedge rst_ni) begin : p_lock_reg
+          if (!rst_ni) begin
+            lock_q <= '0;
+          end else begin
+            if (flush_i) begin
+              lock_q <= '0;
+            end else begin
+              lock_q <= lock_d;
+            end
+          end
+        end
+
+`line 171 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+         
+         
+            
+                       
+                  
+
+`line 178 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+            
+               
+            
+                     
+                  
+        
+         
+
+`line 187 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+        always_ff @(posedge clk_i or negedge rst_ni) begin : p_req_regs
+          if (!rst_ni) begin
+            req_q  <= '0;
+          end else begin
+            if (flush_i) begin
+              req_q  <= '0;
+            end else begin
+              req_q  <= req_d;
+            end
+          end
+        end
+      end else begin : gen_no_lock
+        assign req_d = req_i;
+      end
+
+`line 202 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+      if (FairArb) begin : gen_fair_arb
+        logic [NumIn-1:0] upper_mask,  lower_mask;
+        idx_t             upper_idx,   lower_idx,   next_idx;
+        logic             upper_empty, lower_empty;
+
+`line 207 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+        for (genvar i = 0; i < NumIn; i++) begin : gen_mask
+          assign upper_mask[i] = (i >  rr_q) ? req_d[i] : 1'b0;
+          assign lower_mask[i] = (i <= rr_q) ? req_d[i] : 1'b0;
+        end
+
+`line 212 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+        lzc #(
+          .WIDTH ( NumIn ),
+          .MODE  ( 1'b0  )
+        ) i_lzc_upper (
+          .in_i    ( upper_mask  ),
+          .cnt_o   ( upper_idx   ),
+          .empty_o ( upper_empty )
+        );
+
+`line 221 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+        lzc #(
+          .WIDTH ( NumIn ),
+          .MODE  ( 1'b0  )
+        ) i_lzc_lower (
+          .in_i    ( lower_mask  ),
+          .cnt_o   ( lower_idx   ),
+          .empty_o (    )
+        );
+
+`line 230 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+        assign next_idx = upper_empty      ? lower_idx : upper_idx;
+        assign rr_d     = (gnt_i && req_o) ? next_idx  : rr_q;
+
+`line 233 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+      end else begin : gen_unfair_arb
+        assign rr_d = (gnt_i && req_o) ? ((rr_q == idx_t'(NumIn-1)) ? '0 : rr_q + 1'b1) : rr_q;
+      end
+
+`line 237 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+      always_ff @(posedge clk_i or negedge rst_ni) begin : p_rr_regs
+        if (!rst_ni) begin
+          rr_q   <= '0;
+        end else begin
+          if (flush_i) begin
+            rr_q   <= '0;
+          end else begin
+            rr_q   <= rr_d;
+          end
+        end
+      end
+    end
+
+`line 251 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+    assign gnt_nodes[0] = gnt_i;
+
+`line 253 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+     
+    for (genvar level = 0; unsigned'(level) < NumLevels; level++) begin : gen_levels
+      for (genvar l = 0; l < 2**level; l++) begin : gen_level
+         
+        logic sel;
+         
+        localparam int unsigned Idx0 = 2**level-1+l; 
+        localparam int unsigned Idx1 = 2**(level+1)-1+l*2;
+         
+         
+        if (unsigned'(level) == NumLevels-1) begin : gen_first_level
+           
+          if (unsigned'(l) * 2 < NumIn-1) begin : gen_reduce
+            assign req_nodes[Idx0]   = req_d[l*2] | req_d[l*2+1];
+
+`line 268 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+             
+            assign sel =  ~req_d[l*2] | req_d[l*2+1] & rr_q[NumLevels-1-level];
+
+`line 271 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+            assign index_nodes[Idx0] = idx_t'(sel);
+            assign data_nodes[Idx0]  = (sel) ? data_i[l*2+1] : data_i[l*2];
+            assign gnt_o[l*2]        = gnt_nodes[Idx0] & (AxiVldRdy | req_d[l*2])   & ~sel;
+            assign gnt_o[l*2+1]      = gnt_nodes[Idx0] & (AxiVldRdy | req_d[l*2+1]) & sel;
+          end
+           
+          if (unsigned'(l) * 2 == NumIn-1) begin : gen_first
+            assign req_nodes[Idx0]   = req_d[l*2];
+            assign index_nodes[Idx0] = '0; 
+            assign data_nodes[Idx0]  = data_i[l*2];
+            assign gnt_o[l*2]        = gnt_nodes[Idx0] & (AxiVldRdy | req_d[l*2]);
+          end
+           
+          if (unsigned'(l) * 2 > NumIn-1) begin : gen_out_of_range
+            assign req_nodes[Idx0]   = 1'b0;
+            assign index_nodes[Idx0] = idx_t'('0);
+            assign data_nodes[Idx0]  = DataType'('0);
+          end
+         
+         
+        end else begin : gen_other_levels
+          assign req_nodes[Idx0]   = req_nodes[Idx1] | req_nodes[Idx1+1];
+
+`line 294 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+           
+          assign sel =  ~req_nodes[Idx1] | req_nodes[Idx1+1] & rr_q[NumLevels-1-level];
+
+`line 297 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+          assign index_nodes[Idx0] = (sel) ?
+            idx_t'({1'b1, index_nodes[Idx1+1][NumLevels-unsigned'(level)-2:0]}) :
+            idx_t'({1'b0, index_nodes[Idx1][NumLevels-unsigned'(level)-2:0]});
+
+`line 301 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+          assign data_nodes[Idx0]  = (sel) ? data_nodes[Idx1+1] : data_nodes[Idx1];
+          assign gnt_nodes[Idx1]   = gnt_nodes[Idx0] & ~sel;
+          assign gnt_nodes[Idx1+1] = gnt_nodes[Idx0] & sel;
+        end
+         
+      end
+    end
+
+`line 309 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+     
+     
+     
+       
+      
+          
+        
+         
+    
+
+`line 319 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+        
+           
+
+`line 323 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+          
+           
+
+`line 327 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+            
+           
+
+`line 331 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+             
+           
+
+`line 335 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+          
+           
+
+`line 339 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+       
+          
+           
+    
+    
+     
+  end
+
+`line 347 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 0
+endmodule : rr_arb_tree
+
+`line 349 "../src/merl_azadi-II_azadi_pulp_fpnew_1.0/src/vendor/pulp_fpnew/src/common_cells/src/rr_arb_tree.sv" 2

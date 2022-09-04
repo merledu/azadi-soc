@@ -1,0 +1,63 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 1
+ 
+ 
+ 
+
+
+
+`line 7 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+module timer_core #(
+  parameter int N = 1
+) (
+  input logic clk_i,
+  input logic rst_ni,
+
+`line 13 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+  input logic       active,
+  input logic [11:0] prescaler,
+  input logic [ 7:0] step,
+
+`line 17 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+  output logic        tick,
+  output logic [63:0] mtime_d,
+  input  logic [63:0] mtime,
+  input  logic [63:0] mtimecmp [N],
+
+`line 22 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+  output logic [N-1:0] intr
+);
+
+`line 25 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+  logic [11:0] tick_count;
+
+`line 27 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+  always_ff @(posedge clk_i or negedge rst_ni) begin : generate_tick
+    if (!rst_ni) begin
+      tick_count <= 12'h0;
+    end else if (!active) begin
+      tick_count <= 12'h0;
+    end else if (tick_count == prescaler) begin
+      tick_count <= 12'h0;
+    end else begin
+      tick_count <= tick_count + 1'b1;
+    end
+  end
+
+`line 39 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+  assign tick = active & (tick_count >= prescaler);
+
+`line 41 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+  assign mtime_d = mtime + 64'(step);
+
+`line 43 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+   
+   
+  for (genvar t = 0 ; t < N ; t++) begin : gen_intr
+    assign intr[t] = active & (mtime >= mtimecmp[t]);
+  end
+
+`line 49 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 0
+endmodule : timer_core
+
+`line 51 "../src/merl_azadi-II_azadi_rv_timer_1.0/rtl/timer_core.sv" 2

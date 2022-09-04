@@ -1,0 +1,397 @@
+`begin_keywords "1800-2017"
+`line 1 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 1
+
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+
+`line 7 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+ 
+module tlul_sram_adapter #(
+  parameter int SramAw      = 12,
+  parameter int SramDw      = 32,  
+  parameter int Outstanding = 1,   
+  parameter bit ByteAccess  = 1,   
+  parameter bit ErrOnWrite  = 0,   
+  parameter bit ErrOnRead   = 0    
+) (
+  input   logic clk_i,
+  input   logic rst_ni,
+
+`line 19 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+  input   tlul_pkg::tlul_h2d_t  tl_i,
+  output  tlul_pkg::tlul_d2h_t  tl_o,
+
+`line 23 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+  output logic              req_o,
+  input  logic              gnt_i,
+  output logic              we_o,
+  output logic [SramAw-1:0] addr_o,
+  output logic [SramDw-1:0] wdata_o,
+  output logic [SramDw-1:0] wmask_o,
+  input  logic [SramDw-1:0] rdata_i,
+  input  logic              rvalid_i,
+  input  logic [1:0]        rerror_i  
+);
+
+`line 35 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  import tlul_pkg::*;
+
+`line 37 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  localparam int SramByte = SramDw/8;
+  localparam int DataBitWidth = tlul_pkg::vbits(SramByte);
+  localparam int WidthMult = SramDw / tlul_pkg::TL_DW;
+  localparam int WoffsetWidth = (SramByte == tlul_pkg::TL_DBW) ? 1 :
+                                DataBitWidth - tlul_pkg::vbits(tlul_pkg::TL_DBW);
+
+`line 43 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  typedef struct packed {
+    logic [tlul_pkg::TL_DBW-1:0] mask ;  
+    logic [WoffsetWidth-1:0]    woffset ;  
+  } sram_req_t ;
+
+`line 48 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  typedef enum logic [1:0] {
+    OpWrite,
+    OpRead,
+    OpUnknown
+  } req_op_e ;
+
+`line 54 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  typedef struct packed {
+    req_op_e                    op ;
+    logic                       error ;
+    logic [tlul_pkg::TL_SZW-1:0] size ;
+    logic [tlul_pkg::TL_AIW-1:0] source ;
+  } req_t ;
+
+`line 61 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  typedef struct packed {
+    logic [SramDw-1:0] data ;
+    logic              error ;
+  } rsp_t ;
+
+`line 66 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  localparam int SramReqFifoWidth = $bits(sram_req_t) ;
+  localparam int ReqFifoWidth = $bits(req_t) ;
+  localparam int RspFifoWidth = $bits(rsp_t) ;
+
+`line 70 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+   
+  logic reqfifo_wvalid, reqfifo_wready;
+  logic reqfifo_rvalid, reqfifo_rready;
+  req_t reqfifo_wdata,  reqfifo_rdata;
+
+`line 78 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  logic sramreqfifo_wvalid, sramreqfifo_wready;
+  logic sramreqfifo_rready;
+  sram_req_t sramreqfifo_wdata, sramreqfifo_rdata;
+
+`line 82 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  logic rspfifo_wvalid, rspfifo_wready;
+  logic rspfifo_rvalid, rspfifo_rready;
+  rsp_t rspfifo_wdata,  rspfifo_rdata;
+
+`line 86 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  logic error_internal;  
+  logic wr_attr_error;
+  logic wr_vld_error;
+  logic rd_vld_error;
+  logic tlul_error;      
+
+`line 92 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  logic a_ack, d_ack, sram_ack;
+  assign a_ack    = tl_i.a_valid & tl_o.a_ready ;
+  assign d_ack    = tl_o.d_valid & tl_i.d_ready ;
+  assign sram_ack = req_o        & gnt_i ;
+
+`line 97 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+  logic d_valid, d_error;
+  always_comb begin
+    d_valid = 1'b0;
+
+`line 102 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+    if (reqfifo_rvalid) begin
+      if (reqfifo_rdata.error) begin
+         
+        d_valid = 1'b1;
+      end else if (reqfifo_rdata.op == OpRead) begin
+        d_valid = rspfifo_rvalid;
+      end else begin
+         
+        d_valid = 1'b1;
+      end
+    end else begin
+      d_valid = 1'b0;
+    end
+  end
+
+`line 117 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  always_comb begin
+    d_error = 1'b0;
+
+`line 120 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+    if (reqfifo_rvalid) begin
+      if (reqfifo_rdata.op == OpRead) begin
+        d_error = rspfifo_rdata.error | reqfifo_rdata.error;
+      end else begin
+        d_error = reqfifo_rdata.error;
+      end
+    end else begin
+      d_error = 1'b0;
+    end
+  end
+
+`line 131 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  assign tl_o = '{
+      d_valid  : d_valid ,
+      d_opcode : (d_valid && reqfifo_rdata.op != OpRead) ? AccessAck : AccessAckData,
+      d_param  : '0,
+      d_size   : (d_valid) ? reqfifo_rdata.size : '0,
+      d_source : (d_valid) ? reqfifo_rdata.source : '0,
+      d_sink   : 1'b0,
+      d_data   : (d_valid && rspfifo_rvalid && reqfifo_rdata.op == OpRead)
+                 ? rspfifo_rdata.data : '0,
+      d_error  : d_valid && d_error,
+
+`line 142 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+      a_ready  : (gnt_i | error_internal) & reqfifo_wready & sramreqfifo_wready
+  };
+
+`line 145 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+
+`line 148 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+   
+  assign req_o    = tl_i.a_valid & reqfifo_wready & ~error_internal;
+  assign we_o     = tl_i.a_valid & logic'(tl_i.a_opcode inside {PutFullData, PutPartialData});
+  assign addr_o   = (tl_i.a_valid) ? tl_i.a_address[DataBitWidth+:SramAw] : '0;
+
+`line 156 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+  logic [WoffsetWidth-1:0] woffset;
+  if (tlul_pkg::TL_DW != SramDw) begin : gen_wordwidthadapt
+    assign woffset = tl_i.a_address[DataBitWidth-1:tlul_pkg::vbits(tlul_pkg::TL_DBW)];
+  end else begin : gen_no_wordwidthadapt
+    assign woffset = '0;
+  end
+
+`line 166 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+  logic [WidthMult-1:0][tlul_pkg::TL_DW-1:0] wmask_int;
+  logic [WidthMult-1:0][tlul_pkg::TL_DW-1:0] wdata_int;
+
+`line 170 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  always_comb begin
+    wmask_int = '0;
+    wdata_int = '0;
+
+`line 174 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+    if (tl_i.a_valid) begin
+      for (int i = 0 ; i < tlul_pkg::TL_DW/8 ; i++) begin
+        wmask_int[woffset][8*i +: 8] = {8{tl_i.a_mask[i]}};
+        wdata_int[woffset][8*i +: 8] = (tl_i.a_mask[i] && we_o) ? tl_i.a_data[8*i+:8] : '0;
+      end
+    end
+  end
+
+`line 182 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  assign wmask_o = wmask_int;
+  assign wdata_o = wdata_int;
+
+`line 185 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+
+`line 187 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+  assign wr_attr_error = (tl_i.a_opcode == PutFullData || tl_i.a_opcode == PutPartialData) ?
+                         (ByteAccess == 0) ? (tl_i.a_mask != '1 || tl_i.a_size != 2'h2) : 1'b0 :
+                         1'b0;
+
+`line 194 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  if (ErrOnWrite == 1) begin : gen_no_writes
+    assign wr_vld_error = tl_i.a_opcode != Get;
+  end else begin : gen_writes_allowed
+    assign wr_vld_error = 1'b0;
+  end
+
+`line 200 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  if (ErrOnRead == 1) begin: gen_no_reads
+    assign rd_vld_error = tl_i.a_opcode == Get;
+  end else begin : gen_reads_allowed
+    assign rd_vld_error = 1'b0;
+  end
+
+`line 206 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  tlul_err u_err (
+    .tl_i   (tl_i),
+    .err_o (tlul_error)
+  );
+
+`line 211 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  assign error_internal = wr_attr_error | wr_vld_error | rd_vld_error | tlul_error;
+   
+
+`line 214 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  assign reqfifo_wvalid = a_ack ;  
+  assign reqfifo_wdata  = '{
+    op:     (tl_i.a_opcode != Get) ? OpWrite : OpRead,  
+    error:  error_internal,
+    size:   tl_i.a_size,
+    source: tl_i.a_source
+  };  
+  assign reqfifo_rready = d_ack ;
+
+`line 223 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+  assign sramreqfifo_wdata = '{
+    mask    : tl_i.a_mask,
+    woffset : woffset
+  };
+  assign sramreqfifo_wvalid = sram_ack & ~we_o;
+  assign sramreqfifo_rready = rspfifo_wvalid;
+
+`line 231 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  assign rspfifo_wvalid = rvalid_i & reqfifo_rvalid;
+
+`line 233 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+  logic [WidthMult-1:0][tlul_pkg::TL_DW-1:0] rdata;
+  logic [WidthMult-1:0][tlul_pkg::TL_DW-1:0] rmask;
+   
+  logic [tlul_pkg::TL_DW-1:0] rdata_tlword;
+
+`line 239 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  always_comb begin
+    rmask = '0;
+    for (int i = 0 ; i < tlul_pkg::TL_DW/8 ; i++) begin
+      rmask[sramreqfifo_rdata.woffset][8*i +: 8] = {8{sramreqfifo_rdata.mask[i]}};
+    end
+  end
+
+`line 246 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  assign rdata = rdata_i & rmask;
+  assign rdata_tlword = rdata[sramreqfifo_rdata.woffset];
+
+`line 249 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+  assign rspfifo_wdata  = '{
+    data : rdata_tlword,
+    error: rerror_i[1]  
+  };
+  assign rspfifo_rready = (reqfifo_rdata.op == OpRead & ~reqfifo_rdata.error)
+                        ? reqfifo_rready : 1'b0 ;
+
+`line 256 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+  logic unused_rerror;
+  assign unused_rerror = rerror_i[0];
+
+`line 260 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+
+`line 262 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+   
+   
+   
+   
+   
+
+`line 271 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+   
+   
+   
+  fifo_sync #(
+    .Width   (ReqFifoWidth),
+    .Pass    (1'b0),
+    .Depth   (Outstanding)
+  ) u_reqfifo (
+    .clk_i,
+    .rst_ni,
+    .clr_i   (1'b0),
+    .wvalid_i(reqfifo_wvalid),
+    .wready_o(reqfifo_wready),
+    .wdata_i (reqfifo_wdata),
+    .depth_o (),
+    .rvalid_o(reqfifo_rvalid),
+    .rready_i(reqfifo_rready),
+    .rdata_o (reqfifo_rdata),
+    .full_o ()
+  );
+
+`line 295 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+   
+  fifo_sync #(
+    .Width   (SramReqFifoWidth),
+    .Pass    (1'b0),
+    .Depth   (Outstanding)
+  ) u_sramreqfifo (
+    .clk_i,
+    .rst_ni,
+    .clr_i   (1'b0),
+    .wvalid_i(sramreqfifo_wvalid),
+    .wready_o(sramreqfifo_wready),
+    .wdata_i (sramreqfifo_wdata),
+    .depth_o (),
+    .rvalid_o(),
+    .rready_i(sramreqfifo_rready),
+    .rdata_o (sramreqfifo_rdata),
+    .full_o  ()
+  );
+
+`line 317 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+   
+   
+   
+   
+   
+   
+  fifo_sync #(
+    .Width   (RspFifoWidth),
+    .Pass    (1'b1),
+    .Depth   (Outstanding)
+  ) u_rspfifo (
+    .clk_i,
+    .rst_ni,
+    .clr_i   (1'b0),
+    .wvalid_i(rspfifo_wvalid),
+    .wready_o(rspfifo_wready),
+    .wdata_i (rspfifo_wdata),
+    .depth_o (),
+    .rvalid_o(rspfifo_rvalid),
+    .rready_i(rspfifo_rready),
+    .rdata_o (rspfifo_rdata),
+    .full_o  ()
+  );
+
+`line 341 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 0
+endmodule
+
+`line 343 "../src/merl_azadi-II_azadi_common_1.0/rtl/tlul_sram_adapter.sv" 2
