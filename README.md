@@ -33,10 +33,10 @@ Root directory.
 export AZADI_ROOT=`pwd`
 ```
 We are now ready to do our first exercises with AZADI-II. Following are the options to run the basic tests on the SoC.
-1. Run simulation directly using Makefile by executing `make` from the root and get `.vcd` file in `logs`.
+1. Run simulation directly using Makefile by executing `make` from the root and get `.vcd` file in `build/logs`.
 2. Run simulation through `FuseSoc`, From root run:
 ```
-fusesoc --cores-root=. run --target=sim merl:azadi-II:azadi_sim --cycles=519800 --HEX=$AZADI_ROOT/verif/tests/basic_test/test.hex
+fusesoc --cores-root=. run --target=sim merl:azadi-II:azadi_sim --cycles=519800 --timeout=5000000 --HEX=$AZADI_ROOT/verif/tests/basic-test/test.hex
 ```
 After simulation is done, you can find the waveform file in `$AZADI_ROOT/build/azadi_1.0/sim-verilator/logs`.
 
