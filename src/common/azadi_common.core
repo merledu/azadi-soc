@@ -6,7 +6,7 @@ filesets:
     files:
       - rtl/fifo_async.sv
       - rtl/fifo_sync.sv
-      - rtl/prim_generic_clock_gating.sv
+      - rtl/prim_clock_gating.sv
       - rtl/prim_generic_flop_2sync.sv
       - rtl/prim_clock_gating.sv
       - rtl/prim_generic_flop.sv
@@ -23,6 +23,7 @@ filesets:
       - rtl/tlul_xbar_main.sv
       - rtl/tlul_xbar_periph.sv
       - rtl/tlul_adapter_reg.sv
+      - rtl/prim_filter_ctr.sv
 
     file_type : systemVerilogSource
 targets:

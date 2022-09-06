@@ -1,8 +1,8 @@
 
 module buffer_control #(
   parameter int BUFFER_DEPTH = 128,
-  parameter int BUFFER_WIDTH = 9,
-  parameter int ADDR_WIDTH   = 9
+  parameter int BUFFER_WIDTH = 8,
+  parameter int ADDR_WIDTH   = 8
 )(
   input logic clk_i,
   input logic rst_ni,
@@ -80,19 +80,17 @@ module buffer_control #(
     end
   end
 
- sram_fifo#(
-  .Width(128),
-  .Depth(9)
- ) fifo(
-  .data_out	  (rdata),
-  .i_clk	(clk_i),
-  .read_en	(fifo_cen),
-  .write_en	(fifo_web),
-  .addr	  (fifo_addr),
-  .data_in	  (wdata_i),
-  .i_rst (rst_ni)
+ buffer_array fifo(
+  .clk_i    (clk_i),
+  .rst_ni   (rst_ni),
+  .re_i     (re_i),
+  .we_i     (we_i),
+  .clr_i    (clr_i),
+  .waddr_i    (waddr),
+  .raddr_i    (raddr),
+  .wdata_i    (wdata_i),
+  .rdata_o    (rdata_o)
  );
-
   assign fifo_web  = ((re_i && (~buffer_empty)) ? 1'b1 : (we_i && (~buffer_full)) ? 1'b0 : 1'b0 );
   assign fifo_addr = ({7{re_i}} & raddr) | ({7{we_i}} & waddr[6:0]);
   assign fifo_cen  = (we_i ? 1'b0 : re_i ? 1'b0 : 1'b1);

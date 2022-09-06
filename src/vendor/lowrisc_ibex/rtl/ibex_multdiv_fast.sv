@@ -12,7 +12,7 @@
  * 16x16 kernel multiplier and Long Division
  */
 
-`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
+`include "prim_assert.sv"
 
 module ibex_multdiv_fast #(
     parameter ibex_pkg::rv32m_e RV32M = ibex_pkg::RV32MFast

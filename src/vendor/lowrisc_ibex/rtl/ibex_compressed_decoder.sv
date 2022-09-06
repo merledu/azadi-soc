@@ -11,7 +11,7 @@
  * assertions only.
  */
 
-`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
+`include "prim_assert.sv"
 
 module ibex_compressed_decoder (
     input  logic        clk_i,

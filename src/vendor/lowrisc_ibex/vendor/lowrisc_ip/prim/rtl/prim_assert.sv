@@ -68,14 +68,14 @@
 //  ASSUME_I:     Assume an immediate property
 
 `ifdef VERILATOR
- `include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh"
+ `include "prim_assert_dummy_macros.svh"
 `elsif SYNTHESIS
- `include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert_dummy_macros.svh"
+ `include "prim_assert_dummy_macros.svh"
 `elsif YOSYS
- `include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert_yosys_macros.svh"
+ `include "prim_assert_yosys_macros.svh"
  `define INC_ASSERT
 `else
- `include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert_standard_macros.svh"
+ `include "prim_assert_standard_macros.svh"
  `define INC_ASSERT
 `endif
 

@@ -22,7 +22,7 @@ CYCLES ?= 519800
 TEST := basic-test
 HEX := $(TB_DIR)/tests/$(TEST)/test.hex
 # Setting POST ROM bin path
-ROM_BIN := $(ARM_ROOT)/post-rom/post_rom_verilog.rcf
+ROM_BIN := $(ARM_ROOT)/post_rom_verilog.rcf
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++11 it
 # complains for `auto` variables
@@ -76,7 +76,7 @@ veriltor-clean:
 # ---------------------
 #       Xcelium
 # ---------------------
-xm-build: flist.azadi hex-build
+xm-build: flist.azadi #hex-build
 	@echo $(value HEX)
 	mkdir -p build; mkdir -p build/xcelium;
 	xrun -sv -64bit  +lic_queue -licqueue +incdir+$(INCLUDE_FILES) \

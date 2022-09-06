@@ -1,7 +1,8 @@
+
 // Copyright MERL contributors.
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
-`define SIM
+
 module azadi_soc_top (
 `ifdef USE_POWER_PINS
    inout vccd1,
@@ -275,7 +276,7 @@ module azadi_soc_top (
     .BranchPredictor  ( 0                  ),
     .DbgTriggerEn     ( 1                  ),
     .DbgHwBreakNum    ( 1                  ),
-    .SecureIbex       ( 0                  ),
+    .SecureIbex        ( 0                  ),
     .DmHaltAddr       ( 0                  ),
     .DmExceptionAddr  ( 0                  )
   ) u_ibex_core_top (
@@ -369,7 +370,7 @@ module azadi_soc_top (
   rom_top #(
     .ADDR(8),
     .DW  (32)
-  )u_rom_top (
+  ) u_rom_top (
     .clk_i  ( clk_i       ),
     .rst_ni ( rst_ni      ),
     .tl_d_i ( xbar_to_rom ),
@@ -406,17 +407,15 @@ module azadi_soc_top (
     .we_o            ( instr_we       ),
     .rdata_i         ( instr_rdata    )
   );
-
-  // tlul_sram_adapter u_iccm_mem(
-  //   .Q	  ( instr_rdata ),
-  //   .CLK	( clk_i       ),
-  //   .CEN	( instr_csb   ),
-  //   .WEN	( instr_we    ),
-  //   .A	  ( instr_addr  ),
-  //   .D	  ( instr_wdata ),
-  //   .EMA	( '0          ),
-  //   .RETN	( '1          )
-  // );
+  sram u_iccm_mem (
+    .clock        (clk_i),
+    .reset        (rst_ni),
+    .readEnable   (instr_csb),
+    .Address      (instr_addr),
+    .readData     (instr_rdata),
+    .writeEnable  (instr_we),
+    .writeData    (instr_wdata)
+  );
 
   // Data memory tlul wrapper
   data_mem_top dccm_adapter(
@@ -432,20 +431,16 @@ module azadi_soc_top (
     .we_o        ( data_we      ),
     .rdata_i     ( data_rdata   )
   );
-
-  // // ARM memory Model 32KB
-  // tlul_sram_adapter u_dccm_mem(
-  //   .Q	  ( data_rdata ),
-  //   .CLK	( clk_i      ),
-  //   .CEN	( data_csb   ),
-  //   .WEN	( data_we    ),
-  //   .A	  ( data_addr  ),
-  //   .D	  ( data_wdata ),
-  //   .EMA	( '0         ),
-  //   .RETN	( '1         )
-  // );
-
-  // // Timer 0
+sram u_dccm_mem (
+    .clock        (clk_i),
+    .reset        (rst_ni),
+    .readEnable   (instr_csb),
+    .Address      (instr_addr),
+    .readData     (instr_rdata),
+    .writeEnable  (instr_we),
+    .writeData    (instr_wdata)
+  );
+  // Timer 0
   rv_timer u_rv_timer_0(
     .clk_i        ( clk_i            ),
     .rst_ni       ( rst_ni           ),

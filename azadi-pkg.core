@@ -4,13 +4,7 @@ description: "Azadi SoC pakages core files."
 filesets:
   azadi:
     files:
-      - src/vendor/lowrisc_ibex/rtl/ibex_pkg.sv
-      - src/vendor/lowrisc_ibex/rtl/ibex_tracer_pkg.sv
-      - src/vendor/pulp_fpnew/src/common_cells/src/cf_math_pkg.sv
-      - src/vendor/pulp_fpnew/src/common_cells/include/common_cells/registers.svh
-      - src/vendor/pulp_fpnew/src/fpnew_pkg.sv
       - src/periph/gpio/rtl/gpio_reg_pkg.sv
-      - src/common/rtl/prim_pkg.sv
       - src/common/rtl/prim_util_pkg.sv
       - src/ip/rv_plic/rtl/rv_plic_reg_pkg.sv
       - src/periph/rv_timer/rtl/rv_timer_reg_pkg.sv

@@ -1,19 +1,19 @@
 
-package prog_image_loader_pkg;
+package prog_loader_pkg;
 
   function automatic void read_hex(string hex_file, ref bit [7:0] prog_image [int]);
     int       hex_fd;
     string    astring, addr_string;
     int       addr;
     bit [7:0] data;
-  
+
     hex_fd = $fopen(hex_file, "r");
-  
+
     if (hex_fd == 0)
       $fatal("Hex file not opened! Check path.");
-    else 
+    else
       $display("Hex file opened succesfully!!!");
-  
+
     addr = '0;
     while ($fscanf(hex_fd, "%s", astring) != 0 && !$feof(hex_fd)) begin
       if (astring[0] == "@" && astring.len() > 1) begin
@@ -29,4 +29,4 @@ package prog_image_loader_pkg;
     $fclose(hex_fd);
   endfunction: read_hex
 
-endpackage: prog_image_loader_pkg
+endpackage: prog_loader_pkg

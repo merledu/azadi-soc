@@ -7,7 +7,7 @@
  * Main controller of the processor
  */
 
-`include "/home/merl-lab/GSoC/azadi-II/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv"
+`include "prim_assert.sv"
 
 module ibex_controller #(
     parameter bit WritebackStage  = 0,

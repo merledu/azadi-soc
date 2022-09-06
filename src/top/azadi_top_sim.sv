@@ -4,7 +4,7 @@
 `define ARM_UD_MODEL
 `define TEST_ROM
 module azadi_top_sim
-  import prog_image_loader_pkg::*;
+  import prog_loader_pkg::*;
 (
 `ifdef VERILATOR
   input logic clk_i,

@@ -10,7 +10,7 @@ ${AZADI_ROOT}/src/ip/rv_plic/rtl/rv_plic_reg_pkg.sv
 ${AZADI_ROOT}/src/periph/rv_timer/rtl/rv_timer_reg_pkg.sv
 ${AZADI_ROOT}/src/common/rtl/tlul_pkg.sv
 ${AZADI_ROOT}/src/common/rtl/tlul_xbar_main_pkg.sv
-${AZADI_ROOT}/verif/src/prog_image_loader_pkg.sv
+${AZADI_ROOT}/verif/src/prog_loader_pkg.sv
 ${AZADI_ROOT}/src/common/rtl/tlul_xbar_periph_pkg.sv
 
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv
@@ -20,20 +20,11 @@ ${AZADI_ROOT}/verif/src/SPI_Master.sv
 ${AZADI_ROOT}/src/periph/uart/rtl/buffer_control.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/control_mvp.sv
 ${AZADI_ROOT}/src/ip/sram_interfaces/rtl/data_mem_top.sv
-${AZADI_ROOT}/src/ip/sram_interfaces/rtl/sram_fifo.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl/div_sqrt_top_mvp.sv
 ${AZADI_ROOT}/src/common/rtl/fifo_async.sv
 ${AZADI_ROOT}/src/common/rtl/fifo_sync.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_cast_multi.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_classifier.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_divsqrt_multi.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_fma_multi.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_fma.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_noncomp.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_opgroup_block.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_opgroup_fmt_slice.sv
-${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_opgroup_multifmt_slice.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_rounding.sv
+${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_classifier.sv
 ${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpnew_top.sv
 ${AZADI_ROOT}/src/periph/gpio/rtl/gpio_reg_top.sv
 ${AZADI_ROOT}/src/periph/gpio/rtl/gpio.sv
@@ -68,6 +59,7 @@ ${AZADI_ROOT}/src/ip/rv_plic/rtl/rv_plic_target.sv
 ${AZADI_ROOT}/src/periph/rv_timer/rtl/rv_timer_reg_top.sv
 ${AZADI_ROOT}/src/periph/rv_timer/rtl/rv_timer.sv
 ${AZADI_ROOT}/src/periph/rv_timer/rtl/timer_core.sv
+${AZADI_ROOT}/src/periph/uart/rtl/buffer_array.sv
 ${AZADI_ROOT}/src/periph/uart/rtl/rx_timer.sv
 ${AZADI_ROOT}/src/periph/spi_host/rtl/spi_core.sv
 ${AZADI_ROOT}/src/periph/spi_host/rtl/spi_top.sv
@@ -93,9 +85,9 @@ ${AZADI_ROOT}/src/ip/qspi/rtl/qspi_xip.sv
 ${AZADI_ROOT}/src/ip/qspi/rtl/qspi_transmitter.sv
 ${AZADI_ROOT}/src/ip/qspi/rtl/qspi_receiver.sv
 ${AZADI_ROOT}/src/ip/qspi/rtl/clk_counter.sv
-
+${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/include/common_cells/registers.svh
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_assert.sv
-${AZADI_ROOT}/src/vendor/lowrisc_ibex/vendor/lowrisc_ip/prim/rtl/prim_filter_ctr.sv
+${AZADI_ROOT}/src/common/rtl/prim_filter_ctr.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_counter.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_csr.sv
 ${AZADI_ROOT}/src/vendor/lowrisc_ibex/rtl/ibex_cs_registers.sv

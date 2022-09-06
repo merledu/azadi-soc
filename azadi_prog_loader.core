@@ -1,11 +1,11 @@
 CAPI=2:
-name: "merl:azadi-II:azadi_verif:1.0"
+name: "merl:azadi-II:azadi_prog_loader:1.0"
 description: "Azadi SoC verification files."
 filesets:
   azadi:
     files:
-      - prog_image_loader_pkg.sv
-      - SPI_Master.sv
+      - verif/src/prog_loader_pkg.sv
+      - verif/src/SPI_Master.sv
     file_type : systemVerilogSource
 targets:
   default: &default

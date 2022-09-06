@@ -4,6 +4,7 @@ description: "Azadi SoC UART core files."
 filesets:
   azadi:
     files:
+      - rtl/buffer_array.sv
       - rtl/buffer_control.sv
       - rtl/rx_timer.sv
       - rtl/uart_tx.sv

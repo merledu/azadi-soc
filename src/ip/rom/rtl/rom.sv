@@ -7,8 +7,8 @@ module rom #(
   input  logic [Depth-1:0] addr_i,
   output logic [Width-1:0] rdata_o
 );
-
-  logic [Width-1:0] mem [Depth];
+  localparam actual_depth = 256;
+  logic [Width-1:0] mem [0:actual_depth-1];
 
   always_ff @(posedge clk_i) begin
     if (req_i) begin
