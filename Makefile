@@ -22,7 +22,7 @@ CYCLES ?= 519800
 TEST := basic-test
 HEX := $(TB_DIR)/tests/$(TEST)/test.hex
 # Setting POST ROM bin path
-ROM_BIN := $(ARM_ROOT)/post_rom_verilog.rcf
+ROM_BIN := $(AZADI_ROOT)/post_rom_verilog.rcf
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++11 it
 # complains for `auto` variables
@@ -59,6 +59,10 @@ flist.azadi:
 verilator-build: flist.azadi
 	mkdir -p build;
 	verilator -cc -CFLAGS $(CFLAGS) $(DEFS) \
+	    -I${AZADI_ROOT}/src/ip/prim/rtl \
+	    -I${AZADI_ROOT}/src/ip/prim \
+	    -I${AZADI_ROOT}/src/vendor/pulp_fpnew/src/common_cells/include \
+	    -I${AZADI_ROOT}/src/vendor/pulp_fpnew/src/fpu_div_sqrt_mvp/hdl \
 		-I$(AZADI_ROOT) -I$(TB_DIR) -timescale 1ns/1ps  -f flist.azadi \
 		--trace --trace-structs --trace-params --threads 4 \
 		-Wno-IMPLICIT -Wno-LITENDIAN -Wno-UNSIGNED -Wno-LATCH -Wno-PINMISSING -Wno-WIDTH \
@@ -67,8 +71,8 @@ verilator-build: flist.azadi
 		-exe $(TB_DIR)/src/sim.cpp
 		$(MAKE) -C ./build/verilator/ -f Vazadi_top_sim.mk $(VERILATOR_MAKE_FLAGS)
 
-verilator-run: verilator-build hex-build
-	./build/verilator/Vazadi_top_sim +HEX="${HEX}" +cycles=${CYCLES} +timeout=${TIMEOUT}
+verilator-run: verilator-build #hex-build
+	./build/verilator/Vazadi_top_sim +HEX="${HEX}" +ROM_BIN="${ROM_BIN}" +cycles=${CYCLES} +timeout=${TIMEOUT}
 
 veriltor-clean:
 	rm -rf ./build/verilator
@@ -76,7 +80,7 @@ veriltor-clean:
 # ---------------------
 #       Xcelium
 # ---------------------
-xm-build: flist.azadi #hex-build
+xm-build: flist.azadi hex-build
 	@echo $(value HEX)
 	mkdir -p build; mkdir -p build/xcelium;
 	xrun -sv -64bit  +lic_queue -licqueue +incdir+$(INCLUDE_FILES) \

@@ -2,7 +2,7 @@
 // Copyright MERL contributors.
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
-
+`define SIM
 module azadi_soc_top (
 `ifdef USE_POWER_PINS
    inout vccd1,
