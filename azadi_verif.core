@@ -1,5 +1,5 @@
 CAPI=2:
-name: "merl:azadi-II:azadi_prog_loader:1.0"
+name: "merl:azadi-II:azadi_verif:1.0"
 description: "Azadi SoC verification files."
 filesets:
   azadi:

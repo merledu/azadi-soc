@@ -6,41 +6,11 @@ You can find all the shared dcouments related to Azadi-SoC 65nm tapeout in this 
 
 The progress chart of this project is being documented using GitHub Projects and can be be viewed [here](https://github.com/merledu/azadi-tsmc/projects/1).
 
-## Prerequisite
-You need to have:
-1. [Verilator](https://verilator.org/guide/latest/install.html) for running the simulation of the SoC.
-2. [Fusesoc](https://fusesoc.readthedocs.io/en/stable/user/installation.html) for building the tools to simulate SoC.
-3. [GtkWave](https://www.howtoinstall.me/ubuntu/18-04/gtkwave/) for opening the waveform file.
-To achive pyhton requirements, Run:
-```
-cd src/vendor/lowrisc_ibex/
-```
-```
-pip3 install -U -r python-requirements.txt
-```
-
-## Quickstart guide
-Clone the repositroy.
-```
-cd azadi-II/
-```
-Root directory.
-```
-export AZADI_ROOT=`pwd`
-```
-We are now ready to do our first exercises with AZADI-II. Following are the options to run the basic tests on the SoC.
-1. Run simulation directly using Makefile by executing `make verilator-run` from the root and get `.vcd` file in `build/logs`.
-2. Run simulation through `FuseSoc`, From root run:
-```
-fusesoc --cores-root=. run --target=sim merl:azadi-II:azadi_sim --cycles=519800 --timeout=5000000 --HEX=$AZADI_ROOT/verif/tests/basic-test/test.hex --ROM_BIN=$AZADI_ROOT/post_rom_verilog.rcf
-```
-After simulation is done, you can find the waveform file in `$AZADI_ROOT/build/azadi_1.0/sim-verilator/logs`
-
 ## SoC Block Diagram
 ![SoC Block Diagram](docs/azadi-tsmc.png)
 
 ## Directory Structure Diagram of SoC
-![](docs/AZADI-II%20directory%20structure.jpeg)
+![](docs/AZADI-II_Dir_structure.jpeg)
 
 ## Memory Map
 We are using TileLink-UL bus protocol in Azadi SoC to enable communication of CPU with peripherals. The overview of the internal cross bars are shown in the given picture.
@@ -80,3 +50,33 @@ We are using TileLink-UL bus protocol in Azadi SoC to enable communication of CP
 |                 | PWM3                  | 32'h40004300     | 32'h400043FF     |   32  Bytes    |
 </p>
 </details>
+
+## Simulation prerequisites
+You need to have:
+1. [Verilator](https://verilator.org/guide/latest/install.html) for running the simulation of the SoC.
+2. [Fusesoc](https://fusesoc.readthedocs.io/en/stable/user/installation.html) for building the tools to simulate SoC.
+3. [GtkWave](https://www.howtoinstall.me/ubuntu/18-04/gtkwave/) for opening the waveform file.
+To achive pyhton requirements, Run:
+```
+cd src/vendor/lowrisc_ibex/
+```
+```
+pip3 install -U -r python-requirements.txt
+```
+
+## Simulation guide
+Clone the repositroy.
+```
+cd azadi-II/
+```
+Root directory.
+```
+export AZADI_ROOT=`pwd`
+```
+We are now ready to do our first exercises with AZADI-II. Following are the options to run the basic tests on the SoC.
+1. Run simulation directly using Makefile by executing `make verilator-run` from the root and get `.vcd` file in `build/logs`.
+2. Run simulation through `FuseSoc`, From root run:
+```
+fusesoc --cores-root=. run --target=sim merl:azadi-II:azadi_sim --cycles=519800 --timeout=8000000 --HEX=$AZADI_ROOT/verif/tests/basic-test/test.hex --ROM_BIN=$AZADI_ROOT/verif/src/post_rom_verilog.rcf
+```
+After simulation is done, you can find the waveform file in `$AZADI_ROOT/build/azadi_1.0/sim-verilator/logs`

@@ -5,7 +5,7 @@ filesets:
   azadi:
     depend:
       - merl:azadi-II:azadi-pkg
-      - merl:azadi-II:azadi_prog_loader
+      - merl:azadi-II:azadi_verif
       - merl:azadi-II:azadi_rtl
   tb:
     files:

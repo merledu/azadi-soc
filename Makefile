@@ -11,18 +11,18 @@ export ARM_ROOT := $(AZADI_ROOT)/arm
 export TB_DIR := $(AZADI_ROOT)/verif
 
 # QSPI flash include path
-INCLUDE_FILES = $(AZADI_ROOT)/verif/src/flash_model/N25Q128A13E_VG12
+# INCLUDE_FILES = $(AZADI_ROOT)/verif/src/flash_model/N25Q128A13E_VG12
 
-TOP_HDL = $(AZADI_ROOT)/src/top/azadi_top_sim.sv
+TOP_HDL = $(AZADI_ROOT)/verif/src/azadi_top_sim.sv
 # Verilator simulation CLI variables
-TIMEOUT ?= 5000000
+TIMEOUT ?= 8000000
 CYCLES ?= 519800
 
 # Setting TEST hex path
 TEST := basic-test
 HEX := $(TB_DIR)/tests/$(TEST)/test.hex
 # Setting POST ROM bin path
-ROM_BIN := $(AZADI_ROOT)/post_rom_verilog.rcf
+ROM_BIN := $(AZADI_ROOT)/verif/src/post_rom_verilog.rcf
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++11 it
 # complains for `auto` variables
@@ -71,7 +71,7 @@ verilator-build: flist.azadi
 		-exe $(TB_DIR)/src/sim.cpp
 		$(MAKE) -C ./build/verilator/ -f Vazadi_top_sim.mk $(VERILATOR_MAKE_FLAGS)
 
-verilator-run: verilator-build #hex-build
+verilator-run: verilator-build hex-build
 	./build/verilator/Vazadi_top_sim +HEX="${HEX}" +ROM_BIN="${ROM_BIN}" +cycles=${CYCLES} +timeout=${TIMEOUT}
 
 veriltor-clean:

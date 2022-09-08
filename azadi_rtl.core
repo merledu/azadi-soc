@@ -10,7 +10,7 @@ filesets:
       - merl:azadi-II:azadi_ip
       - merl:azadi-II:azadi_common
     files:
-      - src/top/azadi_top_sim.sv
+      - verif/src/azadi_top_sim.sv
       - src/top/azadi_soc_top.sv
       - src/top/ibex_core_top.sv
     file_type : systemVerilogSource,

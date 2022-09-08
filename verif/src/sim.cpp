@@ -50,13 +50,14 @@ int main (int argc, char **argv) {
   // }
 
   top -> clk_i = 0;
-
+  top -> rst_ni = 1;
   while (!(Verilated::gotFinish() || done)){
 
     top->clk_i = !top->clk_i;
 
-    top->rst_ni = (main_time < 8000 ) ? 0 : 1;
-    // top->boot_sel = (main_time >= 10000 &&  main_time <= 14000) ? 1 : 0;
+    // top->rst_ni = (main_time < 8000 ) ? 0 : 1;
+    // top->por_ni = (main_time >= 5000000) ? 0 : 1;
+    top->boot_sel = (main_time >= 500000) ? 0 : 1;
 
     top->eval();
 
