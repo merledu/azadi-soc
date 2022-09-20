@@ -1,0 +1,31 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_common:1.0"
+description: "Azadi SoC all common files."
+filesets:
+  azadi:
+    files:
+      - rtl/fifo_async.sv
+      - rtl/fifo_sync.sv
+      - rtl/prim_clock_gating.sv
+      - rtl/prim_generic_flop_2sync.sv
+      - rtl/prim_clock_gating.sv
+      - rtl/prim_generic_flop.sv
+      - rtl/prim_intr_hw.sv
+      - rtl/prim_subreg_arb.sv
+      - rtl/prim_subreg_ext.sv
+      - rtl/prim_subreg.sv
+      - rtl/tlul_err_resp.sv
+      - rtl/tlul_err.sv
+      - rtl/tlul_fifo_sync.sv
+      - rtl/tlul_host_adapter.sv
+      - rtl/tlul_socket_1n.sv
+      - rtl/tlul_sram_adapter.sv
+      - rtl/tlul_xbar_main.sv
+      - rtl/tlul_xbar_periph.sv
+      - rtl/tlul_adapter_reg.sv
+      - rtl/prim_filter_ctr.sv
+
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

@@ -1,0 +1,51 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_sim:1.0"
+description: "Azadi SoC simulation core file."
+filesets:
+  azadi:
+    depend:
+      - merl:azadi-II:azadi-pkg
+      - merl:azadi-II:azadi_verif
+      - merl:azadi-II:azadi_rtl
+  tb:
+    files:
+      - verif/src/sim.cpp
+    file_type: cppSource
+
+targets:
+  default: &default
+    filesets: [azadi , tb]
+  sim:
+    <<: *default
+    default_tool: verilator
+    filesets: [azadi, tb]
+    parameters:
+        - ROM_BIN
+        - HEX
+        - timeout
+        - cycles
+        - main_time
+        - done
+    tools:
+      verilator:
+        verilator_options: [-timescale 1ns/1ps , -Wno-LATCH, --trace, --trace-structs, --trace-params, --threads 4, -Wno-IMPLICIT, -Wno-LITENDIAN, -Wno-UNSIGNED, -Wno-PINMISSING, -Wno-WIDTH, -Wno-MODDUP, -Wno-UNOPTFLAT, -Wno-BLKANDNBLK, -Wno-UNOPTTHREADS, -Wno-ALWCOMBORDER, --debug]
+    toplevel: azadi_top_sim
+parameters:
+  ROM_BIN:
+    datatype: str
+    paramtype: plusarg
+  HEX:
+    datatype: str
+    paramtype: plusarg
+  timeout:
+    datatype: int
+    paramtype: plusarg
+  cycles:
+    datatype: int
+    paramtype: plusarg
+  main_time:
+    datatype: int
+    paramtype: plusarg
+  done:
+    datatype: bool
+    paramtype: plusarg

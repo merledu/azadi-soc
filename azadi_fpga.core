@@ -1,0 +1,11 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_fpga:1.0"
+description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC."
+filesets:
+  azadi:
+    files:
+      - src/top/azadi_top_arty7.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

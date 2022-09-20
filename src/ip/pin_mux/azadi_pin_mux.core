@@ -1,0 +1,11 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_pin_mux:1.0"
+description: "Azadi SoC pin mux core files."
+filesets:
+  azadi:
+    files:
+      - rtl/pin_mux.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

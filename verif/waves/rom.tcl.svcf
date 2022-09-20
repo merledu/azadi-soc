@@ -1,0 +1,137 @@
+# SimVision Command Script (Tue Aug 09 05:28:18 PM PKT 2022)
+#
+# Version 20.09.s010
+#
+# You can restore this configuration with:
+#
+#      xrun -sv -64bit +lic_queue -licqueue +incdir+/home/zrafique/projects/azadi-tsmc/verif/../flash_model/N25Q128A13E_VG12 -xmlibdirpath ./build/xcelium -xmlibdirname azadi.build -timescale 1ns/1ps -f ../rtl/flist.azadi -top azadi_top_sim +HEX=/home/zrafique/projects/azadi-tsmc/verif/tests/basic-test/test.hex +ROM_BIN=/home/zrafique/projects/azadi-tsmc/verif/../arm/post-rom/post_rom_verilog.rcf -access +rwc -s -input /home/zrafique/projects/azadi-tsmc/verif/waves/rom.tcl
+#
+
+
+#
+# Preferences
+#
+preferences set plugin-enable-svdatabrowser-new 1
+preferences set cursorctl-dont-show-sync-warning 1
+preferences set toolbar-txe_waveform_toggle-WaveWindow {
+  usual
+  position -pos 1
+}
+preferences set plugin-enable-groupscope 0
+preferences set plugin-enable-interleaveandcompare 0
+preferences set plugin-enable-waveformfrequencyplot 0
+preferences set toolbar-Windows-WaveWindow {
+  usual
+  position -pos 2
+}
+
+#
+# Simulator
+#
+database require simulator -hints {
+	simulator "xrun -sv -64bit +lic_queue -licqueue +incdir+/home/zrafique/projects/azadi-tsmc/verif/../flash_model/N25Q128A13E_VG12 -xmlibdirpath ./build/xcelium -xmlibdirname azadi.build -timescale 1ns/1ps -f ../rtl/flist.azadi -top azadi_top_sim +HEX=/home/zrafique/projects/azadi-tsmc/verif/tests/basic-test/test.hex +ROM_BIN=/home/zrafique/projects/azadi-tsmc/verif/../arm/post-rom/post_rom_verilog.rcf -gui -access +rwc -s -input rom.tcl"
+}
+
+#
+# Mnemonic Maps
+#
+mmap new  -reuse -name {Boolean as Logic} -radix %b -contents {{%c=FALSE -edgepriority 1 -shape low}
+{%c=TRUE -edgepriority 1 -shape high}}
+mmap new  -reuse -name {Example Map} -radix %x -contents {{%b=11???? -bgcolor orange -label REG:%x -linecolor yellow -shape bus}
+{%x=1F -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=2C -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=* -label %x -linecolor gray -shape bus}}
+
+#
+# Design Browser windows
+#
+if {[catch {window new WatchList -name "Design Browser 1" -geometry 730x500+174+20}] != ""} {
+    window geometry "Design Browser 1" 730x500+174+20
+}
+window target "Design Browser 1" on
+browser using {Design Browser 1}
+browser set -scope  simulator::azadi_top_sim 
+browser set \
+    -signalsort name
+browser yview see  simulator::azadi_top_sim 
+browser timecontrol set -lock 0
+
+#
+# Waveform windows
+#
+if {[catch {window new WaveWindow -name "Waveform 1" -geometry 1360x672+-1+27}] != ""} {
+    window geometry "Waveform 1" 1360x672+-1+27
+}
+window target "Waveform 1" on
+waveform using {Waveform 1}
+waveform sidebar select designbrowser
+waveform set \
+    -primarycursor TimeA \
+    -signalnames name \
+    -signalwidth 133 \
+    -units ps \
+    -valuewidth 94
+waveform baseline set -time 0
+
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.clk_i
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.rst_ni
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.w_byte
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.tx_en
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.tx_ready
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.sck_tb
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.sdi_tb
+	} ]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.sdo_tb
+	} ]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals  {
+	{simulator::azadi_top_sim.u_azadi_soc_top.boot_addr[31:0]}
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.u_azadi_soc_top.boot_sel_i
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.u_azadi_soc_top.por_ni
+	} ]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.u_azadi_soc_top.pll_lock_i
+	} ]
+set id [waveform add -cdivider divider]
+set id [waveform add -signals  {
+	simulator::azadi_top_sim.u_azadi_soc_top.u_brq_core_top.brq_core_i.rst_ni
+	} ]
+set id [waveform add -signals  {
+	{simulator::azadi_top_sim.u_azadi_soc_top.u_brq_core_top.brq_core_i.id_stage_i.instr_rdata_i[31:0]}
+	} ]
+
+waveform xview limits 303554ps 966392ps
+
+#
+# Waveform Window Links
+#
+
+#
+# Console windows
+#
+console set -windowname Console
+window geometry Console 730x250+174+393
+
+#
+# Layout selection
+#
+

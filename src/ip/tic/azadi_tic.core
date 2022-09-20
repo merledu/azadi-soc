@@ -1,0 +1,12 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_tic:1.0"
+description: "Azadi SoC tic core files."
+filesets:
+  azadi:
+    files:
+      - rtl/tic_top.sv
+      - rtl/tic.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

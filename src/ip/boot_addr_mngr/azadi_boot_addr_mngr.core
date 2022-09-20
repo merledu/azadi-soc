@@ -1,0 +1,11 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_boot_addr_mngr:1.0"
+description: "Azadi SoC boot address manager core files."
+filesets:
+  azadi:
+    files:
+      - rtl/boot_addr_mngr.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

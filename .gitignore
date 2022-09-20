@@ -1,9 +1,0 @@
-*~
-build/
-*.vcd
-fusesoc.conf
-html
-Bender.lock
-.vscode/
-logs/
-obj_dir/

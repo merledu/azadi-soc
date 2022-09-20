@@ -1,0 +1,15 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_qspi:1.0"
+description: "Azadi SoC qspi core files."
+filesets:
+  azadi:
+    files:
+      - rtl/clk_counter.sv
+      - rtl/qspi_receiver.sv
+      - rtl/qspi_top.sv
+      - rtl/qspi_transmitter.sv
+      - rtl/qspi_xip.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

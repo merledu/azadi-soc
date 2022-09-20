@@ -1,0 +1,12 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_rom:1.0"
+description: "Azadi SoC rom core files."
+filesets:
+  azadi:
+    files:
+      - rtl/rom.sv
+      - rtl/rom_top.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

@@ -1,0 +1,16 @@
+
+/home/uzain/projects/azadi-tsmc/verif/tests/uart/test.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+10000000 <_stext>:
+10000000:	40002437          	lui	x8,0x40002
+10000004:	10040413          	addi	x8,x8,256 # 40002100 <_ebss+0x20002100>
+10000008:	00100713          	li	x14,1
+1000000c:	0d900613          	li	x12,217
+10000010:	00c42023          	sw	x12,0(x8)
+10000014:	00300693          	li	x13,3
+10000018:	00d42223          	sw	x13,4(x8)
+1000001c:	00e42e23          	sw	x14,28(x8)
+10000020:	00e42823          	sw	x14,16(x8)

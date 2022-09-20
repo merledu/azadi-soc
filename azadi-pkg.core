@@ -1,0 +1,17 @@
+CAPI=2:
+name: "merl:azadi-II:azadi-pkg:1.0"
+description: "Azadi SoC pakages core files."
+filesets:
+  azadi:
+    files:
+      - src/periph/gpio/rtl/gpio_reg_pkg.sv
+      - src/common/rtl/prim_util_pkg.sv
+      - src/ip/rv_plic/rtl/rv_plic_reg_pkg.sv
+      - src/periph/rv_timer/rtl/rv_timer_reg_pkg.sv
+      - src/common/rtl/tlul_pkg.sv
+      - src/common/rtl/tlul_xbar_main_pkg.sv
+      - src/common/rtl/tlul_xbar_periph_pkg.sv
+    file_type : systemVerilogSource
+targets:
+  default: &default
+    filesets: [azadi]

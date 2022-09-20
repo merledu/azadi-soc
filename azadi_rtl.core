@@ -1,0 +1,19 @@
+CAPI=2:
+name: "merl:azadi-II:azadi_rtl:1.0"
+description: "Azadi (Freedom) is a RISC-V CPU based 32-bit SoC."
+filesets:
+  azadi:
+    depend:
+      - lowrisc:tool:check_tool_requirements
+      - lowrisc:ibex:ibex_core
+      - merl:azadi-II:azadi_periph
+      - merl:azadi-II:azadi_ip
+      - merl:azadi-II:azadi_common
+    files:
+      - verif/src/azadi_top_sim.sv
+      - src/top/azadi_soc_top.sv
+      - src/top/ibex_core_top.sv
+    file_type : systemVerilogSource,
+targets:
+  default: &default
+    filesets: [azadi]
