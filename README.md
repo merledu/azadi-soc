@@ -2,8 +2,6 @@
 
 This repo has RTL, simulation, verification (UVM), APR files and scripts of `Azadi-SoC`.
 
-You can find all the shared dcouments related to Azadi-SoC 65nm tapeout in this [Drive folder](https://drive.google.com/drive/folders/13rWUPcvsDv4s5yPnm0ogJ6YfQonf5DvC?usp=sharing).
-
 ## SoC Block Diagram
 ![SoC Block Diagram](docs/azadi-tsmc.png)
 
