@@ -1,10 +1,8 @@
-# Azadi-SoC TSMC 65nm
+# Azadi-SoC
 
-This repo has RTL, simulation, verification (UVM), APR files and scripts of `Azadi-SoC` for TSMC-65nm tapeout.
+This repo has RTL, simulation, verification (UVM), APR files and scripts of `Azadi-SoC`.
 
 You can find all the shared dcouments related to Azadi-SoC 65nm tapeout in this [Drive folder](https://drive.google.com/drive/folders/13rWUPcvsDv4s5yPnm0ogJ6YfQonf5DvC?usp=sharing).
-
-The progress chart of this project is being documented using GitHub Projects and can be be viewed [here](https://github.com/merledu/azadi-tsmc/projects/1).
 
 ## SoC Block Diagram
 ![SoC Block Diagram](docs/azadi-tsmc.png)
