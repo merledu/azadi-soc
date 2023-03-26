@@ -1,0 +1,240 @@
+xmelab(64): 20.09-s010: (c) Copyright 1995-2021 Cadence Design Systems, Inc.
+TOOL:	xmelab(64)	20.09-s010: Started on Jul 04, 2022 at 19:54:10 PKT
+xmelab
+    -cdslib .././cds.lib
+    -hdlvar .././hdl.var
+    -mess
+    -NOWARN CUDEFB
+    work.qspi_xip_tb
+    -access +r
+
+	Elaborating the design hierarchy:
+		Caching library 'work' ....... Done
+xmelab: *W,DSEMEL: This SystemVerilog design will be simulated as per IEEE 1800-2009 SystemVerilog simulation semantics. Use -disable_sem2009 option for turning off SV 2009 simulation semantics.
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		work.DebugModule:module <0x1685d1a6>
+			streams:   1, words:   480
+		work.PLRSpart2Detect:module <0x38e79e90>
+			streams:  11, words: 15184
+		work.PLRSpart1Detect:module <0x4cc8f530>
+			streams:  10, words:  9981
+		work.PLRSpart1Detect:module <0x1a55cea3>
+			streams:  10, words:  9966
+		work.PLRSpart1Detect:module <0x604a77f0>
+			streams:  10, words:  9966
+		work.CUIdecoder:module <0x33d59a1d>
+			streams:   4, words: 18577
+		work.CUIdecoder:module <0x5758633b>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x7e23d8c9>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x5340afc6>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x6efe59c3>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x3f49c810>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x0c47fe6b>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x43c0ed6c>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x253c4599>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x5d3beafd>
+			streams:   4, words: 18577
+		work.CUIdecoder:module <0x19530571>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x3028be83>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x3daedf26>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x4e8d098c>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x1f3a985f>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x62a98e8b>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x2d2e9d8c>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x4bd23579>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x062eab9e>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x72bf8ac4>
+			streams:   4, words: 18577
+		work.CUIdecoder:module <0x36d76548>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x1facdeba>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x122abf1f>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x610969b5>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x30bef866>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x4d2deeb2>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x02aafdb5>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x64565540>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x49b3fff9>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x119a684d>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x41ecd420>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x68976fd2>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x13a6ca52>
+			streams:   4, words: 18577
+		work.CUIdecoder:module <0x57ce25de>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x7eb59e2c>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x31f9a351>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x7333ff89>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x5fd621f8>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x392a890d>
+			streams:   4, words: 18490
+		work.CUIdecoder:module <0x00102923>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x51a7b8f0>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x2fc35689>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x16f381ab>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x6044458e>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x597492ac>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x06b8ed7b>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x3f883a59>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x6f621ce2>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x1d0ce673>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x37ddcdb3>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x062477ad>
+			streams:   4, words: 18577
+		work.CUIdecoder:module <0x49a364aa>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x2f5fcc5f>
+			streams:   4, words: 18490
+		work.CUIdecoder:module <0x3ad7ad93>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x7550be94>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x13ac1661>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x15047906>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x5a836a01>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x3c7fc2f4>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x2ca2e8c1>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x6325fbc6>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x05d95333>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x2c34ae24>
+			streams:   4, words: 18574
+		work.CUIdecoder:module <0x63b3bd23>
+			streams:   4, words: 18751
+		work.CUIdecoder:module <0x054f15d6>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x13fba2cd>
+			streams:   4, words: 18487
+		work.CUIdecoder:module <0x5c66f6aa>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x5391c6dc>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x374b8b56>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x63f492dc>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x6c03a2aa>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x371c3ffa>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x38eb0f8c>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x110c2ea8>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x6aa111fe>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x52ccda8b>
+			streams:   4, words: 18577
+		work.CUIdecoder:module <0x640b3ddf>
+			streams:   4, words: 18577
+		work.CUIdecoder:module <0x1d4bc98c>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x2b8c2ed8>
+			streams:   4, words: 18754
+		work.CUIdecoder:module <0x7bb76179>
+			streams:   4, words: 18490
+		work.CUIdecoder:module <0x4d70862d>
+			streams:   4, words: 18490
+		work.CUIdecoder:module <0x28fd0bc3>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x69c0afb6>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x286b4d26>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x279c7d50>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x21ff3c4d>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x5a93f152>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x0e7b5c74>
+			streams:   1, words:  5434
+		work.CUIdecoder:module <0x08181d69>
+			streams:   1, words:  5431
+		work.CUIdecoder:module <0x66f66d89>
+			streams:   1, words:  5431
+		work.qspi_receiver:module <0x1ef1700e>
+			streams:   5, words:  1814
+		work.qspi_transmitter:module <0x4f575171>
+			streams:   5, words:  3114
+		work.clk_counter:module <0x0388e4ee>
+			streams:   4, words:  1514
+		work.qspi_xip:module <0x65e8a8dc>
+			streams:  26, words: 30334
+		work.qspi_xip_tb:module <0x55ede172>
+			streams:  35, words: 14603
+		work.DualQuadOps:module <0x5e8eb675>
+			streams:  42, words: 147091
+		work.OTP_memory:module <0x300fa8ca>
+			streams: 429, words: 832640
+		work.FlashDiscoveryParameter:module <0x5843483c>
+			streams:   3, words:  5811
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		                 Instances  Unique
+		Modules:               149      29
+		Primitives:             15       3
+		Timing outputs:         14       2
+		Registers:             301     289
+		Scalar wires:          170       -
+		Vectored wires:         23       -
+		Named events:          365      51
+		Always blocks:         251     137
+		Initial blocks:        110     100
+		Parallel blocks:       353      41
+		Cont. assignments:      18      19
+		Pseudo assignments:    149     149
+		Simulation timescale:  1ps
+	Writing initial simulation snapshot: work.qspi_xip_tb:module
+TOOL:	xmelab(64)	20.09-s010: Exiting on Jul 04, 2022 at 19:54:12 PKT  (total: 00:00:02)

@@ -1,0 +1,86 @@
+*** Message Type: info ***
+When: Thu Sep 15 08:25:36 PM PKT 2022
+SimVision started.
+Version: TOOL:  simvision(64)   20.09-s010
+User: asabir
+Host: merl-HP-Z840
+Platform: Linux/x86_64/3.10.0-1160.25.1.el7.x86_64
+Started: Thu Sep 15 08:25:36 PM PKT 2022
+Command: /opt/cadence/installs/XCELIUM2009/tools.lnx86/simvision/bin/64bit/simvision.exe -connect dc:merl-HP-Z840:54903 -64BIT -nocopyright
+Work Directory: /home/asabir/projects/azadi_tsmc/azadi-tsmc/verif/random_tests/env/core/vendor/core_ibex
+ 
+*** Message Type: info ***
+When: Thu Sep 15 08:25:37 PM PKT 2022
+Create browser window: "Design Browser 1"
+ 
+*** Message Type: info ***
+When: Thu Sep 15 08:25:40 PM PKT 2022
+Create console window: "Console"
+ 
+*** Message Type: info ***
+When: Thu Sep 15 08:25:43 PM PKT 2022
+Connect to Simulator
+      Design: worklib.prim_lfsr:sv
+   Languages: verilog assertion
+   Simulator: XM-Sim
+     Version: TOOL:     xmsim(64)       20.09-s010
+        User: asabir
+        Host: merl-HP-Z840
+Time Started: Thu Sep 15 08:25:35 PM PKT 2022
+  Process ID: 30338
+   Directory: /home/asabir/projects/azadi_tsmc/azadi-tsmc/verif/random_tests/env/core/vendor/core_ibex
+     Command: xrun -64bit -R -xmlibdirpath out/seed-31304/rtl_sim -l out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/sim.log -licqueue -gui -svseed 31304 -svrnc rand_struct +UVM_TESTNAME=core_ibex_base_test +bin=out/seed-31304/instr_gen/asm_tests/riscv_illegal_instr_test_0.bin +ibex_tracer_file_base=out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/trace_core -nokey +signature_addr=8ffffffc -input {@database -open out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/waves -shm -default} -input {@probe -create core_ibex_tb_top -all -depth all -variables} -input @run
+
+ 
+*** Message Type: info ***
+When: Thu Sep 15 08:25:44 PM PKT 2022
+Create utility window: "Properties"
+ 
+*** Message Type: info ***
+When: Thu Sep 15 08:27:30 PM PKT 2022
+Create waveform window: "Waveform 1"
+ 
+*** Message Type: info ***
+When: Thu Sep 15 08:35:35 PM PKT 2022
+Exit XM-Sim: abnormal
+      Design: worklib.prim_lfsr:sv
+   Languages: verilog assertion
+   Simulator: XM-Sim
+     Version: TOOL:     xmsim(64)       20.09-s010
+        User: asabir
+        Host: merl-HP-Z840
+Time Started: Thu Sep 15 08:25:35 PM PKT 2022
+  Process ID: 30338
+   Directory: /home/asabir/projects/azadi_tsmc/azadi-tsmc/verif/random_tests/env/core/vendor/core_ibex
+     Command: xrun -64bit -R -xmlibdirpath out/seed-31304/rtl_sim -l out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/sim.log -licqueue -gui -svseed 31304 -svrnc rand_struct +UVM_TESTNAME=core_ibex_base_test +bin=out/seed-31304/instr_gen/asm_tests/riscv_illegal_instr_test_0.bin +ibex_tracer_file_base=out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/trace_core -nokey +signature_addr=8ffffffc -input {@database -open out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/waves -shm -default} -input {@probe -create core_ibex_tb_top -all -depth all -variables} -input @run
+
+ 
+*** Message Type: error ***
+When: Thu Sep 15 08:35:35 PM PKT 2022
+XM-Sim Crashed:
+      Design: worklib.prim_lfsr:sv
+   Languages: verilog assertion
+   Simulator: XM-Sim
+     Version: TOOL:     xmsim(64)       20.09-s010
+        User: asabir
+        Host: merl-HP-Z840
+Time Started: Thu Sep 15 08:25:35 PM PKT 2022
+  Process ID: 30338
+   Directory: /home/asabir/projects/azadi_tsmc/azadi-tsmc/verif/random_tests/env/core/vendor/core_ibex
+     Command: xrun -64bit -R -xmlibdirpath out/seed-31304/rtl_sim -l out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/sim.log -licqueue -gui -svseed 31304 -svrnc rand_struct +UVM_TESTNAME=core_ibex_base_test +bin=out/seed-31304/instr_gen/asm_tests/riscv_illegal_instr_test_0.bin +ibex_tracer_file_base=out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/trace_core -nokey +signature_addr=8ffffffc -input {@database -open out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/waves -shm -default} -input {@probe -create core_ibex_tb_top -all -depth all -variables} -input @run
+      Design: worklib.prim_lfsr:sv
+   Languages: verilog assertion
+   Simulator: XM-Sim
+     Version: TOOL:      xmsim(64)       20.09-s010
+        User: asabir
+        Host: merl-HP-Z840
+Time Started: Thu Sep 15 08:25:35 PM PKT 2022
+  Process ID: 30338
+   Directory: /home/asabir/projects/azadi_tsmc/azadi-tsmc/verif/random_tests/env/core/vendor/core_ibex
+     Command: xrun -64bit -R -xmlibdirpath out/seed-31304/rtl_sim -l out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/sim.log -licqueue -gui -svseed 31304 -svrnc rand_struct +UVM_TESTNAME=core_ibex_base_test +bin=out/seed-31304/instr_gen/asm_tests/riscv_illegal_instr_test_0.bin +ibex_tracer_file_base=out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/trace_core -nokey +signature_addr=8ffffffc -input {@database -open out/seed-31304/rtl_sim/riscv_illegal_instr_test.0/waves -shm -default} -input {@probe -create core_ibex_tb_top -all -depth all -variables} -input @run
+
+ 
+*** Message Type: info ***
+When: Thu Sep 15 08:51:16 PM PKT 2022
+SimVision Exit.
+ 

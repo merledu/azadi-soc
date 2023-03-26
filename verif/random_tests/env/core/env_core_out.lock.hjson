@@ -1,0 +1,10 @@
+// This file is auto-generated. Please do not modify it
+// manually.
+
+{
+  upstream:
+  {
+    url: https://github.com/merledu/azadi-verify
+    rev: e570888338249a042add4138a12a703bb61c7ad4
+  }
+}

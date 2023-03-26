@@ -1,0 +1,18 @@
+#-----------------------------
+# Azadi TSMC SET ENV VARIABLES
+#-----------------------------
+echo "******      Setting ENV For AZADI TSMC         *******"
+echo "******************************************************"
+setenv RISCV_TOOLCHAIN /opt/riscv32-azadi
+#setenv RISCV_TOOLCHAIN /home/shared/riscv32
+set path = (/home/shared/riscv32/bin $path)
+
+setenv RISCV_GCC "$RISCV_TOOLCHAIN/bin/riscv32-unknown-elf-gcc"
+setenv RISCV_OBJCOPY "$RISCV_TOOLCHAIN/bin/riscv32-unknown-elf-objcopy"
+
+#setenv DV_AZADI_TSMC /home/asabir/projects/azadi_tsmc/azadi-tsmc/verif
+setenv DV_AZADI_TSMC `pwd`
+setenv MY_WORK_AREA_TSMC $DV_AZADI_TSMC/random_tests/env/vm
+setenv MY_REGRESSION_AREA_TSMC $DV_AZADI_TSMC/regr
+cd random_tests/env/core/vendor/core_ibex
+

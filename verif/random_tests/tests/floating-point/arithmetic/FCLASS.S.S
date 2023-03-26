@@ -1,0 +1,3 @@
+li x1,1
+FCVT.S.W f1,x1
+FCLASS.S x2,f1

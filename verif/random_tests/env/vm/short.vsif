@@ -1,0 +1,21 @@
+session short {
+    top_dir: $ENV(MY_REGRESSION_AREA_TSMC);
+    output_mode : terminal;
+};
+
+group tests {
+    run_script: "$RUN_ENV(MY_WORK_AREA_TSMC)/scripts/my_vm_run_script.sh";
+
+    test riscv_arithmetic_basic_test {
+        sv_seed: random;
+        count: 2;
+    };
+    test riscv_illegal_instr_test {
+        sv_seed: random;
+        count: 3;
+    };
+    test riscv_illegal_instr_test {
+        sv_seed: 5224;
+        count: 1;
+    };
+};

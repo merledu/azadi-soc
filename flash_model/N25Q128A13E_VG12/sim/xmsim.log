@@ -1,0 +1,8 @@
+xmsim(64): 20.09-s010: (c) Copyright 1995-2021 Cadence Design Systems, Inc.
+xmsim: *W,DSEM2009: This SystemVerilog design is simulated as per IEEE 1800-2009 SystemVerilog simulation semantics. Use -disable_sem2009 option for turning off SV 2009 simulation semantics.
+
+-------------------------------------
+Relinquished control to SimVision...
+xcelium> 
+xcelium> ^C
+xcelium> exit

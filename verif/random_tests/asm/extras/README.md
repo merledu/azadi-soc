@@ -1,0 +1,1 @@
+These tests were run on the core while simulating Azadi SoC's powered netlist

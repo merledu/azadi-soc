@@ -1,0 +1,3 @@
+IMC(64): 20.09-s003: (c) Copyright 1995-2021 Cadence Design Systems Inc - Simulator version: 20.09-s010 - Coverage engine version: 20.09-s010
+Starting gui mode
+imc: *I,RUNLD: Successfully loaded run /home/asabir/projects/azadi_tsmc/azadi-tsmc/verif/random_tests/env/core/vendor/core_ibex/aggregated_coverage_results/fcov_05_oct_22.

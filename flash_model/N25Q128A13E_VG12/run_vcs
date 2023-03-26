@@ -1,0 +1,17 @@
+#!/bin/csh -f
+
+
+
+
+
+rm sim/simv.daidir/* 
+#vcs -full64 +v2k -debug_all -timescale=1ns/100fs  -o ./sim/simv code/N25Q032A13E.v stim/plrs_xip_qiofr.v top/*.v
+#vcs -full64 +v2k -debug_all -timescale=1ns/100fs  -o ./sim/simv code/N25Qxxx.v stim/read.v top/*.v
+vcs -full64 -sverilog -debug_all -timescale=1ns/100fs  -o ./sim/simv code/N25Qxxx.v stim/read.v top/*.v
+#vcs -full64 -sverilog -debug_all -timescale=1ns/100fs  -o ./sim/simv code/N25Qxxx.v stim/read_altera_debug.v top/*.v
+#vcs -full64 -sverilog -debug_all -timescale=1ns/100fs  -o ./sim/simv code/N25Qxxx.v 
+
+cd ./sim
+#simv -gui -dve_opt -cmd='run 4000 ms'
+#simv -gui -dve_opt -session=session.inter.vpd.tcl -dve_opt -cmd='run 20 us'
+simv -dve_opt -session=session.inter.vpd.tcl -dve_opt -cmd='run 20 us'

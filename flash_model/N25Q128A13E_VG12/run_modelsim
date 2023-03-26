@@ -1,0 +1,58 @@
+#!/bin/csh -f
+
+
+set RUNDIR  = ./
+set CODEDIR = ./code
+set STIMDIR = ./stim
+set TOPDIR  = ./top
+set SIMDIR  = ./sim
+
+
+if (-e $SIMDIR/work) then
+\rm -r $SIMDIR/work
+endif
+vlib $SIMDIR/work
+
+
+#CODE
+vlog -novopt -work $SIMDIR/work $CODEDIR/N25Qxxx.v
+#vlog -work $SIMDIR/work $CODEDIR/N25Q128A13E-1.v
+#vlog -work $SIMDIR/work $CODEDIR/N25Q128A13E-2.v
+#vlog -work $SIMDIR/work $CODEDIR/N25Q128A13E-3.v
+if ( $status != 0 ) exit 2
+
+
+#STIM
+#vlog -work $SIMDIR/work $STIMDIR/plrs_extended.v
+#vlog -novopt -work $SIMDIR/work $STIMDIR/asml_issue.v
+#vlog -novopt -work $SIMDIR/work $STIMDIR/asml_issue_4.v
+#vlog -novopt -work $SIMDIR/work $STIMDIR/asml_issue_41.v
+#vlog -novopt -work $SIMDIR/work $STIMDIR/asml_issue_42.v
+#vlog -novopt -work $SIMDIR/work $STIMDIR/asml_issue_43.v
+#vlog -work $SIMDIR/work $STIMDIR/plrs_asml_issue.v
+#vlog -work $SIMDIR/work $STIMDIR/adi_issue.v
+#vlog -work $SIMDIR/work $STIMDIR/plrs_xip_diofr.v
+#vlog -work $SIMDIR/work $STIMDIR/plrs_xip_qiofr.v
+#vlog -work $SIMDIR/work $STIMDIR/status_reg_test.v
+vlog -work $SIMDIR/work $STIMDIR/read.v
+#vlog -work $SIMDIR/work $STIMDIR/erase.v
+if ( $status != 0 ) exit 3
+
+
+#TOP
+#vlog -novopt -work $SIMDIR/work $TOPDIR/Testbench_4.v
+vlog -novopt -work $SIMDIR/work $TOPDIR/Testbench.v
+if ( $status != 0 ) exit 4
+vlog -novopt -work $SIMDIR/work $TOPDIR/StimTasks.v
+if ( $status != 0 ) exit 4
+vlog -novopt -work $SIMDIR/work $TOPDIR/ClockGenerator.v
+if ( $status != 0 ) exit 4
+
+
+# Simulate
+cd $SIMDIR
+vsim -novopt -gui -t 1ps work.Testbench  $1 &
+#vsim -novopt -do wave.do -wlfnocollapse -t 1ps work.Testbench  $1 &
+if ( $status != 0 ) exit 5
+
+

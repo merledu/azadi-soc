@@ -1,0 +1,5 @@
+li t1,0x400c0000
+li t2,0x2
+mul t3,t2,t2
+sw t3,0x10(t1)
+nop

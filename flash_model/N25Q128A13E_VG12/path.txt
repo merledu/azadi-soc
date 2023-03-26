@@ -1,0 +1,90 @@
+
+code
+  code/N25Qxxx.v
+
+include
+  include/Decoders.h
+  include/DevParam.h
+  include/PLRSDetectors.h
+  include/StackDecoder.h
+  include/TimingData.h
+  include/UserData.h
+
+sim
+  sim/mem_Q128_bottom.vmf
+  sim/modelsim.ini
+  sim/sfdp.vmf
+  sim/transcript
+  sim/vlog.opt
+  sim/wave4.do
+  sim/wave.do
+  sim/work/
+  sim/@clock@generator
+  sim/@c@u@idecoder
+  sim/@debug@module
+  sim/@dual@quad@ops
+  sim/@flag@status@register
+  sim/@flash@discovery@parameter
+  sim/_info
+  sim/@lock@manager
+  sim/@memory
+  sim/@n25@qxxx
+  sim/@non@volatile@configuration@register
+  sim/@o@t@p_memory
+  sim/param@config
+  sim/@p@l@r@spart1@detect
+  sim/@p@l@r@spart2@detect
+  sim/@program
+  sim/@protection@management@register
+  sim/@read
+  sim/@set@config
+  sim/@status@register
+  sim/@stim@tasks
+  sim/@stim@tasks@config
+  sim/@stimuli
+  sim/_temp
+  sim/@testbench
+  sim/@timing@check
+  sim/@util@functions
+  sim/_vmake
+  sim/@volatile@configuration@register
+  sim/@volatile@enhanced@configuration@register
+
+stim
+  stim/adi_issue.v
+  stim/asml_issue_41.v
+  stim/asml_issue_42.v
+  stim/asml_issue_43.v
+  stim/asml_issue_4.v
+  stim/asml_issue.v
+  stim/deep_power_down.v
+  stim/erase.v
+  stim/lock1.v
+  stim/lock2.v
+  stim/lock_test_SR.v
+  stim/otp.v
+  stim/plrs_asml_issue.v
+  stim/plrs_extended_2nd_part_abort.v
+  stim/plrs_extended.v
+  stim/plrs_xip_diofr.v
+  stim/plrs_xip_dofr.v
+  stim/plrs_xip_qiofr_aborted_bb.v
+  stim/plrs_xip_qiofr_aborted_SHSLviolate.v
+  stim/plrs_xip_qiofr_aborted.v
+  stim/plrs_xip_qiofr.v
+  stim/plrs_xip_qiofr_without_power_loss.v
+  stim/plrs_xip_qofr.v
+  stim/power_up.v
+  stim/program.v
+  stim/Readme.txt
+  stim/read.v
+  stim/status_reg_test.v
+  stim/test_protocol.v
+  stim/test_reg.v
+  stim/XIP_Numonyx.v
+
+top
+  top/ClockGenerator.v
+  top/StimGen_interface.h
+  top/StimTasks.v
+  top/Testbench.v

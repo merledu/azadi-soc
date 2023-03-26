@@ -1,0 +1,273 @@
+session regr {
+  top_dir: $ENV(MY_REGRESSION_AREA_TSMC);
+  output_mode : terminal;
+};
+ 
+group tests {
+  run_script: "$RUN_ENV(MY_WORK_AREA_TSMC)/scripts/my_vm_run_script.sh ";
+  
+  test riscv_arithmetic_basic_test {
+    sv_seed: 4435;
+    count: 1;
+  };
+
+  test riscv_machine_mode_rand_test {
+    sv_seed: 27949;
+    count: 1;
+  };
+
+  test riscv_rand_instr_test {
+    sv_seed: 29335;
+  };
+
+  test riscv_rand_jump_test {
+    sv_seed: 28392;
+    count: 1;
+  };
+
+  test riscv_jump_stress_test {
+    sv_seed: 31194;
+    count: 1;
+  };
+
+  test riscv_loop_test {
+    sv_seed: 28168;
+    count: 1;
+  };
+
+  test riscv_mmu_stress_test {
+    sv_seed: 27237;
+    count: 1;
+  };
+
+  test riscv_mmu_stress_test {
+    sv_seed: 11528;
+    count: 1;
+  };
+
+  test riscv_illegal_instr_test {
+    sv_seed: 19373;
+    count: 1;
+  };
+
+  test riscv_illegal_instr_test {
+    sv_seed: 7421;
+    count: 1;
+  };
+
+  test riscv_hint_instr_test {
+    sv_seed: 20632;
+    count: 1;
+  };
+
+  test riscv_ebreak_test {
+    sv_seed: 407;
+    count: 1;
+  };
+
+  test riscv_debug_basic_test {
+    sv_seed: 647;
+    count: 1;
+  };
+
+  test riscv_debug_stress_test {
+    sv_seed: 28037;
+    count: 1;
+  };
+
+  test riscv_debug_branch_jump_test {
+    sv_seed: 9998;
+    count: 1;
+  };
+
+  test riscv_debug_instr_test {
+    sv_seed: 17495;
+    count: 1;
+  };
+
+  test riscv_debug_wfi_test {
+    sv_seed: 9015;
+    count: 1;
+  };
+
+  test riscv_dret_test {
+    sv_seed: 28414;
+    count: 1;
+  };
+
+  test riscv_debug_ebreak_test {
+    sv_seed: 32047;
+    count: 1;
+  };
+
+  test riscv_debug_ebreakmu_test {
+    sv_seed: 7134;
+    count: 1;
+  };
+
+  test riscv_debug_csr_entry_test {
+    sv_seed: 6844;
+    count: 1;
+  };
+
+  test riscv_irq_in_debug_mode_test {
+    sv_seed: 29070;
+    count: 1;
+  };
+
+  test riscv_debug_in_irq_test {
+    sv_seed: 31934;
+    count: 1;
+  };
+
+  test riscv_single_interrupt_test {
+    sv_seed: 29504;
+    count: 1;
+  };
+
+  test riscv_multiple_interrupt_test {
+    sv_seed: 5938;
+    count: 1;
+  };
+
+  test riscv_nested_interrupt_test {
+    sv_seed: 12454;
+    count: 1;
+  };
+
+  test riscv_nested_interrupt_test {
+    sv_seed: 12996;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: 14962;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: 9327;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: 25505;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: 28143;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: 3434;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: 5224;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: 2225;
+    count: 1;
+  };
+
+  test riscv_interrupt_instr_test {
+    sv_seed: random;
+    count: 5;
+  };
+
+  test riscv_interrupt_wfi_test {
+    sv_seed: 21354;
+    count: 1;
+  };
+
+  test riscv_interrupt_csr_test {
+    sv_seed: 12078;
+    count: 1;
+  };
+
+  test riscv_csr_test {
+    sv_seed: 29535;
+    count: 1;
+  };
+
+  test riscv_unaligned_load_store_test {
+    sv_seed: 19535;
+    count: 1;
+  };
+
+  test riscv_mem_error_test {
+    sv_seed: 28712;
+    count: 1;
+  };
+
+  test riscv_perf_counter_test {
+    sv_seed: 16218;
+    count: 1;
+  };
+
+  test riscv_debug_single_step_test {
+    sv_seed: 17751;
+    count: 1;
+  };
+
+  test riscv_reset_test {
+    sv_seed: 11327;
+    count: 1;
+  };
+
+  test riscv_rv32im_instr_test {
+    sv_seed: 11510;
+    count: 1;
+  };
+
+  test riscv_user_mode_rand_test {
+    sv_seed: 12605;
+    count: 1;
+  };
+
+  test riscv_umode_tw_test {
+    sv_seed: 20220;
+    count: 1;
+  };
+
+  test riscv_invalid_csr_test {
+    sv_seed: 4047;
+    count: 1;
+  };
+
+  test riscv_pmp_basic_test {
+    sv_seed: random;
+    count: 1;
+  };
+
+  test riscv_pmp_disable_all_regions_test {
+    sv_seed: random;
+    count: 1;
+  };
+
+  test riscv_pmp_out_of_bounds_test {
+    sv_seed: random;
+    count: 1;
+  };
+
+  test riscv_pmp_full_random_test {
+    sv_seed: random;
+    count: 1;
+  };
+
+  test riscv_bitmanip_full_test {
+    sv_seed: random;
+    count: 1;
+  };
+
+  test riscv_bitmanip_balanced_test {
+    sv_seed: random;
+    count: 1;
+  };
+
+};

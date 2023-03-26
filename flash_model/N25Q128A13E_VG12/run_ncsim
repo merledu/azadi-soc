@@ -1,0 +1,41 @@
+#!/bin/csh -f
+
+
+set RUNDIR  = ./
+set LIBDIR  = ../flash_model/N25Q128A13E_VG12/include
+set CODEDIR = ../flash_model/N25Q128A13E_VG12/code
+set STIMDIR = ../flash_model/N25Q128A13E_VG12/stim
+set TOPDIR  = ../flash_model/N25Q128A13E_VG12/top
+set SIMDIR  = ../flash_model/N25Q128A13E_VG12/sim
+set HDLPATH = ../flash_model/N25Q128A13E_VG12/hdl.var
+set CDSPATH = ../flash_model/N25Q128A13E_VG12/cds.lib
+#set QSPIFILES = /home/sahmad/xcelium_runs/QSPI_new
+
+
+#if (-e work) then
+#\rm -r work
+#endif
+#mkdir work
+
+
+#CODE
+#xmvlog  -cdslib $CDSPATH -hdlvar $HDLPATH -MESSAGES -NOCOPYRIGHT -LINEDEBUG   $CODEDIR/N25Qxxx.v
+#if ( $status != 0 ) exit 3
+
+#xmvlog -sv -cdslib $CDSPATH -hdlvar $HDLPATH -MESSAGES -NOCOPYRIGHT -LINEDEBUG  -f $QSPIFILES/qspi.flist
+#if ( $status != 0 ) exit 5
+
+
+#cd $SIMDIR
+
+# Elaborate
+#xmelab -cdslib ../$CDSPATH -hdlvar ../$HDLPATH -mess -NOWARN CUDEFB work.qspi_xip_tb -access +r
+#if ( $status != 0 ) exit 6
+
+
+# Simulate
+#xmsim -cdslib ../$CDSPATH -hdlvar ../$HDLPATH work.qspi_xip_tb -gui  $1 &
+#if ( $status != 0 ) exit 7
+
+
+
