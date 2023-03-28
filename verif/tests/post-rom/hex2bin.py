@@ -33,6 +33,3 @@ for n in range(x-1):
   fd_bin.write(hextobin(word) + "\n")
 
 fd_bin.close()
-
-shutil.copy('rom.bin', '../../../arm/post-rom/post_rom_verilog.rcf')
-shutil.copy('rom.bin', '../../../arm/post-rom/post_rom_tmax.rcf')

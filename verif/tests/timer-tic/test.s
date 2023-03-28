@@ -67,3 +67,14 @@ TIMER3:
 	li x12, 0
 	sw x12, 0x1c(x9)
 	j COMPLETE
+
+end:
+  j end
+  nop
+
+.data
+  .section .tohost, "aw",@progbits
+  .align 1
+  .global tohost
+tohost:
+  .word 0

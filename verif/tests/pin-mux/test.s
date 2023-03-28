@@ -74,3 +74,14 @@ start:
   bne x0, x11, loop3
   sw x0,  0x1c(x8)
   sw x0,  0x10(x8) 
+
+end:
+  j end
+  nop
+
+.data
+  .section .tohost, "aw",@progbits
+  .align 1
+  .global tohost
+tohost:
+  .word 0

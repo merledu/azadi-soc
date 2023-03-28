@@ -26,5 +26,17 @@ start:
 pass:
   li x31, 1
 
+  la x9, tohost
+  sw x31, 0(x9)
+
 end:
   j end
+  nop
+
+.data
+  .section .tohost, "aw",@progbits
+  .align 1
+  .global tohost
+tohost:
+  .word 0
+

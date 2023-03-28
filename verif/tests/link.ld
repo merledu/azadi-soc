@@ -30,4 +30,7 @@ SECTIONS
     _ebss = .;
  }>DCCM
 
+. = 0x20001FFC;
+.tohost : { *(.tohost) }
+
 }

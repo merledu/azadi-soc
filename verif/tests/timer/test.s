@@ -57,3 +57,14 @@ LED_ON:
   sw x0, 0x10(x9)
   jal DELAY
   j LED_ON
+
+end:
+  j end
+  nop
+
+.data
+  .section .tohost, "aw",@progbits
+  .align 1
+  .global tohost
+tohost:
+  .word 0
