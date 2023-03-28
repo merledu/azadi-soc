@@ -4,8 +4,6 @@
 //
 // Generic synchronous fifo for use in a variety of devices.
 
-//`include "prim_assert.sv"
-
 module fifo_sync #(
   parameter int unsigned Width       = 16,
   parameter bit Pass                 = 1'b1, // if == 1 allow requests to pass through empty FIFO

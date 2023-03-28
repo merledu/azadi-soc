@@ -4,30 +4,32 @@
 //
 // Designed by: Zeeshan Rafique <zeeshanrafique23@gmail.com>
 
-module rom_top #(
-  parameter ADDR = 8,
-  parameter DW   = 32
+module rom_top 
+import tlul_pkg::tlul_h2d_t;
+import tlul_pkg::tlul_d2h_t;
+#(
+  parameter AW = 8,
+  parameter DW = 32
 )(
-  input logic clk_i,
-  input logic rst_ni,
+  input logic       clk_i,
+  input logic       rst_ni,
 
   // tl-ul insterface
-  input  tlul_pkg::tlul_h2d_t tl_d_i,
-  output tlul_pkg::tlul_d2h_t tl_d_o
+  input  tlul_h2d_t tl_d_i,
+  output tlul_d2h_t tl_d_o
 );
 
-  logic tl_req;
-  logic rvalid; // valid from device
-
+  logic          tl_req;
+  logic          rvalid; // valid from device
   // ROM interface
-  logic            csb;
-  logic [ADDR-1:0] addr;
-  logic [DW-1:0]   rdata;
+  logic          csb;
+  logic [AW-1:0] addr;
+  logic [DW-1:0] rdata;
 
-  assign csb     = ~tl_req;
+  assign csb = ~tl_req;
 
   tlul_sram_adapter #(
-    .SramAw       (ADDR),
+    .SramAw       (AW),
     .SramDw       (DW),
     .Outstanding  (2),
     .ByteAccess   (1),
@@ -57,14 +59,14 @@ module rom_top #(
     end
   end
 
-  // ARM ROM memory Model 1 KB
-    rom #(
-    .Width(DW),
-    .Depth(ADDR)
-    )u_rom(
-    .clk_i	  ( clk_i ),
-    .req_i    (tl_req),
-    .rdata_o	( rdata ),
-    .addr_i	  ( addr  )
+  // ROM memory Model 1 KB
+  rom #(
+    .WIDTH(DW),
+    .DEPTH(AW)
+  ) u_rom(
+    .clk_i	 ( clk_i  ),
+    .req_i   ( tl_req ),
+    .rdata_o ( rdata  ),
+    .addr_i	 ( addr   )
   );
 endmodule

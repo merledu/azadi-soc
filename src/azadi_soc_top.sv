@@ -1,6 +1,8 @@
 // Copyright MERL contributors.
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
+//
+// Designed by: Zeeshan Rafique <zeeshanrafique23@gmail.com>
 
 module azadi_soc_top 
 import ibex_pkg::RV32MFast;
@@ -58,11 +60,13 @@ import ibex_pkg::RegFileFF;
   ////////////////////////////////
   // Local Parameters
   ////////////////////////////////
-  localparam ADDR_WIDTH = 13;
+
+  localparam int unsigned AW = 13;
 
   ////////////////////////////////
   // Memory Initialization
   ////////////////////////////////
+
   `ifdef VERILATOR
     string ROM_BIN;
     initial begin
@@ -78,49 +82,48 @@ import ibex_pkg::RegFileFF;
   // Local Signals
   ////////////////////////////////
 
-
-  // Clock
-  logic sys_clk; // gated system clock
-  logic sys_rst; // sync de-assert system reset
+  // System Clock & Reset
+  logic          sys_clk; // gated system clock
+  logic          sys_rst; // sync de-assert system reset
 
   // Boot address
-  logic [31:0] boot_addr;
-  logic [31:0] boot_reg_val;
+  logic [31:0]   boot_addr;
+  logic [31:0]   boot_reg_val;
 
   // QSPI mux signals
-  logic [3:0]  qspi_oe;
-  logic [3:0]  qspi_sdo;
-  logic        qspi_clk;
-  logic        qspi_csb;
-  logic        intf_sel;
+  logic [3:0]    qspi_oe;
+  logic [3:0]    qspi_sdo;
+  logic          qspi_clk;
+  logic          qspi_csb;
+  logic          intf_sel;
 
   // QSPI write intf signals
-  logic [31:0] qspi_wdata;
-  logic        qspi_we;
+  logic [31:0]   qspi_wdata;
+  logic          qspi_we;
 
   // ICCM controller output signals
-  logic [31:0]           iccm_ctrl_wdata;
-  logic                  iccm_ctrl_we;
-  logic [ADDR_WIDTH-1:0] iccm_ctrl_addr;
-  logic                  iccm_prog_done;
+  logic [31:0]   iccm_ctrl_wdata;
+  logic          iccm_ctrl_we;
+  logic [AW-1:0] iccm_ctrl_addr;
+  logic          iccm_prog_done;
 
   // Instruction sram interface
-  logic                  instr_csb;
-  logic [ADDR_WIDTH-1:0] instr_addr;
-  logic [31:0]           instr_wdata;
-  logic [3:0]            instr_wmask;
-  logic                  instr_we;
-  logic [31:0]           instr_rdata;
+  logic          instr_csb;
+  logic [AW-1:0] instr_addr;
+  logic [31:0]   instr_wdata;
+  logic [3:0]    instr_wmask;
+  logic          instr_we;
+  logic [31:0]   instr_rdata;
 
   // Data sram interface
-  logic                  data_csb;
-  logic [ADDR_WIDTH-1:0] data_addr;
-  logic [31:0]           data_wdata;
-  logic [3:0]            data_wmask;
-  logic                  data_we;
-  logic [31:0]           data_rdata;
-  logic                  reset_req;
-  logic                  boot_sel;
+  logic          data_csb;
+  logic [AW-1:0] data_addr;
+  logic [31:0]   data_wdata;
+  logic [3:0]    data_wmask;
+  logic          data_we;
+  logic [31:0]   data_rdata;
+  logic          reset_req;
+  logic          boot_sel;
 
   // Hosts
   tlul_pkg::tlul_h2d_t ifu_to_xbar;
@@ -235,16 +238,16 @@ import ibex_pkg::RegFileFF;
   };
 
   // Boot address selection. por_ni = 0: ROM; else boot_sel = 1: QSPI, 0: ICCM
- boot_addr_mngr u_boot_addr_mngr (
-    .clk_i          ( sys_clk      ),
-    .por_ni         ( por_ni       ),
+ azadi_boot_mngr u_azadi_boot_mngr (
+    .clk_i          ( sys_clk       ),
+    .por_ni         ( por_ni        ),
     // Management, boot selection and done signal
     .management_i   ( gpio_out_o[0] ),
     .prog_done_i    ( iccm_prog_done),
     .boot_sel_i     ( boot_sel      ),
     // Boot address
-    .boot_addr_o    ( boot_addr    ),
-    .boot_reg_val_o ( boot_reg_val )
+    .boot_addr_o    ( boot_addr     ),
+    .boot_reg_val_o ( boot_reg_val  )
   );
 
   // Mux QSPI interface for programming
@@ -269,8 +272,8 @@ import ibex_pkg::RegFileFF;
   ////////////////////////////////
 
   // Slave SPI controller
-  spi_programmer #(
-    .ADDR_WIDTH( ADDR_WIDTH )
+  azadi_spi_prgmr #(
+    .AW( AW )
   ) u_programmer (
    .clk_i         ( sys_clk         ),
    .por_ni        ( por_ni          ),
@@ -296,25 +299,25 @@ import ibex_pkg::RegFileFF;
 
   // Ibex RV32IMFC core top
   ibex_core_top #(
-    .PMPEnable        ( 0                  ),
-    .PMPGranularity   ( 0                  ),
-    .PMPNumRegions    ( 4                  ),
-    .MHPMCounterNum   ( 0                  ),
-    .MHPMCounterWidth ( 40                 ),
-    .RV32E            ( 10                 ),
-    .RV32M            ( RV32MFast          ),
-    .RV32B            ( RV32BNone          ),
-    .RegFile          ( RegFileFF          ),
-    .BranchTargetALU  ( 1                  ),
-    .WritebackStage   ( 1                  ),
-    .ICache           ( 0                  ),
-    .ICacheECC        ( 0                  ),
-    .BranchPredictor  ( 0                  ),
-    .DbgTriggerEn     ( 1                  ),
-    .DbgHwBreakNum    ( 1                  ),
-    .SecureIbex       ( 0                  ),
-    .DmHaltAddr       ( 0                  ),
-    .DmExceptionAddr  ( 0                  )
+    .PMPEnable        ( 0         ),
+    .PMPGranularity   ( 0         ),
+    .PMPNumRegions    ( 4         ),
+    .MHPMCounterNum   ( 0         ),
+    .MHPMCounterWidth ( 40        ),
+    .RV32E            ( 10        ),
+    .RV32M            ( RV32MFast ),
+    .RV32B            ( RV32BNone ),
+    .RegFile          ( RegFileFF ),
+    .BranchTargetALU  ( 1         ),
+    .WritebackStage   ( 1         ),
+    .ICache           ( 0         ),
+    .ICacheECC        ( 0         ),
+    .BranchPredictor  ( 0         ),
+    .DbgTriggerEn     ( 1         ),
+    .DbgHwBreakNum    ( 1         ),
+    .SecureIbex       ( 0         ),
+    .DmHaltAddr       ( 0         ),
+    .DmExceptionAddr  ( 0         )
   ) u_ibex_core_top (
     .clk_i          ( sys_clk       ),
     .rst_ni         ( sys_rst       ),
@@ -385,13 +388,13 @@ import ibex_pkg::RegFileFF;
   );
 
   // Reset manager
-  clk_rst_mngr u_clk_rst_mngr (
-    .clk_i      ( sys_clk    ),
-    .sys_rst_ni ( rst_ni     ),
+  azadi_rst_mngr u_azadi_rst_mngr (
+    .clk_i      ( sys_clk   ),
+    .sys_rst_ni ( rst_ni    ),
 
-    .rst_req_i  ( reset_req  ),
+    .rst_req_i  ( 1'b0      ),
     // output system reset
-    .reset_o    ( sys_rst    )
+    .reset_o    ( sys_rst   )
   );
 
   prim_clock_gating u_cg_main(
@@ -403,8 +406,8 @@ import ibex_pkg::RegFileFF;
 
   // ROM top wrapper
   rom_top #(
-    .ADDR(8),
-    .DW  (32)
+    .AW ( 8  ),
+    .DW ( 32 )
   ) u_rom_top (
     .clk_i  ( sys_clk     ),
     .rst_ni ( sys_rst     ),
@@ -429,7 +432,9 @@ import ibex_pkg::RegFileFF;
   );
 
   // Instruction memory tlul wrapper
-  instr_mem_top iccm_adapter(
+  instr_mem_top #(
+    .AW (AW)
+  ) iccm_adapter(
     .clk_i           ( sys_clk        ),
     .rst_ni          ( sys_rst        ),
     .tl_i            ( xbar_to_iccm   ),
@@ -448,7 +453,7 @@ import ibex_pkg::RegFileFF;
 
   sram #(
     .DW (32),
-    .AW (ADDR_WIDTH)  
+    .AW (AW)  
   ) u_iccm_mem (
     .clk    ( sys_clk     ),
     .csb    ( instr_csb   ),
@@ -460,7 +465,9 @@ import ibex_pkg::RegFileFF;
   );
 
   // Data memory tlul wrapper
-  data_mem_top dccm_adapter(
+  data_mem_top #(
+    .AW (AW)
+  ) dccm_adapter(
     .clk_i       ( sys_clk      ),
     .rst_ni      ( sys_rst      ),
     .tl_d_i      ( xbar_to_dccm ),
@@ -476,7 +483,7 @@ import ibex_pkg::RegFileFF;
 
   sram #(
     .DW (32),
-    .AW (ADDR_WIDTH)  
+    .AW (AW)  
   ) u_dccm_mem (
     .clk    ( sys_clk     ),
     .csb    ( data_csb    ),

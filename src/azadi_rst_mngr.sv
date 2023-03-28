@@ -4,7 +4,7 @@
 //
 // Designed by: Zeeshan Rafique <zeeshanrafique23@gmail.com>
 
-module clk_rst_mngr (
+module azadi_rst_mngr (
   input  logic clk_i,
   input  logic sys_rst_ni,
 
@@ -44,4 +44,4 @@ module clk_rst_mngr (
     end
   end
   */
-endmodule : clk_rst_mngr
+endmodule : azadi_rst_mngr

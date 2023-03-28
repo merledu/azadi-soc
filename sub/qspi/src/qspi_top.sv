@@ -1,19 +1,25 @@
+// Copyright MERL contributors.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+//
+// Designed by: Sajjad Ahmed <sajjad.ahmed3052@gmail.com>
+
 module qspi_top(
-  input logic clk_i,
-  input logic rst_ni,
-  input logic por_ni,
+  input logic                 clk_i,
+  input logic                 rst_ni,
+  input logic                 por_ni,
 
   input  tlul_pkg::tlul_h2d_t tl_i,
   output tlul_pkg::tlul_d2h_t tl_o,
 
-  input  logic [31:0] wdata_i,
-  input  logic        we_i,
+  input  logic [31:0]         wdata_i,
+  input  logic                we_i,
 
-  input  logic [3:0] qspi_i,
-  output logic [3:0] qspi_o,
-  output logic [3:0] qspi_oe,
-  output logic       qspi_csb,
-  output logic       qspi_clk
+  input  logic [3:0]          qspi_i,
+  output logic [3:0]          qspi_o,
+  output logic [3:0]          qspi_oe,
+  output logic                qspi_csb,
+  output logic                qspi_clk
 );
 
   logic [23:0] addr;
@@ -22,14 +28,14 @@ module qspi_top(
   logic        valid;
   logic        we;
   logic        gnt;
-  
+  logic        trig;  
   logic        gnt_sync;
 
   qspi_xip u_qspi(
     .clk_i    (clk_i),
     .rst_ni   (rst_ni),
     .por_ni   (por_ni),
-    .addr_i   ((addr <<2) ),
+    .addr_i   ((addr <<2)),
     .req_i    (req),
     .rdata_o  (data),
     .rvalid_o (valid),
@@ -66,8 +72,6 @@ module qspi_top(
     .rerror_i  (2'b0)
   );
 
-  logic trig;
-
   always @(posedge clk_i) begin
     if (!rst_ni) begin
       gnt <= 1'b0;
@@ -86,5 +90,4 @@ module qspi_top(
       end
     end
   end
-
 endmodule

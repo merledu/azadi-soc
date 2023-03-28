@@ -5,7 +5,7 @@
 // Designer  : Zeeshan Rafique <zeeshanrafique23@gmail.com>
 // Date,Time : 03/10/2022, 06:50 PM
 
-module azadi_io_pad_top(
+module azadi_chip_top(
   inout wire [53:0] IO_PAD
 );
   logic [53:0] io_in;
@@ -115,4 +115,4 @@ module azadi_io_pad_top(
   /* PULL-DOWN*/ PDDW16SDGZ_G PLL_LOCK  (.I(io_out[52]), .OEN(io_oeb[52]), .REN(io_ren[52]), .PAD(IO_PAD[52]), .C(io_in[52])); // Dedicated PLL-lock
   /* PULL-DOWN*/ PDDW16SDGZ_G P_ON_RST  (.I(io_out[53]), .OEN(io_oeb[53]), .REN(io_ren[53]), .PAD(IO_PAD[53]), .C(io_in[53])); // Dedicated PowerOnReset
 
-endmodule: azadi_io_pad_top
+endmodule: azadi_chip_top

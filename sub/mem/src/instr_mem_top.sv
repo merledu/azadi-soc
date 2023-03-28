@@ -1,25 +1,31 @@
+// Copyright MERL contributors.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+//
+// Designed by: Sajjad Ahmed <sajjad.ahmed3052@gmail.com>
 
-module instr_mem_top
-(
-  input logic clk_i,
-  input logic rst_ni,
+module instr_mem_top #(
+  parameter int unsigned AW = 13
+)(
+  input logic                 clk_i,
+  input logic                 rst_ni,
   
   input  tlul_pkg::tlul_h2d_t tl_i,
   output tlul_pkg::tlul_d2h_t tl_o,
   
   // iccm controller interface 
-  input  [12:0] iccm_ctrl_addr,
-  input  [31:0] iccm_ctrl_wdata,
-  input  logic  iccm_ctrl_we,
-  input  logic  iccm_wsel,
+  input  [AW-1:0]             iccm_ctrl_addr,
+  input  [31:0]               iccm_ctrl_wdata,
+  input  logic                iccm_ctrl_we,
+  input  logic                iccm_wsel,
     
   // sram interface 
-  output  logic        csb,
-  output  logic [12:0] addr_o,
-  output  logic [31:0] wdata_o,
-  output  logic [3:0]  wmask_o,
-  output  logic        we_o,
-  input   logic [31:0] rdata_i
+  output  logic               csb,
+  output  logic [AW-1:0]      addr_o,
+  output  logic [31:0]        wdata_o,
+  output  logic [3:0]         wmask_o,
+  output  logic               we_o,
+  input   logic [31:0]        rdata_i
 );
 
 logic        rvalid;
@@ -51,29 +57,29 @@ assign wmask_o = (iccm_wsel) ? mask_sel : 4'b1111;
   .ErrOnRead    (0)   // 1: Reads not allowed, automatically error  
 
 ) inst_mem (
-  .clk_i     (clk_i),
-  .rst_ni    (rst_ni),
-  .tl_i      (tl_i),
-  .tl_o      (tl_o), 
-  .req_o     (tl_req),
-  .gnt_i     (1'b1),
-  .we_o      (tl_we),
-  .addr_o    (tl_addr),
-  .wdata_o   (tl_wdata),
-  .wmask_o   (tl_wmask),
-  .rdata_i   (rdata_i),
-  .rvalid_i  (rvalid),
-  .rerror_i  (2'b0)
+  .clk_i     ( clk_i    ),
+  .rst_ni    ( rst_ni   ),
+  .tl_i      ( tl_i     ),
+  .tl_o      ( tl_o     ), 
+  .req_o     ( tl_req   ),
+  .gnt_i     ( 1'b1     ),
+  .we_o      ( tl_we    ),
+  .addr_o    ( tl_addr  ),
+  .wdata_o   ( tl_wdata ),
+  .wmask_o   ( tl_wmask ),
+  .rdata_i   ( rdata_i  ),
+  .rvalid_i  ( rvalid   ),
+  .rerror_i  ( 2'b0     )
 );
 
- always_ff @(posedge clk_i or negedge rst_ni) begin
-  if (!rst_ni) begin
-    rvalid <= 1'b0;
-  end else if (iccm_ctrl_we | tl_we) begin
-    rvalid <= 1'b0;
-  end else begin 
-    rvalid <= tl_req;
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      rvalid <= 1'b0;
+    end else if (iccm_ctrl_we | tl_we) begin
+      rvalid <= 1'b0;
+    end else begin 
+      rvalid <= tl_req;
+    end
   end
- end
 
 endmodule

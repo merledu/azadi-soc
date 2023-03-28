@@ -126,9 +126,9 @@ module azadi_pin_top #(
   );
 
   //////////////////////////////////////////////
-  // IO [23:0] are handled in pin_mux module
+  // IO [23:0] are handled in azadi_pin_mux module
   //////////////////////////////////////////////
-  pin_mux #(
+  azadi_pin_mux #(
     // available GPIO pins to mux
     .GPIO   (24),
     // peripherals to mux with GPIO pins

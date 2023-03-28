@@ -5,7 +5,7 @@
 // Designer  : Zeeshan Rafique <zeeshanrafique23@gmail.com>
 // Date,Time : 02/08/2022, 02:00 AM
 
-module pin_mux #(
+module azadi_pin_mux #(
   // available GPIO pins to mux
   parameter int unsigned GPIO   = 24,
   // peripherals to mux with GPIO pins
@@ -149,4 +149,4 @@ module pin_mux #(
 
   end : pin_mux_logic
 
-endmodule : pin_mux
+endmodule : azadi_pin_mux 

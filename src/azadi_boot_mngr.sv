@@ -4,7 +4,7 @@
 //
 // Designed by: Zeeshan Rafique <zeeshanrafique23@gmail.com>
 
-module boot_addr_mngr (
+module azadi_boot_mngr (
   input  logic        clk_i,        // main clock
   input  logic        por_ni,
   // Management, boot selection and done signal
@@ -51,4 +51,4 @@ module boot_addr_mngr (
   assign boot_addr_o = boot_addr_q;
   assign boot_reg_val_o = boot_reg_val_q;
 
-endmodule : boot_addr_mngr
+endmodule : azadi_boot_mngr

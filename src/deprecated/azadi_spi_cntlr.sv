@@ -4,7 +4,7 @@
 //
 // Designed by: Sajjad Ahmed <sajjad.ahmed3052@gmail.com>
 
-module spi_controller_iccm #(
+module azadi_spi_cntlr #(
   parameter ADDR_WIDTH = 13
 )(
   input  logic  clk_i,
@@ -169,5 +169,5 @@ module spi_controller_iccm #(
   assign waddr_o  = waddr_q_dst; // waddr_qs;
   assign wdata_o  = wdata_q_dst; // wdata_swp;
   assign wvalid_o = wvalid_q_dst; // wvalid_qs;
-endmodule : spi_controller_iccm
+endmodule : azadi_spi_cntlr
 // 00 FF FF 00 FF FF FF FF FF FF FF FF

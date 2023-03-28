@@ -22,11 +22,6 @@ module prim_clock_gating (
   assign clk_o = en_latch & clk_i;
 `elsif SKY130
   sky130_fd_sc_hd__dlclkp_1 CG( .CLK(clk_i), .GCLK(clk_o), .GATE(en_i | test_en_i));
-`else
-  logic delay_clk;
-
-  FRICG_X7P5B_A12TL clock_delay( .ECK(delay_clk), .CK(clk_i) );
-  PREICG_X1P4B_A12TL clock_gate(.ECK(clk_o), .CK(delay_clk), .E(en_i), .SE(test_en_i));
 `endif
 
 endmodule

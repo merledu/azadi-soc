@@ -1,16 +1,15 @@
 // Copyright lowRISC contributors.
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
-//
 
 
-module timer_core #(
+module rv_timer_core #(
   parameter int N = 1
 ) (
-  input logic clk_i,
-  input logic rst_ni,
+  input logic        clk_i,
+  input logic        rst_ni,
 
-  input logic       active,
+  input logic        active,
   input logic [11:0] prescaler,
   input logic [ 7:0] step,
 
@@ -46,4 +45,4 @@ module timer_core #(
     assign intr[t] = active & (mtime >= mtimecmp[t]);
   end
 
-endmodule : timer_core
+endmodule : rv_timer_core

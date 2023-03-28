@@ -4,29 +4,29 @@
 //
 // Designed by: Sajjad Ahmed <sajjad.ahmed3052@gmail.com>
 
-module spi_programmer #(
-  parameter ADDR_WIDTH = 13
+module azadi_spi_prgmr #(
+  parameter int unsigned AW = 13
 )(
-  input  logic                  clk_i,
-  input  logic                  por_ni,
+  input  logic          clk_i,
+  input  logic          por_ni,
   // Chip IOs
-  input  logic                  sck_i,
-  input  logic                  sdi_i,
-  input  logic                  csb_i,
+  input  logic          sck_i,
+  input  logic          sdi_i,
+  input  logic          csb_i,
   // Writing interface to ICCM
-  output logic [ADDR_WIDTH-1:0] waddr_o,
-  output logic [31:0]           wdata_o,
-  output logic                  wvalid_o,
-  output logic                  p_done,
+  output logic [AW-1:0] waddr_o,
+  output logic [31:0]   wdata_o,
+  output logic          wvalid_o,
+  output logic          p_done,
   // Writing interface to QSPI module
-  output logic [31:0]           q_wdata_o,
-  output logic                  q_valid_o,
+  output logic [31:0]   q_wdata_o,
+  output logic          q_valid_o,
   // Reset request
-  output logic                  reset_req_o,
+  output logic          reset_req_o,
   // Flash interface mux-sel
-  output logic                  flash_intf_o,
+  output logic          flash_intf_o,
   // Boot selection
-  output logic                  target_mem_o
+  output logic          target_mem_o
 );
 
   typedef enum logic [2:0] {MIDLE, COMMAND, ICCM, FLASH, QSPI_CONFIG} m_state_t;
@@ -42,7 +42,7 @@ module spi_programmer #(
   logic [7:0]            byte_reg;
   logic [3:0]            byte_cnt;
   logic [31:0]           word_reg;
-  logic [ADDR_WIDTH-1:0] iccm_addr;
+  logic [AW-1:0] iccm_addr;
   logic [31:0]           iccm_data;
   logic                  iccm_valid;
   logic                  iccm_prog_done;
@@ -50,7 +50,7 @@ module spi_programmer #(
   logic                  qspi_valid;
   logic                  flash_intf;
   logic                  main_state_init;
-  logic [ADDR_WIDTH-1:0] waddr;
+  logic [AW-1:0]         waddr;
   logic                  reset_req;
   logic                  target_memory;
 
@@ -244,4 +244,4 @@ module spi_programmer #(
       endcase
     end
   end
-endmodule
+endmodule : azadi_spi_prgmr

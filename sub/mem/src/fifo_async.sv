@@ -1,6 +1,8 @@
-
+// Copyright MERL contributors.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+//
 // Generic asynchronous fifo for use in a variety of devices.
-
 
 module fifo_async #(
   parameter  int unsigned Width  = 16,
@@ -202,7 +204,4 @@ module fifo_async #(
     else
       gray2dec = {1'b0,dec_tmp};
   endfunction
-
-
-
 endmodule
