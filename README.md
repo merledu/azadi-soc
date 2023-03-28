@@ -2,6 +2,18 @@
 
 Azadi is an SoC with 32-bit RISC-V CPU (lowrisc/ibex + F ext), ibex is in-order core with a 3-stage pipeline that implements the RV32IMFC instruction set architecture.
 
+## Build SoC
+Clone the repo with `--recursive` flag to clone with the submodule (cvfpu)  
+
+    git clone https://github.com/merledu/azadi-soc.git --recursive
+
+Then, run `make` from verif folder to build the simulation for `basic-test`. To run test other than basic-test simply put `TEST=test_name` after make.
+
+Forexample:  
+  To build `fle.s` test, run 
+
+    make TEST=fle.s
+
 ## SoC Block Diagram
 ![SoC Block Diagram](docs/img/azadi-tsmc.png)
 
