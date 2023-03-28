@@ -3,12 +3,12 @@
 Azadi is an SoC with 32-bit RISC-V CPU (lowrisc/ibex + F ext), ibex is in-order core with a 3-stage pipeline that implements the RV32IMFC instruction set architecture.
 
 ## SoC Block Diagram
-![SoC Block Diagram](docs/azadi-tsmc.png)
+![SoC Block Diagram](docs/img/azadi-tsmc.png)
 
 ## Memory Map
 We are using TileLink-UL bus protocol in Azadi SoC to enable communication of CPU with peripherals. The overview of the internal cross bars are shown in the given picture.  
 
-![xbar-overview](docs/xbar-overview.png)
+![xbar-overview](docs/img/xbar-overview.png)
 
 <details>
 <summary> The memory map table of SoC: </summary>
