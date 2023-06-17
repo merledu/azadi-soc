@@ -25,11 +25,8 @@ module tluh_host_adapter #(
     input logic clk_i,
     input logic rst_ni, // ni stands for negative edge triggered and i stands for input
 // interface with host agent 
-    // TODO --> a_param as input for both arithmetic and logic operation_is
-    // let a_param to be an input of type logic [2:0]
-    // let a_param be the parameter that is used to determine the type of the operation
     input logic [2:0]                   operation_i, // parameter for the operation
-    input bit                           arithmetic_i, // if 1 then it is an arithmetic operation_i if 0 then it is a logic operation_i
+    input bit                           arithmetic_i, // if 1 then it is an arithmetic operation. if 0 then it is a logic operation
     input                               req_i, // request from host agent it is either a read or write request
     output logic                        gnt_o, // grant to host agent this means the adapter is ready to accept a request
     input logic [tluh_pkg::TL_AW-1:0]   addr_i, // address of the request from host agent to be sent to the TL-UL interface so that it can be sent to the target agent
@@ -78,7 +75,7 @@ module tluh_host_adapter #(
 
 
 
-        // this always block is used to assign the value of source_q to source_d
+        // this always block is used to assign the value of source_d to source_q 
         always_ff @(posedge clk_i) begin
             if(!rst_ni) begin
                 source_q <= '0;
@@ -136,8 +133,8 @@ module tluh_host_adapter #(
         a_opcode:   (arithmetic_i) ? tluh_pkg::ArithmeticData :
                     (operation_i != 0 & we_i) ? tluh_pkg::LogicalData :
                     (operation_i != 0) ? tluh_pkg::Intent :
-                    (~we_i & ~operation_i) ? tluh_pkg::Get :   
-                    (&be_i) ? tluh_pkg::PutFullData :  // & is a reduction operator in system verilog which returns 1 if all the bits of the signal be_i are asserted (i.e, 1)
+                    (~we_i & ~operation_i) ? tluh_pkg::Get :
+                    (&be_i) ? tluh_pkg::PutFullData :
                               tluh_pkg::PutPartialData,
 
         a_param:    (arithmetic_i)? tluh_pkg::tluh_a_param_arith'(operation_i) :
