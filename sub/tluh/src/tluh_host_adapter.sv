@@ -54,11 +54,7 @@ module tluh_host_adapter #(
     // as the source refers to the source of the request which is the host agent
     if(MAX_REQS == 1) begin
         assign tl_source = '0;   
-    end 
-    // second case --> if MAX_REQS > 1 then the source is incremented by 1 for every request
-    // as the source here represent the source of the request which is the host agent
-    // when it is incremented by 1 it means that the source of the request is changed to the next host agent 
-    else begin
+    end else begin
         localparam int ReqNumW = $clog2(MAX_REQS);
         logic [ReqNumW-1:0] source_d, source_q; // d stands for destination and q stands for query
 
@@ -101,7 +97,7 @@ module tluh_host_adapter #(
                 if(source_q == MAX_REQS - 1) source_d = '0;
                 else source_d = source_q + 1;
                 //. check if the request is get, arithmetic or logical
-                if(opcode_i == tluh_pkg::Get | operation_i > 0) begin
+                if(tl_h_c_a.a_opcode == tluh_pkg::Get | operation_i > 0) begin
                     counter = counter + 1; // indicating that I have to wait untill all the beats are sent to the host agent before proceeding to the next request
                 end
             end
@@ -127,6 +123,7 @@ module tluh_host_adapter #(
                     counter = counter + 1;
                 end
             end
+        end
         assign tl_source = tluh_pkg::TL_AIW'(source_q); // ' is a casting operator in system verilog which casts the value of source_q to the width of the signal tl_source as tl_source is of type tluh_pkg::TL_AIW and source_q is of type logic [ReqNumW-1:0] so the value of source_q is casted to the width of tl_source
     end
 
@@ -145,7 +142,7 @@ module tluh_host_adapter #(
 
         a_param:    (arithmetic_i)? tluh_pkg::tluh_a_param_arith'(operation_i) :
                     (we_i & operation_i > 0)? tluh_pkg::tluh_a_param_log'(operation_i) :
-                    (~we_i & operation_i > 0) ? tluh_pkg::tluh_a_operation_intent'(operation_i) : '0,
+                    (~we_i & operation_i > 0) ? tluh_pkg::tluh_a_param_intent'(operation_i) : '0,
                     
         a_size:     tluh_pkg::TL_SZW'(WordSize),
         a_mask:     tl_be,
