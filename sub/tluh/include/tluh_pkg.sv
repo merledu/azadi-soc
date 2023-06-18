@@ -4,6 +4,9 @@
 //
 // Modified by MERL, for Azadi SoC
 
+
+
+
 package tluh_pkg;
 
   parameter ArbiterImpl = "PPC"; // the arbiter is the one that decides which master gets to use the bus
@@ -13,10 +16,10 @@ package tluh_pkg;
   endfunction
 
   localparam int TL_AW  = 32; // AW stands for Address Width
-  localparam int TL_DW  = 32; // DW stands for Data Width
+  localparam int TL_DW  = 32; // DW stands for Data Width (it is 32 bits not bytes)
   localparam int TL_AIW = 8; // AIW stands for Address Index Width
   localparam int TL_DIW = 1; // DIW stands for Data Index Width
-  localparam int TL_DBW = (TL_DW>>3); // DBW stands for Data Byte Width  // 4
+  localparam int TL_DBW = (TL_DW>>3); // DBW stands for Data Byte Width  // 4 bytes
   localparam int TL_SZW = $clog2($clog2(TL_DBW)+1); // SZW stands for Size Width //2
 
   // opcodes for channel A messages/operations defined in official TileLink spec
@@ -68,11 +71,11 @@ package tluh_pkg;
     logic                   a_valid;
     tluh_a_m_op             a_opcode;
     logic      [2:0]        a_param;
-    logic      [TL_SZW-1:0] a_size;
+    logic      [TL_SZW-1:0] a_size;  // in terms of log2(bytes). the size of the response message (is 2^a_size bytes) - max to be of value 3 indicating that tha accessed data is of (2^3 = 8) bytes and the channel width is only 32 bits (4 bytes) (in case of burst the number of beats will be 8 / 4 = 2 beats)
     logic      [TL_AIW-1:0] a_source;
     logic      [TL_AW-1:0]  a_address;
     logic      [TL_DBW-1:0] a_mask;
-    logic      [TL_DW-1:0]  a_data;
+    logic      [TL_DW-1:0]  a_data; // 32 bits (4 bytes)
     logic                   d_ready;
   } tluh_h2d_t; // h2d stands for Host to Device
 
