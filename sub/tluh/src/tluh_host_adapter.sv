@@ -195,9 +195,8 @@ module tluh_host_adapter #(
                     
                 end
             end
+            assign tl_source = tluh_pkg::TL_AIW'(source_q); // ' is a casting operator in system verilog which casts the value of source_q to the width of the signal tl_source as tl_source is of type tluh_pkg::TL_AIW and source_q is of type logic [ReqNumW-1:0] so the value of source_q is casted to the width of tl_source
         end
-        assign tl_source = tluh_pkg::TL_AIW'(source_q); // ' is a casting operator in system verilog which casts the value of source_q to the width of the signal tl_source as tl_source is of type tluh_pkg::TL_AIW and source_q is of type logic [ReqNumW-1:0] so the value of source_q is casted to the width of tl_source
-    end
 
 // For TL-UL Get opcode all active bytes must have their mask bit set, so all reads get all tl_be
 // bits set. For writes the supplied be_i is used as the mask.
