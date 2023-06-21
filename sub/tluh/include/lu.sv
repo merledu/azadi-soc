@@ -9,9 +9,9 @@ module logical_unit
     );
 
     // 1: XOR – 2: OR – 3: AND – 4: SWAP
-    assign result = (op == tluh_pkg::XOR) ? a ^ b :
-                    (op == tluh_pkg::OR) ? a | b :
-                    (op == tluh_pkg::AND) ? a & b :
-                    (op == tluh_pkg::SWAP) ? a : 0;
+    assign {cout, result} = (op == tluh_pkg::XOR) ? a ^ b ^ cin :
+                            (op == tluh_pkg::OR) ? a | b | cin :
+                            (op == tluh_pkg::AND) ? a & b & cin :
+                            (op == tluh_pkg::SWAP) ? a : 0;   //. Not sure about this one
    
 endmodule
