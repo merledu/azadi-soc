@@ -1,17 +1,19 @@
 module logical_unit
     (
-        input logic [31:0] a,
-        input logic [31:0] b,
-        input bit cin,
-        input tluh_pkg::tluh_a_param_log op,
-        output logic [31:0] result,
-        output bit cout
+        input bit                          enable_i,
+        input logic [tluh_pkg::TL_DW-1:0]  op1_i,
+        input logic [tluh_pkg::TL_DW-1:0]  op2_i,
+        input bit                          cin_i,
+        input tluh_pkg::tluh_a_param_log   operation_i,
+        output logic [tluh_pkg::TL_DW-1:0] result_o,
+        output bit                         cout_o
     );
 
     // 1: XOR – 2: OR – 3: AND – 4: SWAP
-    assign {cout, result} = (op == tluh_pkg::XOR) ? a ^ b ^ cin :
-                            (op == tluh_pkg::OR) ? a | b | cin :
-                            (op == tluh_pkg::AND) ? a & b & cin :
-                            (op == tluh_pkg::SWAP) ? a : 0;   //. Not sure about this one
+    assign {cout_o, result_o} = (enable_i != 1)                 ? '0 :
+                                (operation_i == tluh_pkg::XOR)  ? op1_i ^ op2_i ^ cin_i :
+                                (operation_i == tluh_pkg::OR)   ? op1_i | op2_i | cin_i :
+                                (operation_i == tluh_pkg::AND)  ? op1_i & op2_i & cin_i :
+                                (operation_i == tluh_pkg::SWAP) ? op1_i : 0;   //. Not sure about this one
    
 endmodule
