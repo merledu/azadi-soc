@@ -23,7 +23,7 @@ module tluh_host_adapter #(
     input logic rst_ni,
 // interface with host agent 
     input logic [tluh_pkg::TL_SZW-1:0]  data_width_i, //. in the form of Log2(DataWidth/8)
-    input logic [2:0]                   operation_i, //. the arithmetic/logical operation to be performed
+    input logic [2:0]                   operation_i, //. the arithmetic/logical/intent operation to be performed
     input bit                           arithmetic_i, //. 1 --> arithmetic operation, 0 --> logical operation
     input                               req_i,
     output logic                        gnt_o,
@@ -101,13 +101,13 @@ module tluh_host_adapter #(
             if(counter == 0) begin //. indicate the beginning of a request
                 
                 //. case 1 --> Get request
-                if(~we_i & ~operation_i) begin
+                if(~we_i & (operation_i == 0)) begin
                     wait_resp = 1;
                     beats_no = $clog2(data_width_i);
                 end
 
                 //. case 2 --> PutFullData or PutPartialData requests
-                else if(we_i & ~operation_i) begin
+                else if(we_i & (operation_i == 0)) begin
                     //. check the number of beats to send
                     if(data_width_i == 3)
                         counter = counter + 1;
@@ -162,9 +162,9 @@ module tluh_host_adapter #(
             //. need to decide whether to put in the buffer or not
 
             //. in case it is a response to the Get or intent request, then no need to buffer the beats
-            //. TO ASK: as it is allowed to receive the response of Get/Intent in the same clock cycle of sending the req, should we buffer them?
+            //. TO ASK: as it is allowed to receive the response to Get/Intent in the same clock cycle of sending the req, should we buffer them?
             if(counter == 0) begin 
-                //. case 1 --> 2nd response beat of burst request....so but it in the buffer
+                //. case 1 --> 2nd response beat of burst request....so put it in the buffer
                 if(read_form_buffer == 1) begin
                     buffer[buffer_index_write] = tl_h_c_d.d_data;
                     buffer_index_read = 0;
@@ -172,12 +172,12 @@ module tluh_host_adapter #(
                 end
                 //. case 2 --> 1st response beat of burst request....no buffering is needed
 
-                //. case 3 --> response beat for non-burst request (Get/Intent).....no buffering is needed
+                //. case 3 --> response beat to non-burst request (Get/Intent).....no buffering is needed
 
                 beats_no -= 1;
             end
 
-            //. case 2 --> in case it is a response form burst request
+            //. case 2 --> in case it is a response to burst request
             //. then buffer it in case it is the same clock cycle of either first or second beat of the request message
             else if(counter == 1) begin  //. same clock cycle as the request
                 buffer[buffer_index_write] = tl_h_c_d.d_data;
@@ -210,7 +210,7 @@ module tluh_host_adapter #(
         a_opcode:   (arithmetic_i) ? tluh_pkg::ArithmeticData :
                     (operation_i != 0 & we_i) ? tluh_pkg::LogicalData :
                     (operation_i != 0) ? tluh_pkg::Intent :
-                    (~we_i & ~operation_i) ? tluh_pkg::Get :
+                    (~we_i & (operation_i == 0)) ? tluh_pkg::Get :
                     (&be_i) ? tluh_pkg::PutFullData :
                               tluh_pkg::PutPartialData,
 
