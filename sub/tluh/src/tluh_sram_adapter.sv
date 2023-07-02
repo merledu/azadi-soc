@@ -23,6 +23,7 @@ module tluh_sram_adapter #(
   output  tluh_pkg::tluh_d2h_t  tl_o,
 
   // SRAM interface
+  output logic [1:0]        intent_o,  //. 0: not intent message, 1: intent to read (PrefetchRead), 2: intent to write (PrefetchWrite),
   output logic              req_o,
   input  logic              gnt_i,
   output logic              we_o,
@@ -179,7 +180,8 @@ module tluh_sram_adapter #(
   assign we_o     = (tl_i.a_valid || op_enable) & logic'(tl_i.a_opcode inside {PutFullData, PutPartialData, ArithmeticData, LogicalData}); //. TODO: || atomic
   assign addr_o   = (tl_i.a_valid) ? tl_i.a_address[DataBitWidth+:SramAw] : //.//. [2+:12] = [13:2] //. I guess we use [] because of aliasing (but this doesn't happen in our case I guess)
                     (burst_enable && beat_no == 1) ? (addr_o + 1) % (2^SramAw) : '0; //. TO ASK: Is this correct?   //. TODO: Burst && atomic
-
+  assign intent_o = (tl_i.a_valid & tl_i.a_opcode == Intent) ? (tl_i.a_param == PrefetchRead) ? 2'h1 : 2'h2 : '0;
+ 
   // Support SRAMs wider than the TL-UH word width by mapping the parts of the
   // TL-UH address which are more fine-granular than the SRAM width to the
   // SRAM write mask.
