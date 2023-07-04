@@ -301,6 +301,8 @@ module tluh_sram_adapter #(
   //. assign op_data2  = tl_i.a_valid ? tl_i.a_data : op_data2;  //. latch the data  TO ASK: is this fine? OR make it synchronous with the clock?
   assign op_data2  = rspfifo_rdata.data;
   assign op_mask   = tl_i.a_valid ? tl_i.a_mask : op_mask;   //. latch the mask  //. TO ASK: should we take it from the sramfifo?
+  assign op_type   = tl_i.a_valid ? (tl_i.a_opcode == ArithmeticData) ? 1'b1 : 1'b0 : op_type;  //. latch the type
+  assign op_function = tl_i.a_valid ? tl_i.a_param : op_function;  //. latch the function
   //. now we have to handle the burst atomic case --> we have to let carry out of the first beat to be carry in of the second beat
   assign op_cin = (op_beat_no == 1) ? op_cout : 1'b0;
   always @ (posedge clk_i) begin
