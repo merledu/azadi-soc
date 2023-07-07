@@ -101,7 +101,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
 
         READ_NEXT_BEAT: begin
           if(d_ack) begin
-            addr_o  = addr_o + RegBw;
+            addr_o  = (addr_o + RegBw) %  (2^RegAw);
             beat_no = beat_no - 1;
             if(beat_no == 0) begin
               get_state <= GET_IDLE;
@@ -147,7 +147,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
         end
         WRITE_NEXT_BEAT: begin
           if(a_ack) begin
-            addr_o      = addr_o + RegBw;
+            addr_o      = (addr_o + RegBw) %  (2^RegAw);
             put_beat_no = put_beat_no - 1;
             if(put_beat_no == 0) begin
               put_state        = PUT_IDLE;
@@ -244,7 +244,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
           if(beats_sent + op_beat_no == total_beats && !wait_next_beat) begin
             wr_req      = 0;
             op_cin      = op_cout;
-            addr_o      = addr_o + RegBw; //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
+            addr_o      = (addr_o + RegBw) %  (2^RegAw); //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
             rd_req      = 1;
             op_data2    = rdata_i;  //. should we take the reading in the same cycle or in the next cycle? I guess in the same cycle cause it is combinational in the top module 
           end
