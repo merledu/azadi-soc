@@ -66,7 +66,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
 
   assign we_o     = wr_req & ~err_internal;
   assign re_o     = rd_req & ~err_internal;
-  assign addr_o   = op_rvalid ? op_addr         : {tl_i.a_address[RegAw-1:2], 2'b00}; // generate always word-align  //. TODO: in case of burst response, it should be changed
+  //assign addr_o   = op_rvalid ? op_addr         : {tl_i.a_address[RegAw-1:2], 2'b00}; // generate always word-align  //. TODO: in case of burst response, it should be changed
   assign wdata_o  = op_rvalid ? op_latch_result : tl_i.a_data;  //. TODO: in case of atomic, it should be op_result
   assign be_o     = op_rvalid ? op_mask         : tl_i.a_mask;
   assign intent_o = (a_ack & (tl_i.a_opcode == Intent)) ? tl_i.a_param : 0;
@@ -88,6 +88,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
       case(get_state)
         GET_IDLE: begin
           if(a_ack && tl_i.a_opcode == Get) begin
+            addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
             rd_req = 1;
 
             if(tl_i.a_size > $log2(TL_DBW)) begin
@@ -100,6 +101,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
 
         READ_NEXT_BEAT: begin
           if(d_ack) begin
+            addr_o  = addr_o + RegBw;
             beat_no = beat_no - 1;
             if(beat_no == 0) begin
               get_state <= GET_IDLE;
@@ -114,7 +116,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
   end
   //. End: Get response
 
-  //. Begin: Put response
+  //. Begin: Put response & Hint response
   typedef enum logic {  //. State machine states
     PUT_IDLE,
     WRITE_NEXT_BEAT       //. read the next beat from the register and wait for the next beat request
@@ -130,22 +132,27 @@ module tluh_adapter_reg import tluh_pkg::*; #(
       case(put_state)
         PUT_IDLE: begin
           if(a_ack && tl_i.a_opcode inside {PutFullData, PutPartialData}) begin
+            addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
             wr_req = 1;
 
             if(tl_i.a_size > $log2(TL_DBW)) begin
-              put_state <= WRITE_NEXT_BEAT;
+              put_state        = WRITE_NEXT_BEAT;
               put_burst_enable = 1;
-              put_beat_no = $log2(tl_i.a_size);
+              put_beat_no      = $log2(tl_i.a_size);
             end
           end
+          //. TO ASK: in case it is hintack --> I don't know where to put it
+          else if (intent_o != 0)
+            addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
         end
         WRITE_NEXT_BEAT: begin
           if(a_ack) begin
+            addr_o      = addr_o + RegBw;
             put_beat_no = put_beat_no - 1;
             if(put_beat_no == 0) begin
-              put_state <= PUT_IDLE;
+              put_state        = PUT_IDLE;
               put_burst_enable = 0;
-              wr_req = 0; 
+              wr_req           = 0; 
             end
           end
         end
@@ -195,7 +202,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
           op_rvalid     = 0;
           if(a_ack && logic'(tl_i.a_opcode inside {ArithmeticData, LogicalData})) begin
             atomic_state = PERFORM_WRITE;
-            op_addr     = {tl_i.a_address[RegAw-1:2], 2'b00};
+            addr_o      = {tl_i.a_address[RegAw-1:2], 2'b00};
             op_mask     = tl_i.a_mask;
             rd_req      = 1;
             op_data1    = tl_i.a_data;
@@ -237,7 +244,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
           if(beats_sent + op_beat_no == total_beats && !wait_next_beat) begin
             wr_req      = 0;
             op_cin      = op_cout;
-            op_addr     = op_addr + RegBw; //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
+            addr_o      = addr_o + RegBw; //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
             rd_req      = 1;
             op_data2    = rdata_i;  //. should we take the reading in the same cycle or in the next cycle? I guess in the same cycle cause it is combinational in the top module 
           end
