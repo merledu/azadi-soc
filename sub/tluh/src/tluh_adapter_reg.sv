@@ -89,24 +89,25 @@ module tluh_adapter_reg import tluh_pkg::*; #(
         GET_IDLE: begin
           if(a_ack && tl_i.a_opcode == Get) begin
             addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
+            wr_req = 0;
             rd_req = 1;
 
             if(tl_i.a_size > $log2(TL_DBW)) begin
-              get_state <= READ_NEXT_BEAT;
+              get_state        = READ_NEXT_BEAT;
               get_burst_enable = 1;
-              beat_no = $log2(tl_i.a_size);
+              beat_no          = $log2(tl_i.a_size);
             end
           end
         end
 
         READ_NEXT_BEAT: begin
           if(d_ack) begin
-            addr_o  = (addr_o + RegBw) %  (2^RegAw);
+            addr_o  = (addr_o + RegBw) % (2^RegAw);
             beat_no = beat_no - 1;
             if(beat_no == 0) begin
-              get_state <= GET_IDLE;
+              get_state        = GET_IDLE;
               get_burst_enable = 0;
-              rd_req = 0;   //. TO ASK: not sure if we have to let it 0 in this cycle or in the prev cycle  --> what if another read request is received in the same cycle?
+              rd_req           = 0;   //. TO ASK: not sure if we have to let it 0 in this cycle or in the prev cycle  --> what if another read request is received in the same cycle?
             end
           end
 
@@ -133,6 +134,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
         PUT_IDLE: begin
           if(a_ack && tl_i.a_opcode inside {PutFullData, PutPartialData}) begin
             addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
+            rd_req = 0;
             wr_req = 1;
 
             if(tl_i.a_size > $log2(TL_DBW)) begin
@@ -142,12 +144,15 @@ module tluh_adapter_reg import tluh_pkg::*; #(
             end
           end
           //. TO ASK: in case it is hintack --> I don't know where to put it
-          else if (intent_o != 0)
+          else if (intent_o != 0) begin
             addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
+            rd_req = 0;
+            wr_req = 0;
+          end
         end
         WRITE_NEXT_BEAT: begin
           if(a_ack) begin
-            addr_o      = (addr_o + RegBw) %  (2^RegAw);
+            addr_o      = (addr_o + RegBw) % (2^RegAw);
             put_beat_no = put_beat_no - 1;
             if(put_beat_no == 0) begin
               put_state        = PUT_IDLE;
@@ -202,17 +207,18 @@ module tluh_adapter_reg import tluh_pkg::*; #(
           op_rvalid     = 0;
           if(a_ack && logic'(tl_i.a_opcode inside {ArithmeticData, LogicalData})) begin
             atomic_state = PERFORM_WRITE;
-            addr_o      = {tl_i.a_address[RegAw-1:2], 2'b00};
-            op_mask     = tl_i.a_mask;
-            rd_req      = 1;
-            op_data1    = tl_i.a_data;
-            op_enable   = 1;
-            op_function = tl_i.a_param;
-            op_type     = ~tl_i.a_opcode[0];
+            addr_o       = {tl_i.a_address[RegAw-1:2], 2'b00};
+            op_mask      = tl_i.a_mask;
+            wr_req       = 0;
+            rd_req       = 1;
+            op_data1     = tl_i.a_data;
+            op_enable    = 1;
+            op_function  = tl_i.a_param;
+            op_type      = ~tl_i.a_opcode[0];
             if(tl_i.a_size > $log2(TL_DBW)) begin
               op_burst_enable = 1;
-              op_beat_no   = $log2(tl_i.a_size);
-              total_beats  = $log2(tl_i.a_size);
+              op_beat_no      = $log2(tl_i.a_size);
+              total_beats     = $log2(tl_i.a_size);
             end
           end
         end
@@ -244,14 +250,14 @@ module tluh_adapter_reg import tluh_pkg::*; #(
           if(beats_sent + op_beat_no == total_beats && !wait_next_beat) begin
             wr_req      = 0;
             op_cin      = op_cout;
-            addr_o      = (addr_o + RegBw) %  (2^RegAw); //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
+            addr_o      = (addr_o + RegBw) % (2^RegAw); //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
             rd_req      = 1;
             op_data2    = rdata_i;  //. should we take the reading in the same cycle or in the next cycle? I guess in the same cycle cause it is combinational in the top module 
           end
 
           //. then make sure the next beat of the request is received
           if(beats_received + op_beat_no == total_beats) begin
-            atomic_state = PERFORM_WRITE;
+            atomic_state   = PERFORM_WRITE;
             wait_next_beat = 0;
           end
           else
@@ -286,7 +292,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       rdata  <= '0;
-      error <= 1'b0;
+      error  <= 1'b0;
     end else if (a_ack) begin
       rdata <= (err_internal) ? '1 : rdata_i;
       error <= error_i | err_internal;
