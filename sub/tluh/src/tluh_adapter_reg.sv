@@ -215,9 +215,9 @@ module tluh_adapter_reg import tluh_pkg::*; #(
             op_enable    = 1;
             op_function  = tl_i.a_param;
             op_type      = ~tl_i.a_opcode[0];
+            op_beat_no   = $log2(tl_i.a_size);
             if(tl_i.a_size > $log2(TL_DBW)) begin
               op_burst_enable = 1;
-              op_beat_no      = $log2(tl_i.a_size);
               total_beats     = $log2(tl_i.a_size);
             end
           end
