@@ -28,6 +28,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
   logic a_ack, d_ack;
 
   logic [RegDw-1:0] rdata;
+  logic [RegDw-1:0] wdata;
   logic             error, err_internal;
 
   logic addr_align_err;     // Size and alignment
@@ -40,11 +41,11 @@ module tluh_adapter_reg import tluh_pkg::*; #(
   logic rd_req, wr_req, intent_req;
 
 
+
   //. Atomic request
   logic [tluh_pkg::TL_DW-1:0]  op_data1;
   logic [tluh_pkg::TL_DW-1:0]  op_data2;
   logic [tluh_pkg::TL_DW-1:0]  op_result;
-  logic [tluh_pkg::TL_DW-1:0]  op_latch_result;
   logic [RegAw-1:0]            op_addr;
   logic [2:0]                  op_function;
   bit                          op_rvalid;  //. result valid
@@ -66,13 +67,14 @@ module tluh_adapter_reg import tluh_pkg::*; #(
 
   assign we_o     = wr_req & ~err_internal;
   assign re_o     = rd_req & ~err_internal;
-  //assign addr_o   = op_rvalid ? op_addr         : {tl_i.a_address[RegAw-1:2], 2'b00}; // generate always word-align  //. TODO: in case of burst response, it should be changed
-  assign wdata_o  = op_rvalid ? op_latch_result : tl_i.a_data;  //. TODO: in case of atomic, it should be op_result
-  assign be_o     = op_rvalid ? op_mask         : tl_i.a_mask;
+ //. assign addr_o   = {tl_i.a_address[RegAw-1:2], 2'b00}; // generate always word-align  //. TODO: in case of burst response, it should be changed
+  assign wdata_o  = op_rvalid ? op_result : wdata;  //. TODO: in case of atomic, it should be op_result
+  //.assign be_o     = op_rvalid ? op_mask   : tl_i.a_mask;
   assign intent_o = (a_ack & (tl_i.a_opcode == Intent)) ? tl_i.a_param : 0;
 
+  assign op_data2 = rd_req ? rdata_i : op_data2;
 
-  //. Begin: Get response
+  //. Get
   typedef enum logic {  //. State machine states
     GET_IDLE,
     READ_NEXT_BEAT       //. read the next beat from the register and wait for the next beat request
@@ -82,42 +84,8 @@ module tluh_adapter_reg import tluh_pkg::*; #(
   bit get_burst_enable = 0;
   int beat_no = 0;  //. TODO: change the type to logic of 2 bits
 
-  always_ff @ (posedge clk_i or negedge rst_ni) begin
-    if(!rst_ni) get_state <= GET_IDLE;
-    else begin
-      case(get_state)
-        GET_IDLE: begin
-          if(a_ack && tl_i.a_opcode == Get) begin
-            addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
-            wr_req = 0;
-            rd_req = 1;
 
-            if(tl_i.a_size > $log2(TL_DBW)) begin
-              get_state        = READ_NEXT_BEAT;
-              get_burst_enable = 1;
-              beat_no          = $log2(tl_i.a_size);
-            end
-          end
-        end
-
-        READ_NEXT_BEAT: begin
-          if(d_ack) begin
-            addr_o  = (addr_o + RegBw) % (2^RegAw);
-            beat_no = beat_no - 1;
-            if(beat_no == 0) begin
-              get_state        = GET_IDLE;
-              get_burst_enable = 0;
-              rd_req           = 0;   //. TO ASK: not sure if we have to let it 0 in this cycle or in the prev cycle  --> what if another read request is received in the same cycle?
-            end
-          end
-
-        end
-      endcase
-    end
-  end
-  //. End: Get response
-
-  //. Begin: Put response & Hint response
+  //. Put
   typedef enum logic {  //. State machine states
     PUT_IDLE,
     WRITE_NEXT_BEAT       //. read the next beat from the register and wait for the next beat request
@@ -125,50 +93,11 @@ module tluh_adapter_reg import tluh_pkg::*; #(
 
   put_state_t put_state;
   bit put_burst_enable = 0;
-  int put_beat_no = 0; 
+  int put_beat_no = 0;  
 
-  always_ff @ (posedge clk_i or negedge rst_ni) begin
-    if(rst_ni) put_state <= PUT_IDLE;
-    else begin
-      case(put_state)
-        PUT_IDLE: begin
-          if(a_ack && tl_i.a_opcode inside {PutFullData, PutPartialData}) begin
-            addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
-            rd_req = 0;
-            wr_req = 1;
-
-            if(tl_i.a_size > $log2(TL_DBW)) begin
-              put_state        = WRITE_NEXT_BEAT;
-              put_burst_enable = 1;
-              put_beat_no      = $log2(tl_i.a_size);
-            end
-          end
-          //. TO ASK: in case it is hintack --> I don't know where to put it
-          else if (intent_o != 0) begin
-            addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
-            rd_req = 0;
-            wr_req = 0;
-          end
-        end
-        WRITE_NEXT_BEAT: begin
-          if(a_ack) begin
-            addr_o      = (addr_o + RegBw) % (2^RegAw);
-            put_beat_no = put_beat_no - 1;
-            if(put_beat_no == 0) begin
-              put_state        = PUT_IDLE;
-              put_burst_enable = 0;
-              wr_req           = 0; 
-            end
-          end
-        end
-      endcase
-    end
-  end
-  //. End: Put response
-
-  //. Begin: Atomic Response
+  //. Atomic
   typedef enum logic [1:0] {  //. State machine states
-    IDLE,
+    ATOMIC_IDLE,
     PERFORM_WRITE,  //. perform the operation and write the result to the register
     NEXT_BEAT       //. read the next beat from the register and wait for the next beat request
   } atomic_state_t;
@@ -178,6 +107,118 @@ module tluh_adapter_reg import tluh_pkg::*; #(
   int beats_sent      = 0;
   int beats_received  = 0;
 
+  
+
+
+  //. Begin: Get response ------------------------------------------------------------------------------------
+  always_ff @ (posedge clk_i or negedge rst_ni) begin
+    if(!rst_ni) get_state <= GET_IDLE;
+    else begin
+      if (d_ack && (get_state == GET_IDLE) && (atomic_state != PERFORM_WRITE)) outstanding = 1'b0;
+      if(get_state != GET_IDLE && beat_no == 0) begin 
+        get_state         = GET_IDLE;
+        get_burst_enable <= 0;
+        //.rd_req           = 0;
+      end
+      case(get_state)
+        GET_IDLE: begin
+          if((a_ack || (~outstanding && tl_i.a_valid)) && tl_i.a_opcode == Get) begin
+            rspop       <= AccessAckData;
+            addr_o      <= {tl_i.a_address[RegAw-1:2], 2'b00};
+            wr_req      <= 0;
+            rd_req      <= 1'b1;
+            outstanding <= 1'b1;  
+            be_o        <= tl_i.a_mask;
+
+            reqid       <= tl_i.a_source;
+            reqsz       <= tl_i.a_size;
+
+            if(tl_i.a_size > $clog2(TL_DBW)) begin
+              get_state        <= READ_NEXT_BEAT;
+              get_burst_enable <= 1'b1;
+              beat_no          <= $clog2(tl_i.a_size) - 1;
+            end
+          end
+        end
+
+        READ_NEXT_BEAT: begin
+          //. make sure the master received the previous beat
+          if(d_ack) begin
+            addr_o  <= (addr_o + RegBw) % (2**RegAw);
+            beat_no <= beat_no - 1;
+          end
+
+        end
+      endcase
+    end
+  end
+  //. End: Get response
+
+
+
+  //. Begin: Put response & Hint response ------------------------------------------------------------------------------------
+  always_ff @ (posedge clk_i or negedge rst_ni) begin
+    if(!rst_ni) put_state <= PUT_IDLE;
+    else begin
+      if(put_state != PUT_IDLE && put_beat_no == 0) begin
+        rspop            <= AccessAck;
+        outstanding      = 1'b1;
+        put_state        = PUT_IDLE;
+        put_burst_enable <= 0;
+        //.wr_req           = 0; 
+      end
+      if (d_ack && (get_state == GET_IDLE) && (atomic_state != PERFORM_WRITE)) begin 
+        outstanding = 1'b0;
+      end
+      case(put_state)
+        PUT_IDLE: begin
+          if((a_ack || (~outstanding && tl_i.a_valid)) && tl_i.a_opcode inside {PutFullData, PutPartialData}) begin            
+            addr_o <= {tl_i.a_address[RegAw-1:2], 2'b00};
+            rd_req <= 0;
+            wr_req <= 1'b1;
+
+            reqid <= tl_i.a_source;
+            reqsz <= tl_i.a_size;
+
+            wdata    <= tl_i.a_data;  
+            be_o     <= tl_i.a_mask;
+            
+
+            if(tl_i.a_size > $clog2(TL_DBW)) begin
+              put_state        <= WRITE_NEXT_BEAT;
+              put_burst_enable <= 1'b1;
+              put_beat_no      <= $clog2(tl_i.a_size) - 1;
+            end
+            else begin
+              rspop       <= AccessAck;
+              outstanding <= 1'b1;
+            end
+          end
+          //. TO ASK: in case it is hintack --> I don't know where to put it
+          else if (intent_o != 0) begin
+            rd_req <= 0;
+            wr_req <= 0;
+            rspop  <= HintAck;
+            addr_o <= {tl_i.a_address[RegAw-1:2], 2'b00};
+          end
+        end
+        WRITE_NEXT_BEAT: begin
+          //. make sure the next beat arrives
+          if(a_ack) begin
+            addr_o      <= (addr_o + RegBw) % (2**RegAw);
+            put_beat_no <= put_beat_no - 1;
+            wdata       <= tl_i.a_data;
+            be_o        <= tl_i.a_mask;
+          end
+        end
+      endcase
+    end
+  end
+  //. End: Put response
+
+
+
+  //. Begin: Atomic Response ------------------------------------------------------------------------------------
   //. beats_sent and beats_received handling (burst response)
   always_ff @ (negedge clk_i or negedge rst_ni) begin
     if(!rst_ni) begin
@@ -200,49 +241,66 @@ module tluh_adapter_reg import tluh_pkg::*; #(
 
   //. Response to atomic request
   always_ff @ (posedge clk_i or negedge rst_ni) begin
-    if(!rst_ni) atomic_state <= IDLE;
+    if(!rst_ni) atomic_state <= ATOMIC_IDLE;
     else begin
+      if (d_ack && (get_state == GET_IDLE) && (atomic_state != PERFORM_WRITE)) outstanding = 1'b0;
+      if(atomic_state != ATOMIC_IDLE && op_beat_no == 0) begin
+        atomic_state     = ATOMIC_IDLE;
+        wait_next_beat  <= 0;
+        op_burst_enable <= 0;
+        op_enable       <= 0;
+        total_beats     <= 0;
+        op_rvalid       <= 0;
+      end
       case(atomic_state)
-        IDLE: begin
-          op_rvalid     = 0;
-          if(a_ack && logic'(tl_i.a_opcode inside {ArithmeticData, LogicalData})) begin
-            atomic_state = PERFORM_WRITE;
-            addr_o       = {tl_i.a_address[RegAw-1:2], 2'b00};
-            op_mask      = tl_i.a_mask;
-            wr_req       = 0;
-            rd_req       = 1;
-            op_data1     = tl_i.a_data;
-            op_enable    = 1;
-            op_function  = tl_i.a_param;
-            op_type      = ~tl_i.a_opcode[0];
-            op_beat_no   = $log2(tl_i.a_size);
-            if(tl_i.a_size > $log2(TL_DBW)) begin
-              op_burst_enable = 1;
-              total_beats     = $log2(tl_i.a_size);
+        ATOMIC_IDLE: begin
+          if((a_ack || (~outstanding && tl_i.a_valid)) && logic'(tl_i.a_opcode inside {ArithmeticData, LogicalData})) begin
+            atomic_state <= PERFORM_WRITE;
+            rspop        <= AccessAckData;
+            addr_o       <= {tl_i.a_address[RegAw-1:2], 2'b00};
+            wr_req       <= 0;
+            rd_req       <= 1'b1;
+            op_data1     <= tl_i.a_data;
+            op_enable    <= 1'b1;
+            op_function  <= tl_i.a_param;
+            op_type      <= ~tl_i.a_opcode[0];
+            op_rvalid    <= 1'b1;
+            op_beat_no   <= $clog2(tl_i.a_size); 
+            be_o         <= tl_i.a_mask;
+
+            reqid        <= tl_i.a_source;
+            reqsz        <= tl_i.a_size;
+
+            
+            if(tl_i.a_size > $clog2(TL_DBW)) begin
+              op_burst_enable <= 1'b1;
+              total_beats     <= $clog2(tl_i.a_size);
             end
           end
         end
 
         PERFORM_WRITE: begin
-          op_data2        = rdata_i;
-          op_latch_result = op_result;
+          rdata           = rdata_i;
           rd_req          = 0;
-          op_rvalid       = 1;
-          wr_req          = 1;
+          wr_req          = 1'b1;
+          outstanding     = 1'b1;
           op_beat_no      = op_beat_no - 1;
           //.op_cin          = op_cout;
 
-          if(op_beat_no == 0) begin
-            atomic_state    = IDLE;
-            op_enable       = 0;
-            op_burst_enable = 0;
-            op_cin          = 0;
-            wr_req          = 0;
-            rd_req          = 0;
-            total_beats     = 0;
-          end
-          else
-            atomic_state = NEXT_BEAT;   
+          if(op_beat_no != 0)
+            atomic_state = NEXT_BEAT;
+
+          // if(op_beat_no == 0) begin
+          //   atomic_state    = ATOMIC_IDLE;
+          //   op_enable       = 0;
+          //   op_burst_enable = 0;
+          //   op_cin          = 0;
+          //   wr_req          = 0;
+          //   rd_req          = 0;
+          //   total_beats     = 0;
+          // end
+          // else
+          //   atomic_state = NEXT_BEAT;   
         end
 
         NEXT_BEAT: begin
@@ -250,9 +308,8 @@ module tluh_adapter_reg import tluh_pkg::*; #(
           if(beats_sent + op_beat_no == total_beats && !wait_next_beat) begin
             wr_req      = 0;
             op_cin      = op_cout;
-            addr_o      = (addr_o + RegBw) % (2^RegAw); //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
-            rd_req      = 1;
-            op_data2    = rdata_i;  //. should we take the reading in the same cycle or in the next cycle? I guess in the same cycle cause it is combinational in the top module 
+            addr_o      = (addr_o + RegBw) % (2**RegAw); //. TO ASK: should we increment it by one or by 4? I guess by 4 because it is word aligned
+            rd_req      = 1'b1;
           end
 
           //. then make sure the next beat of the request is received
@@ -261,7 +318,7 @@ module tluh_adapter_reg import tluh_pkg::*; #(
             wait_next_beat = 0;
           end
           else
-            wait_next_beat = 1;
+            wait_next_beat = 1'b1;
           
         end
       endcase
@@ -271,9 +328,9 @@ module tluh_adapter_reg import tluh_pkg::*; #(
 
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni)                      outstanding <= 1'b0;
-    else if (a_ack)                   outstanding <= 1'b1;
-    else if (d_ack && (beat_no == 0)) outstanding <= 1'b0;  //. changes here
+    if (!rst_ni)                               outstanding <= 1'b0;
+    //.else if (a_ack)                            outstanding <= 1'b1;
+    //.else if (d_ack && (get_state == GET_IDLE) && (atomic_state != PERFORM_WRITE)) outstanding <= 1'b0;  //. changes here
   end
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -281,20 +338,22 @@ module tluh_adapter_reg import tluh_pkg::*; #(
       reqid <= '0;
       reqsz <= '0;
       rspop <= AccessAck;
-    end else if (a_ack) begin
-      reqid <= tl_i.a_source;
-      reqsz <= tl_i.a_size;
-      // Return AccessAckData regardless of error
-      rspop <= (rd_req) ? AccessAckData : (wr_req & ~op_enable) ? AccessAck : HintAck;  //. changes here
-    end
+    end 
+    // else if (a_ack) begin
+    //   reqid <= tl_i.a_source;
+    //   reqsz <= tl_i.a_size;
+    //   // Return AccessAckData regardless of error
+    //   //.rspop <= (rd_req) ? AccessAckData : (wr_req & ~op_enable) ? AccessAck : HintAck;  //. changes here
+    // end
   end
+
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       rdata  <= '0;
       error  <= 1'b0;
     end else if (a_ack) begin
-      rdata <= (err_internal) ? '1 : rdata_i;
+      //. rdata <= (err_internal) ? '1 : rdata_i;
       error <= error_i | err_internal;
     end
   end
@@ -303,18 +362,18 @@ module tluh_adapter_reg import tluh_pkg::*; #(
     a_ready:  ~outstanding,
     d_valid:  outstanding,  //. TODO
     d_opcode: rspop,
-    d_param:  '0,
+    d_param:  tl_i.a_valid ? tl_i.a_param : '0,
     d_size:   reqsz,
     d_source: reqid,
     d_sink:   '0,
-    d_data:   rdata,
+    d_data:   re_o ? rdata_i : tl_o.d_data,  //.rdata,
     d_error: error
   };
 
   ////////////////////
   // Error Handling //
   ////////////////////
-  assign err_internal = addr_align_err | tl_err ;
+  assign err_internal = '0;//.addr_align_err | tl_err ;
 
   // addr_align_err
   //    Raised if addr isn't aligned with the size
@@ -331,10 +390,11 @@ module tluh_adapter_reg import tluh_pkg::*; #(
   end
 
   // tl_err : separate checker
- tlul_err u_err (
-    .tl_i (tl_i),
-    .err_o (tl_err)
-  );
+    assign tl_err = 0;
+//  tlul_err u_err (
+//     .tl_i (tl_i),
+//     .err_o (tl_err)
+//   );
 
   //. ALU 
   ALU 
