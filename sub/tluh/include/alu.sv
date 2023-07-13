@@ -9,12 +9,19 @@ module ALU (
     output bit                         cout_o
   );
 
-  //. according to the operation_i either logical or arithmetic, we will decide which module to enable
+  logic [tluh_pkg::TL_DW-1:0] result_arith;
+  logic [tluh_pkg::TL_DW-1:0] result_logic;
 
+  bit cout_arith, cout_logic;
+
+  //. according to the operation_i either logical or arithmetic, we will decide which module to enable
   bit enable_arithmetic, enable_logical;
 
   assign enable_arithmetic = (enable_i && operation_i) ? 1'b1 : 1'b0;
   assign enable_logical    = (enable_i && ~operation_i) ? 1'b1 : 1'b0;
+
+  assign result_o = enable_arithmetic ? result_arith : result_logic;
+  assign cout_o   = enable_arithmetic ? cout_arith   : cout_logic;
 
   arithmetic_unit
     arithmetic_unit_dut (
@@ -23,8 +30,8 @@ module ALU (
       .op2_i       (op2_i),
       .cin_i       (cin_i),
       .operation_i (function_i),
-      .result_o    (result_o),
-      .cout_o      (cout_o)
+      .result_o    (result_arith),
+      .cout_o      (cout_arith)
     );
 
   logical_unit
@@ -34,8 +41,8 @@ module ALU (
       .op2_i       (op2_i),
       .cin_i       (cin_i),
       .operation_i (function_i),
-      .result_o    (result_o),
-      .cout_o      (cout_o)
+      .result_o    (result_logic),
+      .cout_o      (cout_logic)
     );
 
 
