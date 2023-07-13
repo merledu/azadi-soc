@@ -7,7 +7,7 @@ module arithmetic_unit
         input logic [tluh_pkg::TL_DW-1:0]  op1_i,
         input logic [tluh_pkg::TL_DW-1:0]  op2_i,
         input bit                          cin_i, //. carry in
-        input tluh_pkg::tluh_a_param_arith operation_i,
+        input logic [2:0]                  operation_i,
         output logic [tluh_pkg::TL_DW-1:0] result_o,
         output bit                         cout_o //. carry out
     );
@@ -17,10 +17,10 @@ module arithmetic_unit
     always_comb begin : perform_operation
         if(enable_i) begin
             case (operation_i)
-                tluh_pkg::MIN: result_o  = $signedmin(op1_i, op2_i);
-                tluh_pkg::MAX: result_o  = $signedmax(op1_i, op2_i);
-                tluh_pkg::MINU: result_o = $unsignedmin(op1_i, op2_i);
-                tluh_pkg::MAXU: result_o = $unsignedmax(op1_i, op2_i);
+                tluh_pkg::MIN: result_o  = $signed(op1_i) < $signed(op2_i) ? op1_i : op2_i;
+                tluh_pkg::MAX: result_o  = $signed(op1_i) > $signed(op2_i) ? op1_i : op2_i;
+                tluh_pkg::MINU: result_o = $unsigned(op1_i) < $unsigned(op2_i) ? op1_i : op2_i;
+                tluh_pkg::MAXU: result_o = $unsigned(op1_i) > $unsigned(op2_i) ? op1_i : op2_i;
                 tluh_pkg::ADD: begin 
                     {cout_o, result_o} = op1_i + op2_i + cin_i;
                 end
