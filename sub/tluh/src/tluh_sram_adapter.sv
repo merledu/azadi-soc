@@ -179,7 +179,7 @@ module tluh_sram_adapter #(
   assign req_o    = ((tl_i.a_valid & reqfifo_wready) || burst_enable) & ~error_internal;  //. TO ASK: why don't we generate a req in case it is a read request? Does write here refer to write data or write any request?
   assign we_o     = (tl_i.a_valid || op_enable) & logic'(tl_i.a_opcode inside {PutFullData, PutPartialData, ArithmeticData, LogicalData}); //. TODO: || atomic
   assign addr_o   = (tl_i.a_valid) ? tl_i.a_address[DataBitWidth+:SramAw] : //.//. [2+:12] = [13:2] //. I guess we use [] because of aliasing (but this doesn't happen in our case I guess)
-                    (burst_enable && beat_no == 1) ? (addr_o + 1) % (2^SramAw) : '0; //. TO ASK: Is this correct?   //. TODO: Burst && atomic
+                    (burst_enable && beat_no == 1) ? (addr_o + 4) % (2**SramAw) : '0; //. TO ASK: Is this correct?   //. TODO: Burst && atomic
   assign intent_o = (tl_i.a_valid & tl_i.a_opcode == Intent) ? (tl_i.a_param == PrefetchRead) ? 2'h1 : 2'h2 : '0;
  
   // Support SRAMs wider than the TL-UH word width by mapping the parts of the
