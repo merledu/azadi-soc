@@ -3,13 +3,13 @@ module arithmetic_unit
         //. TO ASK: what if the operation is done on 64 bits? should we perform the operatoin in 2 steps?
         //. So, we have to out the carry out of the first operation and use it as carry in for the second operation?
         //. Or we can simply use the 64 bits operators?
-        input bit                          enable_i,
+        input logic                        enable_i,
         input logic [tluh_pkg::TL_DW-1:0]  op1_i,
         input logic [tluh_pkg::TL_DW-1:0]  op2_i,
-        input bit                          cin_i, //. carry in
+        input logic                        cin_i, //. carry in
         input logic [2:0]                  operation_i,
         output logic [tluh_pkg::TL_DW-1:0] result_o,
-        output bit                         cout_o //. carry out
+        output logic                       cout_o //. carry out
     );
 
     //. 1: min, 2: max, 3: minu, 4: maxu, 5: add
