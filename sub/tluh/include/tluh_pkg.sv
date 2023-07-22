@@ -21,13 +21,15 @@ package tluh_pkg;
   localparam int TL_DIW = 1; // DIW stands for Data Index Width
   localparam int TL_DBW = (TL_DW>>3); // DBW stands for Data Byte Width  // 4 bytes
   localparam int TL_SZW = $clog2($clog2(TL_DBW)+1); // SZW stands for Size Width //2
+  localparam int TL_BEATSMAX = (2**(2**TL_SZW - 1)) / TL_DBW;
+  localparam int TL_BEATSMAXW = $bits(TL_BEATSMAX);
 
   // opcodes for channel A messages/operations defined in official TileLink spec
   typedef enum logic [2:0] {
     PutFullData     = 3'h0,
     PutPartialData  = 3'h1,
     Get             = 3'h4, 
-    // additional opcodes for TL-UL interface
+    // additional opcodes for TL-UH interface
     ArithmeticData  = 3'h2,
     LogicalData     = 3'h3,
     Intent          = 3'h5
@@ -38,7 +40,7 @@ package tluh_pkg;
   typedef enum logic [2:0] {
     AccessAck     = 3'h0,
     AccessAckData = 3'h1,
-    // additional opcodes for TL-UL interface
+    // additional opcodes for TL-UH interface
     HintAck       = 3'h2
   } tluh_d_m_op;  // d_m_op stands for data master operation
 
@@ -46,25 +48,25 @@ package tluh_pkg;
   // we will need 2 enums one for arithmetic and one for logical
   // let's begin by the enum of arithmetic operations --> MIN – MAX – MINU – MAXU – ADD
   typedef enum logic [2:0] {
-    MIN  = 3'h1,
-    MAX  = 3'h2,
-    MINU = 3'h3,
-    MAXU = 3'h4,
-    ADD  = 3'h5
+    MIN  = 3'h0,
+    MAX  = 3'h1,
+    MINU = 3'h2,
+    MAXU = 3'h3,
+    ADD  = 3'h4
   } tluh_a_param_arith;
 
   // now let's make the enum for logical operations --> XOR – OR – AND – SWAP
   typedef enum logic [2:0] {
-    XOR  = 3'h1,
-    OR   = 3'h2,
-    AND  = 3'h3,
-    SWAP = 3'h4
+    XOR  = 3'h0,
+    OR   = 3'h1,
+    AND  = 3'h2,
+    SWAP = 3'h3
   } tluh_a_param_log;
 
   // make enum for the a_param in case of intent --> PrefetchRead - PrefetchWrite
   typedef enum logic [2:0] {
-    PrefetchRead  = 3'h1,
-    PrefetchWrite = 3'h2
+    PrefetchRead  = 3'h0,
+    PrefetchWrite = 3'h1
   } tluh_a_param_intent;
 
   typedef struct packed {
