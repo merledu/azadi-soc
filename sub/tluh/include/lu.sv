@@ -1,12 +1,12 @@
 module logical_unit
     (
-        input bit                          enable_i,
+        input logic                        enable_i,
         input logic [tluh_pkg::TL_DW-1:0]  op1_i,
         input logic [tluh_pkg::TL_DW-1:0]  op2_i,
-        input bit                          cin_i,  //. TO ASK: I think no need for cin in logical operations
+        input logic                        cin_i,  //. TO ASK: I think no need for cin in logical operations
         input logic [2:0]                  operation_i,
         output logic [tluh_pkg::TL_DW-1:0] result_o,
-        output bit                         cout_o
+        output logic                       cout_o
     );
 
     // 1: XOR – 2: OR – 3: AND – 4: SWAP
