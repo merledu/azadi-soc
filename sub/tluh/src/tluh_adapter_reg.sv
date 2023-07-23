@@ -106,7 +106,7 @@
 
   //. Atomic signals
   assign op_data1    = a_ack ? tl_i.a_data       : op_data1;
-  //.assign op_data2    = rdata_i;
+  assign op_data2    = rdata;
   assign op_type     = a_ack ? ~tl_i.a_opcode[0] : op_type;
   assign op_function = a_ack ? tl_i.a_param      : op_function;
 
@@ -117,7 +117,7 @@
     if (!rst_ni) begin
       burst        <= 1'b0;
       rdata        <= '0;
-      op_data2     <= '0;
+      //.op_data2     <= '0;
       outstanding  <= 1'b0;
       get_state    <= GET_IDLE;
       put_state    <= PUT_IDLE;
@@ -210,7 +210,7 @@
         case(atomic_state)
           ATOMIC_IDLE: begin
             rdata        <= rdata_i;
-            op_data2     <= rdata_i;
+            //.op_data2     <= rdata_i;
             outstanding  <= 1'b1;
             op_cin       <= 1'b0;
             op_enable    <= 1'b1;
@@ -249,7 +249,7 @@
           NEXT_BEAT: begin
             if(a_ack) begin
               rdata        <= rdata_i;
-              op_data2     <= rdata_i;
+              //.op_data2     <= rdata_i;
               outstanding  <= 1'b1;
               atomic_state <= PERFORM_WRITE;
               beats_cnt    <= beats_cnt - 1;
