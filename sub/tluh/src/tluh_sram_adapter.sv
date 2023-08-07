@@ -93,7 +93,7 @@ module tluh_sram_adapter #(
 
   //. Burst response
   logic burst_enable;
-  int   beat_no = 0;  //. TODO: change the type to logic of 2 bits
+  int   beats_cnt = 0;  //. TODO: change the type to logic of 2 bits
 
   //. Atomic request
   logic [tluh_pkg::TL_DW-1:0]  op_data1;
@@ -105,7 +105,7 @@ module tluh_sram_adapter #(
   bit                          op_type;   //. 1: arithmetic, 0: logical
   bit                          op_enable;
   logic [tluh_pkg::TL_DBW-1:0] op_mask;
-  int                          op_beat_no = 0;
+  int                          op_beats_cnt = 0;
 
   logic error_internal; // Internal protocol error checker
   logic wr_attr_error;
@@ -163,7 +163,7 @@ module tluh_sram_adapter #(
       d_source : (d_valid) ? reqfifo_rdata.source : '0,
       d_sink   : 1'b0,
       d_data   : (d_valid && rspfifo_rvalid && (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic))
-                 ? rspfifo_rdata.data : '0,  //. in case of atomic operatoin we reteru the extant data value
+                 ? rspfifo_rdata.data : '0,  //. in case of atomic operatoin we return the extant data value
       d_error  : d_valid && d_error,
 
       a_ready  : (gnt_i | error_internal) & reqfifo_wready & sramreqfifo_wready  //. TO ASK: why do we need error_internal here?
@@ -179,7 +179,7 @@ module tluh_sram_adapter #(
   assign req_o    = ((tl_i.a_valid & reqfifo_wready) || burst_enable) & ~error_internal;  //. TO ASK: why don't we generate a req in case it is a read request? Does write here refer to write data or write any request?
   assign we_o     = (tl_i.a_valid || op_enable) & logic'(tl_i.a_opcode inside {PutFullData, PutPartialData, ArithmeticData, LogicalData}); //. TODO: || atomic
   assign addr_o   = (tl_i.a_valid) ? tl_i.a_address[DataBitWidth+:SramAw] : //.//. [2+:12] = [13:2] //. I guess we use [] because of aliasing (but this doesn't happen in our case I guess)
-                    (burst_enable && beat_no == 1) ? (addr_o + 4) % (2**SramAw) : '0; //. TO ASK: Is this correct?   //. TODO: Burst && atomic
+                    (burst_enable && beats_cnt == 1) ? (addr_o + 4) % (2**SramAw) : '0; //. TO ASK: Is this correct?   //. TODO: Burst && atomic
   assign intent_o = (tl_i.a_valid & tl_i.a_opcode == Intent) ? (tl_i.a_param == PrefetchRead) ? 2'h1 : 2'h2 : '0;
  
   // Support SRAMs wider than the TL-UH word width by mapping the parts of the
@@ -256,7 +256,7 @@ module tluh_sram_adapter #(
     size:   tl_i.a_size,
     source: tl_i.a_source
   }; // Store the request only. Doesn't have to store data //. this means if the req contians datapayload to be written in the SRAK, so no need to store it, just send it directly to the SRAM   //. cause it is already in SRAM (Important) Wrong
-  assign reqfifo_rready = (((beat_no == 2) && (reqfifo_rdata.size == 3) && ((reqfifo_rdata.op == OpAtomic) || (reqfifo_rdata.op == OpRead))) || (reqfifo_rdata.size < 3))  && d_ack;  //. (beat_no == 0) ? d_ack : 1'b0; //. Pop from FIFO only when granted (after sending all beats)  //. changed here ;
+  assign reqfifo_rready = (((beats_cnt == 2) && (reqfifo_rdata.size == 3) && ((reqfifo_rdata.op == OpAtomic) || (reqfifo_rdata.op == OpRead))) || (reqfifo_rdata.size < 3))  && d_ack;  //. (beats_cnt == 0) ? d_ack : 1'b0; //. Pop from FIFO only when granted (after sending all beats)  //. changed here ;
 
   // push together with ReqFIFO, pop upon returning read
   assign sramreqfifo_wdata = '{
@@ -292,7 +292,7 @@ module tluh_sram_adapter #(
     error: rerror_i[1] // Only care for Uncorrectable error
   };
   assign rspfifo_rready = ((reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic) & ~reqfifo_rdata.error)
-                        ? (reqfifo_rready || (beat_no == 1)) : 1'b0 ;  //. no need to put || beat_no == 2 as if so then reqfifo_rready will be 1
+                        ? (reqfifo_rready || (beats_cnt == 1)) : 1'b0 ;  //. no need to put || beats_cnt == 2 as if so then reqfifo_rready will be 1
 
 
   //. Begin: In case of atomic request
@@ -306,14 +306,14 @@ module tluh_sram_adapter #(
   assign op_type   = tl_i.a_valid ? (tl_i.a_opcode == ArithmeticData) ? 1'b1 : 1'b0 : op_type;  //. latch the type
   assign op_function = tl_i.a_valid ? tl_i.a_param : op_function;  //. latch the function
   //. now we have to handle the burst atomic case --> we have to let carry out of the first beat to be carry in of the second beat
-  assign op_cin = (op_beat_no == 1) ? op_cout : 1'b0;
+  assign op_cin = (op_beats_cnt == 1) ? op_cout : 1'b0;
   always @ (posedge clk_i) begin
-    if(op_beat_no == 2)
-      op_beat_no <= 0;
+    if(op_beats_cnt == 2)
+      op_beats_cnt <= 0;
     if(reqfifo_rvalid && reqfifo_rdata.size == 3 && (reqfifo_rdata.op == OpAtomic)) begin
       //. check if the response is stored in the FIFO
       if(rspfifo_wready && rspfifo_wvalid) begin  //. instead of cheking the Sram_ack
-        op_beat_no <= op_beat_no + 1;
+        op_beats_cnt <= op_beats_cnt + 1;
       end
     end
   end
@@ -321,7 +321,7 @@ module tluh_sram_adapter #(
 
 
   //. Begin: In case of burst response
-  //. assign burst_enable = (reqfifo_rvalid && reqfifo_rdata.size == 3 && beat_no < 2) ? 1'b1 : 1'b0;
+  //. assign burst_enable = (reqfifo_rvalid && reqfifo_rdata.size == 3 && beats_cnt < 2) ? 1'b1 : 1'b0;
 
   //. burst_enable Handling
   //. TO ASK: I think it should be combinational, right?
@@ -329,20 +329,20 @@ module tluh_sram_adapter #(
     if(reqfifo_rvalid && reqfifo_rdata.size == 3 && ((reqfifo_rdata.op == OpAtomic) || (reqfifo_rdata.op == OpRead))) begin
       burst_enable = 1'b1;
     end
-    if(beat_no == 2) begin
+    if(beats_cnt == 2) begin
       burst_enable = 1'b0;
     end
   end
   
-  //. beat_no Handling  
+  //. beats_cnt Handling  
   //. TO ASK: I think it should be synchronized with the clock, right?
   always @ (posedge clk_i) begin
-    if(beat_no == 2)
-      beat_no <= 0;
+    if(beats_cnt == 2)
+      beats_cnt <= 0;
     if(burst_enable) begin
       //. check if the response is stored in the FIFO
       if(rspfifo_wready && rspfifo_wvalid) begin  //. instead of cheking the Sram_ack
-        beat_no <= beat_no + 1;
+        beats_cnt <= beats_cnt + 1;
       end
     end
   end
