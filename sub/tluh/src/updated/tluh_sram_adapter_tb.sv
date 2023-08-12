@@ -17,7 +17,7 @@ tluh_d2h_t tl_o;
 
 logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o; //. intention blocks
 logic [1:0]        intent_o;  //. intent operation (prefetchRead, prefetchWrite)
-logic              ie_o; //. intent enable
+logic              intent_en_o; //. intent enable
 logic              req_o;
 logic              gnt_i;
 logic              we_o;
@@ -158,7 +158,7 @@ tluh_sram_adapter
     .tl_o(tl_o),
     .intention_blocks_o(intention_blocks_o),
     .intent_o(intent_o),
-    .ie_o(ie_o),
+    .intent_en_o(intent_en_o),
     .req_o(req_o),
     .gnt_i(gnt_i),
     .we_o(we_o),
@@ -205,7 +205,7 @@ function void validate
       $display("Error: d_opcode should be %d but it is %d", opcode.name(), tl_o.d_opcode.name());
     end
     if (tl_o.d_size != tl_i.a_size) begin
-      $display("Error: d_size should be 2");
+      $display("Error: d_size should be %d but it is %d", tl_i.a_size, tl_o.d_size);
     end
     if (tl_o.d_source != tl_i.a_source) begin
       $display("Error: d_source should be 0");
@@ -233,6 +233,11 @@ task wait_response();
     end
   end
 endtask
+
+initial begin
+  wait(clk_cnt == 4)
+  tl_i.a_valid = 1'b0;
+end
 
 //. responses
 initial begin
@@ -265,21 +270,110 @@ initial begin
   validate(AccessAckData, data_array[0]);
 //.
 
+  //. TO ASK
+  // tl_i.a_valid = 0;
+  // #10
 
 //. test burst read request
   $display("Burst Read Test -----------------------------------------------------");
+  tl_i.a_valid = 1'b1;
   tl_i.a_size = 'h3;
   tl_i.a_address = 'h4;
   wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
   $display("Sending  : clk_cnt = %d", clk_cnt);
   wait_response();
+  tl_i.a_valid = 1'b0;
   $display("-------first beat--------");
   validate(AccessAckData, data_array[1]);
-  #10
+  //.tl_i.a_valid = 1'b0;
+  //#20
   wait(clk_i == 1'b1);
   wait_response();
   $display("-------second beat-------");
   validate(AccessAckData, data_array[2]);
+//.
+
+
+
+//. Write Test --------------------------------------------------------------
+//. test the non-burst write request
+  $display("Non-burst Write Test -------------------------------------------------");  
+  tl_i.a_size = 'h2;
+  tl_i.d_ready = 1'b0;  //. TO ASK
+  tl_i.a_valid = 1'b1;
+  tl_i.a_opcode = PutFullData;
+  tl_i.a_data = 32'd55;
+  tl_i.a_address = 'h0;
+  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  tl_i.a_valid = 1'b0;
+  $display("Sending  : clk_cnt = %d", clk_cnt);
+  wait(req_o == 1'b1 && we_o == 1'b1);
+  if(wdata_o != 32'd55) begin
+    $display("Error: wdata_o should be 32'd55 but it is %d", wdata_o);
+  end
+  else begin
+    $display("Success: wdata_o = %d", wdata_o);
+  end
+  tl_i.d_ready = 1'b1;
+  wait_response();
+  validate(AccessAck, '0, 1'b1);
+
+//.
+
+#10
+//. test the burst write request
+  $display("Burst Write Test -----------------------------------------------------");
+  tl_i.a_valid = 1'b1;
+  tl_i.a_opcode = PutFullData;
+  tl_i.a_size = 'h3;
+  tl_i.a_data = 32'd66;
+  //. send the first beat
+  //wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
+  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  $display("Sending  : clk_cnt = %d", clk_cnt);
+  $display("-------first beat--------");
+  tl_i.a_valid = 1'b0;
+  while(~(req_o == 1 && we_o == 1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  if(wdata_o != 32'd66) begin
+    $display("Error: wdata_o should be 32'd66 but it is %d", wdata_o);
+  end
+  else begin
+    $display("Success: wdata_o = %d", wdata_o);
+  end
+  wait_response();
+  validate(AccessAck, '0, 1'b1);
+  //. send the second beeat
+  wait(clk_i == 1'b0);
+  wait(clk_i == 1'b1);
+  tl_i.a_data = 32'd77;
+  tl_i.a_valid = 1'b1;
+  while(tl_o.a_ready != 1'b1) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  $display("Sending  : clk_cnt = %d", clk_cnt);
+  $display("-------second beat--------");
+  
+  while(~(req_o == 1 && we_o == 1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  tl_i.a_valid = 1'b0;
+  if(wdata_o != 32'd77) begin
+    $display("Error: wdata_o should be 32'd77 but it is %d", wdata_o);
+  end
+  else begin
+    $display("Success: wdata_o = %d", wdata_o);
+  end
 //.
 
 

@@ -23,7 +23,7 @@
   // SRAM interface
   output logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o, //. intention blocks
   output logic [1:0]        intent_o,  //. intent operation (prefetchRead, prefetchWrite)
-  output logic              ie_o, //. intent enable
+  output logic              intent_en_o, //. intent enable
   output logic              req_o,
   input  logic              gnt_i,
   output logic              we_o,
@@ -87,7 +87,20 @@
   logic rspfifo_rvalid, rspfifo_rready;
   rsp_t rspfifo_wdata,  rspfifo_rdata;
 
-  logic rspfifo_ack, rspfifo_full, rspfifo_depth;
+  logic [WidthMult-1:0][tluh_pkg::TL_DW-1:0] rdata;
+  logic [WidthMult-1:0][tluh_pkg::TL_DW-1:0] rmask;
+  //logic [SramDw-1:0] rmask;
+  logic [tluh_pkg::TL_DW-1:0] rdata_tlword;
+
+  localparam int RspFIFODepthW = vbits((Outstanding * TL_BEATSMAX)+1);
+  logic [RspFIFODepthW-1:0] rspfifo_depth;
+  logic [Outstanding-1:0] reqfifo_depth;
+
+  logic rspfifo_ack, rspfifo_full;
+
+  logic already_ack; // Burst already acknowledged - in case of burst put request, to make sure that the only one ack is sent for the whole burst
+
+  logic rd_req, wr_req, atomic_req, intent_req;
 
   logic error_internal; // Internal protocol error checker
   logic wr_attr_error;
@@ -119,11 +132,14 @@
   } atomic_state_t;
   atomic_state_t atomic_state;
 
+  logic remove_req; //. remove the request from the reqfifo
+
   //. Burst responses
   logic burst;
   logic wait_till_sending_current, wait_till_pushing_last;
   logic [tluh_pkg::TL_BEATSMAXW-1:0] beats_to_push;
   logic [tluh_pkg::TL_BEATSMAXW-1:0] beats_to_send;
+  logic [tluh_pkg::TL_BEATSMAXW-1:0] beats_cnt;
 
   logic a_ack, d_ack, sram_ack;
   assign a_ack    = tl_i.a_valid & tl_o.a_ready ;
@@ -133,22 +149,59 @@
   // Valid handling
   logic d_valid, d_error;
   always_comb begin
-    d_valid = 1'b0;
+    wr_req     = (reqfifo_rdata.op == OpWrite && (reqfifo_rvalid)) || (a_ack && (tl_i.a_opcode == PutFullData || tl_i.a_opcode == PutPartialData)); 
+    rd_req     = ((reqfifo_rdata.op == OpRead) && (reqfifo_rvalid || reqfifo_wvalid)) || (a_ack && (tl_i.a_opcode == Get)); 
+    atomic_req = reqfifo_rdata.op == OpAtomic;
+    
+    // d_valid = 1'b0;
 
-    if (reqfifo_rvalid) begin
-      if (reqfifo_rdata.error) begin
-        // Return error response. Assume no request went out to SRAM
-        d_valid = 1'b1;
-      end else if (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic) begin
-        d_valid = rspfifo_rvalid;
-      end else begin
-        // Write without error
-        d_valid = 1'b1;
-      end
+
+    // if (reqfifo_rvalid && reqfifo_rdata.error) begin
+    //   // Return error response. Assume no request went out to SRAM
+    //   d_valid = 1'b1;
+    // end 
+    // else if (rd_req || atomic_req) begin
+    //   if(rspfifo_depth == 0)
+    //     d_valid = rvalid_i;
+    //   else
+    //     d_valid = rspfifo_rvalid;
+    // end
+    // else if (wr_req) begin
+    //   d_valid = ~already_ack;
+    //   // if(burst) begin
+    //   //   d_valid = ~already_ack;
+    //   // end else
+    //   //   d_valid = ~already_ack;
+    // end
+
+  end
+
+  always_ff @(posedge clk_i) begin
+    if (~rst_ni) begin
+      d_valid <= 1'b0;
     end else begin
-      d_valid = 1'b0;
+      if (reqfifo_rvalid && reqfifo_rdata.error) begin
+        // Return error response. Assume no request went out to SRAM
+        d_valid <= 1'b1;
+      end 
+      else if (rd_req || atomic_req) begin
+        if(rspfifo_depth == 0) begin
+          d_valid <= rvalid_i;
+        end
+        else
+          d_valid <= rspfifo_rvalid;
+      end
+      else if (wr_req) begin
+        if(d_ack) begin
+          d_valid <= 1'b0;
+        end
+        else
+          d_valid = ~already_ack;
+      end
+      
     end
   end
+
 
   always_comb begin
     d_error = 1'b0;
@@ -169,20 +222,23 @@
       d_opcode : (reqfifo_rdata.op == OpWrite) ? AccessAck : 
                  (reqfifo_rdata.op == OpHint)  ? HintAck   : AccessAckData,  //. TO ASK: in the TL_UL version, it checks for the d_valid as well. Is it ok to remove this check from here?
       d_param  : '0,
-      d_size   : (d_valid) ? reqfifo_rdata.size : '0,
+      d_size   : tl_i.a_valid ? tl_i.a_size : tl_o.d_size, //.(d_valid) ? reqfifo_rdata.size : '0,
       d_source : (d_valid) ? reqfifo_rdata.source : '0,
       d_sink   : 1'b0,
-      d_data   : (d_valid && rspfifo_rvalid && (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic))
-                 ? rspfifo_rdata.data : '0,
+      d_data   : (rspfifo_rvalid) //&& (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic))
+                 ? rspfifo_rdata.data : rdata_tlword,
       d_error  : '0, //. d_valid && d_error,
 
       a_ready  : (gnt_i | error_internal) & reqfifo_wready & sramreqfifo_wready
   };
+// a_ready depends on the FIFO full condition and grant from SRAM (or SRAM arbiter)
+// assemble response, including read response, write response, and error for unsupported stuff
+
 
 
   logic [SramAw-1:0] next_addr;
 
-  //. Atomic signals
+//. Atomic signals
   logic [tluh_pkg::TL_DW-1:0]  op_data1;
   logic [tluh_pkg::TL_DW-1:0]  op_data2;
   logic [tluh_pkg::TL_DW-1:0]  op_result;
@@ -191,34 +247,38 @@
   logic                        op_cout;
   logic                        op_type;   //. 1: arithmetic, 0: logical
   logic                        op_enable;
+//.
 
+  
 
-  logic rd_req, wr_req, atomic_req;
+  // assign wr_req     = reqfifo_rdata.op == OpWrite; //.a_ack & ((tl_i.a_opcode == PutFullData) | (tl_i.a_opcode == PutPartialData));
+  // assign rd_req     = ((reqfifo_rdata.op == OpRead) && (reqfifo_rvalid || reqfifo_wvalid)) || (a_ack && (tl_i.a_opcode == Get)); //.a_ack ? (tl_i.a_opcode == Get) : burst ? rd_req : 1'b0; //. latch the rd_req signal for burst response of get request
+  // assign atomic_req = reqfifo_rdata.op == OpAtomic; //.a_ack ? ((tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData)) : ((atomic_state == PERFORM_WRITE || burst)) ? atomic_req : 1'b0; //. latch the atomic_req signal for burst response of burst atomic request or for the cycle of writing the result of atomic operation to the register
 
-  assign wr_req     = a_ack & ((tl_i.a_opcode == PutFullData) | (tl_i.a_opcode == PutPartialData));
-  assign rd_req     = a_ack ? (tl_i.a_opcode == Get) : burst ? rd_req : 1'b0; //. latch the rd_req signal for burst response of get request
-  assign atomic_req = a_ack ? ((tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData)) : ((atomic_state == PERFORM_WRITE || burst)) ? atomic_req : 1'b0; //. latch the atomic_req signal for burst response of burst atomic request or for the cycle of writing the result of atomic operation to the register
+  //. Intent signals
+  assign intention_blocks_o = $clog2(tl_i.a_size);
+  assign intent_o           = tl_i.a_param;
+  assign intent_en_o        = a_ack & (tl_i.a_opcode == Intent);
 
-
-
-
-
-
-  // a_ready depends on the FIFO full condition and grant from SRAM (or SRAM arbiter)
-  // assemble response, including read response, write response, and error for unsupported stuff
 
   // Output to SRAM:
   //    Generate request only when no internal error occurs. If error occurs, the request should be
   //    dropped and returned error response to the host. So, error to be pushed to reqfifo.
   //    In this case, it is assumed the request is granted (may cause ordering issue later?)
-  assign req_o    = ((tl_i.a_valid & reqfifo_wready) || burst) & ~error_internal;
+  always_comb begin
+    req_o = 1'b0;
+    if(a_ack) begin
+      req_o = 1'b1;
+    end
+    else begin
+      //. if it is a burst read request 
+      if(rd_req && reqfifo_depth > 0 && ~reqfifo_rready && beats_to_send > 1) begin
+        req_o = 1'b1;
+      end   
+    end
+  end
+  //assign req_o    = ((a_ack) || (burst && rd_req && (reqfifo_depth != 0) && ~reqfifo_rready)) & ~error_internal;
   assign we_o     = (a_ack && logic'(tl_i.a_opcode inside {PutFullData, PutPartialData})) || (atomic_state == PERFORM_WRITE);  //.tl_i.a_valid & logic'(tl_i.a_opcode inside {PutFullData, PutPartialData});
-
-  logic wait_till_address_updated;
-
-
-
-
   //assign addr_o   = ~burst ? (tl_i.a_valid) ? tl_i.a_address[0+:SramAw] : '0 : (req_o || we_o) ? next_addr : addr_o; //. (tl_i.a_valid) ? tl_i.a_address[DataBitWidth+:SramAw] : '0;  //. [13:2]
 
   // Support SRAMs wider than the TL-UL word width by mapping the parts of the
@@ -239,7 +299,7 @@
     wmask_int = '0;
     wdata_int = '0;
 
-    if (tl_i.a_valid) begin  //. TODO: change the condition
+    if (tl_i.a_valid || burst) begin  //. TODO: change the condition
       for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
         wmask_int[woffset][8*i +: 8] = {8{tl_i.a_mask[i]}};
         wdata_int[woffset][8*i +: 8] = (tl_i.a_mask[i] && we_o) ? tl_i.a_data[8*i+:8] : '0; //. TODO: in case of burst or atomic
@@ -250,8 +310,476 @@
   assign wmask_o = wmask_int;
   assign wdata_o = wdata_int;
 
-  // Begin: Request Error Detection
 
+
+//. Begin: Req FIFO
+  assign reqfifo_wvalid = a_ack ; // Push to FIFO only when granted
+  assign reqfifo_wdata  = '{
+    op:     (tl_i.a_opcode == Get) ? OpRead :  // To return AccessAck for opcode error
+            (tl_i.a_opcode == ArithmeticData || tl_i.a_opcode == LogicalData) ? OpAtomic :
+            (tl_i.a_opcode == Intent) ? OpHint : OpWrite , 
+    error:  error_internal,
+    size:   tl_i.a_size,
+    source: tl_i.a_source
+  }; // Store the request only. Doesn't have to store data
+  //.assign reqfifo_rready = rd_req ? remove_req : d_ack ; //. TODO: what if the req is Get and the a_size indicates that that rsp is burst? so we need to pop the req only when all beats that correspond to this req are popped from rspfifo
+
+  always_comb begin
+    reqfifo_rready = 1'b0;
+    if(rd_req) begin
+      if(d_ack && (rspfifo_depth == 0) && (beats_to_send == 1)) begin
+        reqfifo_rready = 1'b1;
+      end
+    end
+    else begin
+      if(wr_req) begin
+        if(remove_req) begin
+          reqfifo_rready = 1'b1;
+        end
+      end
+      else if (d_ack && (rspfifo_depth == 0)) begin
+        reqfifo_rready = 1'b1;
+      end
+    end
+  end
+
+
+  logic keep_req;
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if(~rst_ni) begin
+      remove_req <= 1'b0;
+      keep_req   <= 1'b0;
+    end
+    else begin
+      //. first check if this is the last beat of the burst
+      //. if so then keep it in the reqfifo in case already_ack is low until it become high
+      //. if it is not the last beat, then keep it for one clock cycle (to make sure the data is written in the sram) then check sram_ack and if it is not raised then keep the req and if it is raised then remove it
+      if(wr_req) begin
+        if(a_ack) begin
+          keep_req   <= 1'b1;
+          remove_req <= 1'b0;
+        end
+        else if (keep_req) begin
+          //. if this is the last beat of the burst
+          if(beats_to_send == 1) begin
+            if(already_ack || d_ack) begin
+              keep_req   <= 1'b0;
+              remove_req <= 1'b1;
+            end
+          end
+          else begin
+            keep_req   <= 1'b0;
+            remove_req <= 1'b1;
+          end
+
+        end
+        else begin
+          remove_req <= 1'b0;
+        end
+      end
+      else 
+        remove_req <= 1'b0;
+
+    end
+  end
+
+  //.assign already_ack = d_ack && wr_req ? 1'b1 : 1'b0;
+
+
+//. End: Req FIFO
+  
+
+//. Begin: srmareq FIFO
+  // push together with ReqFIFO, pop upon returning read
+  assign sramreqfifo_wdata = '{
+    mask    : tl_i.a_mask,
+    woffset : woffset
+  };
+  assign sramreqfifo_wvalid = sram_ack & ~we_o;
+  assign sramreqfifo_rready = reqfifo_rready;//.rspfifo_wvalid; //. TODO: what if the req is Get and the a_size indicates that that rsp is burst? so we need to pop the req only when all beats that correspond to this req are popped from rspfifo
+//. End: srmareq FIFO
+
+
+  //assign rspfifo_wvalid = wait_till_address_updated ? 1'b0 : rvalid_i & reqfifo_rvalid; 
+
+  // Make sure only requested bytes are forwarded
+
+  // always_comb begin
+  //   //.rmask = '0;
+  //   for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
+  //     rmask[sramreqfifo_rdata.woffset][8*i +: 8] = {8{sramreqfifo_rdata.mask[i]}};
+  //   end
+  // end
+
+  //assign rdata = rdata_i & rmask;
+
+  assign rdata_tlword = rdata[sramreqfifo_rdata.woffset];
+
+//.Begin: Rsp FIFO
+  assign rspfifo_wvalid = (~tl_i.d_ready || (rspfifo_depth > 0)) && reqfifo_rvalid && rvalid_i;
+  assign rspfifo_wdata  = '{
+    data : rdata_tlword,
+    error: rerror_i[1] // Only care for Uncorrectable error
+  };
+  // assign rspfifo_rready = (reqfifo_rdata.op == OpRead & ~reqfifo_rdata.error)
+  //                       ? reqfifo_rready : 1'b0 ;  //. TODO: in case of burst
+  assign rspfifo_rready = tl_i.d_ready && (rspfifo_depth > 0);//. && ~reqfifo_rdata.error;
+
+  assign rspfifo_ack = rspfifo_wvalid & rspfifo_wready;
+//.Begin: Rsp FIFO
+
+  logic update_addr;
+
+  always_comb begin
+    if(sramreqfifo_rvalid) begin
+      rmask = '0;
+      for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
+        rmask[sramreqfifo_rdata.woffset][8*i +: 8] = {8{sramreqfifo_rdata.mask[i]}};
+      end
+    end
+    
+    if(~burst) begin
+      if(tl_i.a_valid)begin
+        addr_o = tl_i.a_address[0+:SramAw]; // tl_i.a_address[DataBitWidth+:SramAw]
+        rdata = rdata_i & rmask;
+      end 
+      // else  //. TO ASK
+      //   addr_o = '0;
+    end
+    else if(update_addr) begin
+      addr_o = next_addr;
+      rdata  = rdata_i & rmask;    
+    end
+  end
+
+
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      update_addr <= '0;
+    end
+    else begin
+      if(rd_req && (d_ack || rspfifo_ack)) begin
+        update_addr <= 1'b1;
+      end
+      else if (wr_req && (a_ack))
+        update_addr <= 1'b1;
+      else begin
+        update_addr <= 1'b0;
+      end
+      //. TODO: add in case of write or atomic req
+    end
+  end
+
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      burst        <= 1'b0;
+      //rdata        <= '0;
+      op_data2     <= '0;
+      get_state    <= GET_IDLE;
+      put_state    <= PUT_IDLE;
+      atomic_state <= ATOMIC_IDLE;
+      next_addr    <= '0;
+      beats_to_push <= '0;
+      beats_to_send <= '0;
+      beats_cnt     <= 0;
+      already_ack <= 0;
+      wait_till_sending_current <= 1'b0;
+      
+    end 
+
+    else begin
+      if(d_ack) begin
+        if(wr_req) begin
+          already_ack <= 1'b1;
+        end
+        else begin
+          if(beats_to_send > 0) begin
+            beats_to_send <= (beats_to_send - 1);
+            if(beats_to_send == 1) begin
+              beats_to_push <= '0;
+            end
+          end
+        end
+      end
+  
+      if(rspfifo_ack) begin
+        beats_to_push <= beats_to_push - 1;
+      end
+
+      if(sram_ack && wr_req) begin
+        beats_to_send <= beats_to_send - 1;
+      end
+
+      if(((beats_to_push == 1 && rspfifo_ack) || (beats_to_send == 1 && d_ack)) && burst && ~a_ack) begin
+        burst <= 1'b0;
+      end
+  
+      if (a_ack | burst | d_ack) begin
+        //. case 1: get request
+        if(rd_req) begin
+          case(get_state)
+            GET_IDLE: begin
+              if(a_ack) begin
+                beats_to_send <= $clog2(tl_i.a_size);
+                beats_to_push <= $clog2(tl_i.a_size);
+                //. check if burst
+                if(tl_i.a_size > $clog2(TL_DBW)) begin
+                  get_state <= READ_NEXT_BEAT;
+                  burst     <= 1'b1;
+                  next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
+                end
+                else begin
+                  wait_till_sending_current <= 1'b1;
+                  burst <= 1'b0;
+                end
+              end
+            end
+            READ_NEXT_BEAT: begin
+              //. make sure the previous beat was either pushed into the FIFO or sent to the host
+              if((beats_to_send == 1 && d_ack) || (beats_to_push == 1 && rspfifo_ack))
+                get_state <= GET_IDLE;
+              else if (rspfifo_ack || d_ack)
+                next_addr <= ((addr_o + SramByte) % (2**SramAw));
+            end
+          endcase
+        
+        end
+
+        else if (wr_req) begin
+          case(put_state)
+            PUT_IDLE: begin
+              if(a_ack) begin
+                already_ack <= 1'b0;
+                if(sram_ack)
+                  beats_to_send <= $clog2(tl_i.a_size) - 1; //. the beats here will be sent to the sram (not the host) to be written inside it
+                else
+                  beats_to_send <= $clog2(tl_i.a_size);
+                  //. check if burst
+                if(tl_i.a_size >  $clog2(TL_DBW)) begin
+                  put_state <= WRITE_NEXT_BEAT;
+                  burst     <= 1'b1;
+                  next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
+                end
+                else
+                  burst <= 1'b0;
+              end
+            end
+            WRITE_NEXT_BEAT: begin
+              //.make sure the previous beat was written in the sram
+              if(sram_ack && beats_to_send == 1) begin
+                put_state <= PUT_IDLE;
+              end else if (sram_ack)
+                next_addr <= ((addr_o + SramByte) % (2**SramAw));
+            end
+          endcase
+        end
+        
+
+      end
+    end
+    
+  end
+
+
+
+
+
+
+
+
+
+
+
+  // always_ff @(posedge clk_i or negedge rst_ni) begin
+  //   if (!rst_ni) begin
+  //     burst        <= 1'b0;
+  //     //rdata        <= '0;
+  //     op_data2     <= '0;
+  //     get_state    <= GET_IDLE;
+  //     put_state    <= PUT_IDLE;
+  //     atomic_state <= ATOMIC_IDLE;
+  //     next_addr    <= '0;
+  //     beats_to_push <= '0;
+  //     wait_till_sending_current <= 1'b0;
+  //     remove_req <= 1'b0;
+  //   end 
+
+  //   else begin
+  //     if(reqfifo_rready)
+  //       remove_req <= 1'b0;
+
+  //     if(burst && beats_to_push == 0)
+  //     begin
+  //       burst <= 1'b0;
+  //     end
+
+  //     if (wait_till_pushing_last) begin
+  //       if(rspfifo_ack)
+  //         wait_till_pushing_last <= 1'b0;
+  //     end
+  
+  //     if(wait_till_sending_current) begin
+  //       if(d_ack) begin 
+  //         //outstanding <= 1'b0;
+  //         beats_to_send <= beats_to_send - 1;
+  //         if(beats_to_send == 1) begin
+  //           wait_till_sending_current <= 1'b0;
+  //           remove_req <= 1'b1;
+  //         end
+  //       end
+  //     end
+
+
+  
+  //     else if (a_ack | burst | d_ack) begin
+  //       //. case 1: get request
+  //       if(rd_req) begin
+  //         case(get_state)
+  //           GET_IDLE: begin
+  //             beats_to_send <= $clog2(tl_i.a_size);
+  //             //. check if burst
+  //             if(tl_i.a_size > $clog2(TL_DBW)) begin
+  //               get_state <= READ_NEXT_BEAT;
+  //               burst     <= 1'b1;
+  //               next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
+  //               beats_to_push <= $clog2(tl_i.a_size) - 1;   
+  //             end
+  //             else
+  //               wait_till_sending_current <= 1'b1;
+  //           end
+  //           READ_NEXT_BEAT: begin
+  //             //. make sure the previous beat was either pushed into the FIFO or sent to the host
+  //             if(rspfifo_ack) begin
+  //               beats_to_push <= beats_to_push - 1;
+  //               if(beats_to_push == 1) begin  //. == 1 means that in this cycle it will be 0 (non-blocking assignment)
+  //                 //.burst                  <= 1'b0;
+  //                 get_state              <= GET_IDLE;
+  //                 wait_till_pushing_last <= 1'b1;
+  //                 if(beats_to_send > 0 && ~d_ack)
+  //                   wait_till_sending_current <= 1'b1;
+  //               end
+  //               else
+  //                 next_addr <= ((addr_o + SramByte) % (2**SramAw));
+  //             end
+  //             if(d_ack)
+  //             begin
+  //               beats_to_send <= beats_to_send - 1;
+  //               if(beats_to_send == 1) begin
+  //                 remove_req <= 1'b1;
+  //                 wait_till_sending_current <= 1'b0;
+  //               end
+  //               else
+  //                 wait_till_sending_current <= 1'b1;
+  //             end
+  //           end
+  //         endcase
+  //       end 
+        
+  //       //. case 2: put request  
+  //       else if (wr_req || (put_state != PUT_IDLE)) begin
+  //         case(put_state)
+  //           PUT_IDLE: begin
+  //             //outstanding <= 1'b1;
+  //             //. check if burst
+  //             if(tl_i.a_size > $clog2(TL_DBW)) begin
+  //               put_state <= WRITE_NEXT_BEAT;
+  //               burst     <= 1'b1;
+  //               next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
+  //               beats_to_push <= $clog2(tl_i.a_size) - 1;
+  //             end
+  //             else
+  //               wait_till_sending_current <= 1'b1;
+  //           end
+  //           WRITE_NEXT_BEAT: begin
+  //             //. make sure the next beat arrives
+  //             if(a_ack) begin
+  //               beats_to_push <= beats_to_push - 1;
+  //               if(beats_to_push == 1) begin
+  //                 //.burst     <= 1'b0;
+  //                 put_state <= PUT_IDLE;
+  //                 // if(~d_ack && outstanding)
+  //                 //   wait_till_sending_current = 1'b1;
+  //               end
+  //               else
+  //                 next_addr <= ((addr_o + SramByte) % (2**SramAw));
+  //             end
+  //           end
+  //         endcase
+  //       end 
+  
+  //       //. case 3: atomic request  
+  //       else if (atomic_req) begin
+  //         case(atomic_state)
+  //           ATOMIC_IDLE: begin
+  //             //rdata        <= rdata_i;
+  //             op_data2     <= rdata_i;
+  //             //outstanding  <= 1'b1;
+  //             op_cin       <= 1'b0;
+  //             op_enable    <= 1'b1;
+  //             atomic_state <= PERFORM_WRITE;
+  //             //. check if burst
+  //             if(tl_i.a_size > $clog2(TL_DBW)) begin
+  //               burst     <= 1'b1;
+  //               next_addr <= addr_o;  //. I have to do this to avoid incrementing addr_o twice
+  //               beats_to_push <= $clog2(tl_i.a_size) - 1;
+  //             end
+  //           end
+  //           PERFORM_WRITE: begin
+  //             if(d_ack) begin
+  //              // outstanding  <= 1'b0;
+  //             end
+  //             else begin
+  //               wait_till_sending_current = 1'b1;
+  //             end
+  //             if(burst) begin
+  //               //. at this moment we are sure that the result is written in the register
+  //               if(beats_to_push == 0) begin
+  //                 burst        <= 1'b0;
+  //                 op_enable    <= 1'b0;
+  //                 atomic_state <= ATOMIC_IDLE;
+  //               end
+  //               else begin
+  //                 atomic_state <= NEXT_BEAT;
+  //                 next_addr    <= ((addr_o + SramByte) % (2**SramAw));
+  //                 op_cin       <= op_cout;
+  //               end              
+  //             end 
+  //             else begin
+  //               atomic_state <= ATOMIC_IDLE;
+  //             end
+  //           end
+  //           NEXT_BEAT: begin
+  //             if(a_ack) begin
+  //               //rdata        <= rdata_i;
+  //               op_data2     <= rdata_i;
+  //               //outstanding  <= 1'b1;
+  //               atomic_state <= PERFORM_WRITE;
+  //               beats_to_push    <= beats_to_push - 1;
+  //             end
+  //           end
+  //         endcase
+  
+  //       end
+        
+  //       //. case 4: Intent request
+  //       else if (intent_en_o) begin
+  //         //outstanding               <= 1'b1;
+  //         wait_till_sending_current <= 1'b1;
+  //       end
+  
+
+        
+  //       //. TO ASK: I think no need to put else statement here case the latches will be desirable, right?
+  
+  //     end
+  //   end
+    
+  // end
+
+
+//Begin: Request Error Detection
   // wr_attr_error: Check if the request size,mask are permitted.
   //    Basic check of size, mask, addr align is done in tluh_err module.
   //    Here it checks any partial write if ByteAccess isn't allowed.
@@ -277,287 +805,11 @@
 //   );
 
   assign error_internal = '0; //.wr_attr_error | wr_vld_error | rd_vld_error | tluh_error;
-  // End: Request Error Detection
-
-  assign reqfifo_wvalid = a_ack ; // Push to FIFO only when granted
-  assign reqfifo_wdata  = '{
-    op:     (tl_i.a_opcode == Get) ? OpRead :  // To return AccessAck for opcode error
-            (tl_i.a_opcode == ArithmeticData || tl_i.a_opcode == LogicalData) ? OpAtomic :
-            (tl_i.a_opcode == Intent) ? OpHint : OpWrite , 
-    error:  error_internal,
-    size:   tl_i.a_size,
-    source: tl_i.a_source
-  }; // Store the request only. Doesn't have to store data
-  assign reqfifo_rready = rd_req ? ((beats_to_send == 1) && d_ack) : d_ack ; //. TODO: what if the req is Get and the a_size indicates that that rsp is burst? so we need to pop the req only when all beats that correspond to this req are popped from rspfifo
-
-  // push together with ReqFIFO, pop upon returning read
-  assign sramreqfifo_wdata = '{
-    mask    : tl_i.a_mask,
-    woffset : woffset
-  };
-  assign sramreqfifo_wvalid = sram_ack & ~we_o;
-  assign sramreqfifo_rready = rspfifo_wvalid; //. TODO: what if the req is Get and the a_size indicates that that rsp is burst? so we need to pop the req only when all beats that correspond to this req are popped from rspfifo
-
-  //assign rspfifo_wvalid = wait_till_address_updated ? 1'b0 : rvalid_i & reqfifo_rvalid; 
-
-  // Make sure only requested bytes are forwarded
-  logic [WidthMult-1:0][tluh_pkg::TL_DW-1:0] rdata;
-  logic [WidthMult-1:0][tluh_pkg::TL_DW-1:0] rmask;
-  //logic [SramDw-1:0] rmask;
-  logic [tluh_pkg::TL_DW-1:0] rdata_tlword;
-
-  // always_comb begin
-  //   //.rmask = '0;
-  //   for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
-  //     rmask[sramreqfifo_rdata.woffset][8*i +: 8] = {8{sramreqfifo_rdata.mask[i]}};
-  //   end
-  // end
-
-  //assign rdata = rdata_i & rmask;
-  logic wait_rspfifo_ack;
-
-  assign rdata_tlword = rdata[sramreqfifo_rdata.woffset];
-
-  assign rspfifo_wdata  = '{
-    data : rdata_tlword,
-    error: rerror_i[1] // Only care for Uncorrectable error
-  };
-  assign rspfifo_rready = (reqfifo_rdata.op == OpRead & ~reqfifo_rdata.error)
-                        ? reqfifo_rready : 1'b0 ;  //. TODO: in case of burst
-
-  assign rspfifo_ack = rspfifo_wvalid & rspfifo_wready;
+//End: Request Error Detection
 
   // This module only cares about uncorrectable errors.
   logic unused_rerror;
   assign unused_rerror = rerror_i[0];
-
-  // always_comb begin
-  //   rmask = '0;
-  //   for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
-  //     rmask[sramreqfifo_rdata.woffset][8*i +: 8] = {8{sramreqfifo_rdata.mask[i]}};
-  //   end
-  //   if(rvalid_i) begin
-  //     if(wait_rspfifo_ack == 1'b0) begin
-  //       rdata = rdata_i & rmask;
-  //     end
-  //   end
-  // end
-
-  always_comb begin
-    if(sramreqfifo_rvalid) begin
-      rmask = '0;
-      for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
-        rmask[sramreqfifo_rdata.woffset][8*i +: 8] = {8{sramreqfifo_rdata.mask[i]}};
-      end
-    end
-    
-    if(~burst) begin
-      if(tl_i.a_valid)
-        addr_o = tl_i.a_address[0+:SramAw]; // tl_i.a_address[DataBitWidth+:SramAw]
-      else
-        addr_o = '0;
-    end
-    else if(req_o && we_o) begin
-      addr_o = next_addr;
-    end
-
-    if(reqfifo_rvalid && rvalid_i) begin
-      if(rspfifo_depth == 0) begin
-        rspfifo_wvalid = 1'b1;
-        rdata = rdata_i & rmask;
-      end
-      else if(rspfifo_ack) begin
-        //. update the address
-        addr_o = next_addr;
-        rspfifo_wvalid = 1'b1;
-        rdata = rdata_i & rmask;
-      end
-      else
-        rspfifo_wvalid = 1'b0;
-    end
-    else begin
-      rspfifo_wvalid = 1'b0;
-    end
-  end
-
-
-
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) begin
-      burst        <= 1'b0;
-      //rdata        <= '0;
-      op_data2     <= '0;
-      get_state    <= GET_IDLE;
-      put_state    <= PUT_IDLE;
-      atomic_state <= ATOMIC_IDLE;
-      next_addr    <= '0;
-      beats_to_push <= '0;
-      wait_till_sending_current <= 1'b0;
-      wait_rspfifo_ack <= 1'b0;
-    end 
-
-    else begin
-      if (wait_till_pushing_last) begin
-        if(rspfifo_ack)
-          wait_till_pushing_last <= 1'b0;
-      end
-  
-      if(wait_till_sending_current) begin
-        if(d_ack) begin 
-          //outstanding <= 1'b0;
-          beats_to_send <= beats_to_send - 1;
-          if(beats_to_send == 1)
-            wait_till_sending_current <= 1'b0;
-        end
-      end
-  
-      else if (a_ack | burst | d_ack) begin
-        //. case 1: get request
-        if(rd_req) begin
-          case(get_state)
-            GET_IDLE: begin
-              beats_to_send <= $clog2(tl_i.a_size);
-              //. check if burst
-              if(tl_i.a_size > $clog2(TL_DBW)) begin
-                get_state <= READ_NEXT_BEAT;
-                burst     <= 1'b1;
-                next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
-                beats_to_push <= $clog2(tl_i.a_size) - 1;   
-              end
-              else
-                wait_till_sending_current <= 1'b1;
-            end
-            READ_NEXT_BEAT: begin
-              //. make sure the previous beat was pushed into the FIFO
-              if(rspfifo_ack) begin
-                wait_rspfifo_ack <= 1'b0;
-                beats_to_push <= beats_to_push - 1;
-                if(beats_to_push == 1) begin  //. == 1 means that in this cycle it will be 0 (non-blocking assignment)
-                  burst                  <= 1'b0;
-                  get_state              <= GET_IDLE;
-                  wait_till_pushing_last <= 1'b1;
-                  if(beats_to_send > 0 && ~d_ack)
-                    wait_till_sending_current <= 1'b1;
-                end
-                else
-                  next_addr <= ((addr_o + SramByte) % (2**SramAw));
-              end
-              else
-                wait_rspfifo_ack <= 1'b1;
-              if(d_ack)
-              begin
-                beats_to_send <= beats_to_send - 1;
-                if(beats_to_send == 1)
-                  wait_till_sending_current <= 1'b0;
-                else
-                  wait_till_sending_current <= 1'b1;
-              end
-            end
-          endcase
-        end 
-        
-        //. case 2: put request  
-        else if (wr_req || (put_state != PUT_IDLE)) begin
-          case(put_state)
-            PUT_IDLE: begin
-              //outstanding <= 1'b1;
-              //. check if burst
-              if(tl_i.a_size > $clog2(TL_DBW)) begin
-                put_state <= WRITE_NEXT_BEAT;
-                burst     <= 1'b1;
-                next_addr <= ((addr_o + SramByte) % (2**SramAw));
-                beats_to_push <= $clog2(tl_i.a_size) - 1;
-              end
-              else
-                wait_till_sending_current <= 1'b1;
-            end
-            WRITE_NEXT_BEAT: begin
-              //. make sure the ack signal is sent and received by the master
-              if(d_ack) begin
-                //outstanding <= 1'b0;
-              end
-              //. make sure the next beat arrives
-              if(a_ack) begin
-                beats_to_push <= beats_to_push - 1;
-                if(beats_to_push == 1) begin
-                  burst     <= 1'b0;
-                  put_state <= PUT_IDLE;
-                  // if(~d_ack && outstanding)
-                  //   wait_till_sending_current = 1'b1;
-                end
-                else
-                  next_addr <= ((addr_o + SramByte) % (2**SramAw));
-              end
-            end
-          endcase
-        end 
-  
-        //. case 3: atomic request  
-        else if (atomic_req) begin
-          case(atomic_state)
-            ATOMIC_IDLE: begin
-              //rdata        <= rdata_i;
-              op_data2     <= rdata_i;
-              //outstanding  <= 1'b1;
-              op_cin       <= 1'b0;
-              op_enable    <= 1'b1;
-              atomic_state <= PERFORM_WRITE;
-              //. check if burst
-              if(tl_i.a_size > $clog2(TL_DBW)) begin
-                burst     <= 1'b1;
-                next_addr <= addr_o;  //. I have to do this to avoid incrementing addr_o twice
-                beats_to_push <= $clog2(tl_i.a_size) - 1;
-              end
-            end
-            PERFORM_WRITE: begin
-              if(d_ack) begin
-               // outstanding  <= 1'b0;
-              end
-              else begin
-                wait_till_sending_current = 1'b1;
-              end
-              if(burst) begin
-                //. at this moment we are sure that the result is written in the register
-                if(beats_to_push == 0) begin
-                  burst        <= 1'b0;
-                  op_enable    <= 1'b0;
-                  atomic_state <= ATOMIC_IDLE;
-                end
-                else begin
-                  atomic_state <= NEXT_BEAT;
-                  next_addr    <= ((addr_o + SramByte) % (2**SramAw));
-                  op_cin       <= op_cout;
-                end              
-              end 
-              else begin
-                atomic_state <= ATOMIC_IDLE;
-              end
-            end
-            NEXT_BEAT: begin
-              if(a_ack) begin
-                //rdata        <= rdata_i;
-                op_data2     <= rdata_i;
-                //outstanding  <= 1'b1;
-                atomic_state <= PERFORM_WRITE;
-                beats_to_push    <= beats_to_push - 1;
-              end
-            end
-          endcase
-  
-        end
-        
-        //. case 4: Intent request
-        else if (ie_o) begin
-          //outstanding               <= 1'b1;
-          wait_till_sending_current <= 1'b1;
-        end
-  
-        //. TO ASK: I think no need to put else statement here case the latches will be desirable, right?
-  
-      end
-    end
-    
-  end
 
 
 
@@ -589,7 +841,7 @@
     .wvalid_i(reqfifo_wvalid),
     .wready_o(reqfifo_wready),
     .wdata_i (reqfifo_wdata),
-    .depth_o (),
+    .depth_o (reqfifo_depth),
     .rvalid_o(reqfifo_rvalid),
     .rready_i(reqfifo_rready),
     .rdata_o (reqfifo_rdata),
