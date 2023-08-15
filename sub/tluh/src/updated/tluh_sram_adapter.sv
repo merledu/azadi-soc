@@ -182,7 +182,7 @@
 
     wr_req     = atomic_wr || (reqfifo_rdata.op == OpWrite && (reqfifo_rvalid)) || (a_ack && (tl_i.a_opcode == PutFullData || tl_i.a_opcode == PutPartialData)); 
     rd_req     = atomic_rd || ((reqfifo_rdata.op == OpRead) && (reqfifo_rvalid || reqfifo_wvalid)) || (a_ack && (tl_i.a_opcode == Get)); 
-
+    intent_req = ((reqfifo_rdata.op == OpHint) && (reqfifo_rvalid || reqfifo_wvalid) ) || (a_ack && (tl_i.a_opcode == Intent));
   end
 
 // Valid handling
@@ -206,7 +206,16 @@
           d_valid <= 1'b0;
         end
         else
-          d_valid = ~already_ack;
+          d_valid <= ~already_ack;
+      end
+      else if (intent_req) begin
+        if(d_ack)
+          d_valid <= 1'b0;
+        else 
+          d_valid <= reqfifo_rvalid;
+      end
+      else begin
+        d_valid <= 1'b0;
       end
       
     end
@@ -254,9 +263,20 @@
 
 
   //. Intent signals
-  assign intention_blocks_o = $clog2(tl_i.a_size);
-  assign intent_o           = tl_i.a_param;
-  assign intent_en_o        = a_ack & (tl_i.a_opcode == Intent);
+  always_comb begin
+    if(a_ack && intent_req) begin
+      intention_blocks_o = $clog2(tl_i.a_size);
+      intent_o           = tl_i.a_param;
+      intent_en_o        = 1'b1;
+    end
+    else begin
+      intent_en_o        = 1'b0;
+    end
+  end
+
+  // assign intention_blocks_o = $clog2(tl_i.a_size);
+  // assign intent_o           = tl_i.a_param;
+  // assign intent_en_o        = a_ack & (tl_i.a_opcode == Intent);
 
 
   logic wait_addr_update;
@@ -417,6 +437,7 @@
 //.End:   Rsp FIFO
 
 
+  logic intent_ack;
 
   always_comb begin
     if(sramreqfifo_rvalid) begin
@@ -447,8 +468,30 @@
     else if (atomic_req) begin
       req_o = atomic_wr;
     end
+    else if (intent_req) begin
+      req_o = ~intent_ack;
+    end
     else begin
       req_o = 1'b0;
+    end
+  end
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if(~rst_ni) begin
+      intent_ack <= 1'b0;
+    end
+    else begin
+      if(intent_req) begin
+        if(sram_ack) begin
+          intent_ack <= 1'b1;
+        end
+        else begin
+          intent_ack <= 1'b0;
+        end
+      end
+      else begin
+        intent_ack <= 1'b0;
+      end 
     end
   end
 

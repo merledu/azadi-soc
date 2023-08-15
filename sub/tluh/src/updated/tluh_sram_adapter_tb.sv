@@ -184,7 +184,7 @@ always_ff @(posedge clk_i or negedge rst_ni) begin
   if (!rst_ni) begin
     rvalid_i <= 1'b0;
     rdata_i <= '0;
-  end else if (we_o) begin
+  end else if (we_o || intent_en_o) begin  //. TO ASK: intent_en_o
     rvalid_i <= 1'b0;
   end else begin
     rvalid_i <= req_o;
@@ -465,6 +465,25 @@ initial begin
   end 
   wait_response();
   validate(AccessAckData, data_array[2]);
+//.
+
+
+
+//. Intent Test -------------------------------------------------------------
+  $display("Intent test -------------------------------------------------");
+  tl_i.a_valid = 1'b1;
+  tl_i.a_opcode = Intent;
+  tl_i.a_size = 'h2;
+  tl_i.a_address = 'h2;
+  tl_i.a_param = 'h0;
+  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_valid = 1'b0;
+  wait_response();
+  validate(HintAck, '0, 1'b1);  
 //.
 
 
