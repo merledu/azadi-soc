@@ -177,16 +177,19 @@ always #5 clk_i = ~clk_i;
 always #10 clk_cnt = clk_cnt + 1'b1;
 
 
-assign rdata_i = (~we_o) ? data_to_read : 32'd60;
+//.assign rdata_i = data_to_read;//. (~we_o) ? data_to_read : 32'd60;
 
 
 always_ff @(posedge clk_i or negedge rst_ni) begin
   if (!rst_ni) begin
     rvalid_i <= 1'b0;
+    rdata_i <= '0;
   end else if (we_o) begin
     rvalid_i <= 1'b0;
   end else begin
     rvalid_i <= req_o;
+    if(req_o)
+      rdata_i  <= data_to_read;
   end
 end
 
@@ -374,6 +377,94 @@ initial begin
   else begin
     $display("Success: wdata_o = %d", wdata_o);
   end
+//.
+
+  
+  #10
+//. Atomic Test --------------------------------------------------------------
+//. test non-burst atomic request
+  $display("Non-burst Atomic test -------------------------------------------------");
+  //. 1- arithemetic
+  $display("-------arithemetic--------");
+  //. a- min
+  $display("-------min--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h0;
+  tl_i.a_address = 'hc;
+  tl_i.a_data = 32'd5;
+  tl_i.a_valid = 1'b1;
+  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_valid = 1'b0;
+  while(~(req_o == 1 && we_o == 1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  if(wdata_o != 32'h3)
+    $display("Error: wdata_o should be 32'h2 but it is %d", wdata_o);
+  else begin
+    $display("Success: wdata_o = %d", wdata_o);
+  end
+  wait_response();
+  validate(AccessAckData, data_array[3]);
+//.
+
+
+//. test the burst atomic request
+  $display("burst Atomic test-------------------------------------------------");
+  //. 1- arithemetic
+  $display("-------arithemetic--------");
+  //. a- min
+  $display("-------max--------");
+  tl_i.a_size = 'h3;
+  tl_i.a_param = 'h1;
+  tl_i.a_address = 'h4;
+  tl_i.a_data = 32'd5;
+  tl_i.a_valid = 1'b1;
+  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  $display("Sending  : clk_cnt = %d", clk_cnt);
+  $display("-------first beat--------");
+  tl_i.a_valid = 1'b0;
+  while(~(req_o == 1 && we_o == 1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  //. check the wdata_o
+  if(wdata_o != 32'h5)
+    $display("Error: wdata_o should be 32'h5 but it is %d", wdata_o);
+  else begin
+    $display("Success: wdata_o = %d", wdata_o);
+  end  
+  wait_response();
+  validate(AccessAckData, data_array[1]);
+  //. send the second beat
+  tl_i.a_valid = 1'b1;
+  tl_i.a_data = 32'd0;
+  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  $display("Sending  : clk_cnt = %d", clk_cnt);
+  $display("-------second beat--------");
+  tl_i.a_valid = 1'b0;
+  while(~(req_o == 1 && we_o == 1)) begin
+    wait(clk_i == 1'b0);
+    wait(clk_i == 1'b1);
+  end
+  if(wdata_o != 32'h2)
+    $display("Error: wdata_o should be 32'h2 but it is %d", wdata_o);
+  else begin
+    $display("Success: wdata_o = %d", wdata_o);
+  end 
+  wait_response();
+  validate(AccessAckData, data_array[2]);
 //.
 
 
