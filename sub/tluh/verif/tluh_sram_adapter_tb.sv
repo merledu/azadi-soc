@@ -16,7 +16,7 @@ tluh_h2d_t tl_i;
 tluh_d2h_t tl_o;
 
 logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o; //. intention blocks
-logic [1:0]        intent_o;  //. intent operation (prefetchRead, prefetchWrite)
+logic              intent_o;  //. intent operation (prefetchRead, prefetchWrite)
 logic              intent_en_o; //. intent enable
 logic              req_o;
 logic              gnt_i;
@@ -196,7 +196,7 @@ end
 //assign rvalid_i = req_o && ~we_o;
 
 
-//. make a function to display the error messages
+
 function void validate
   (input tluh_d_m_op opcode,
   input [SramDw-1:0] expected_data,
@@ -225,6 +225,33 @@ function void validate
   end
 endfunction
 
+task wait_sram_req();
+  begin
+    while(~(req_o == 1 && we_o == 1 && clk_i == 1)) begin
+      wait(clk_i == 1'b0);
+      wait(clk_i == 1'b1);
+    end
+  end
+endtask
+
+function void validate_sram_req
+  (input[SramDw-1:0] wdata,
+  input [SramAw-1:0] addr);
+  begin
+    if(wdata_o != wdata) begin
+      $display("Error: wdata_o should be %d but it is %d", wdata, wdata_o);
+    end
+    else begin
+      $display("Success: wdata_o = %d", wdata_o);
+    end
+    if(addr_o != addr) begin
+      $display("Error: addr_o should be %d but it is %d", addr, addr_o);
+    end
+    else begin
+      $display("Success: addr_o = %d", addr_o);
+    end
+  end
+endfunction
 
 task wait_response();
   begin
@@ -237,16 +264,21 @@ task wait_response();
   end
 endtask
 
-initial begin
-  wait(clk_cnt == 4)
-  tl_i.a_valid = 1'b0;
-end
+task send_req(); 
+  begin
+    while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
+      wait(clk_i == 1'b0);
+      wait(clk_i == 1'b1);
+    end
+    $display("Sending  : clk_cnt = %d", clk_cnt);
+  end
+endtask
 
 //. responses
 initial begin
   //. inital values
   tl_i = '{
-    a_valid:   1'b1,
+    a_valid:   1'b0,
     a_opcode:  Get,
     a_param:   0,
     a_size:    'h2,
@@ -262,12 +294,13 @@ initial begin
 
   #10
   rst_ni = 1;
+
 //. Read Test ---------------------------------------------------------------
 //. test non-burst read request
-  #10
   $display("Non-burst Read Test -------------------------------------------------");
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
   wait_response();
   //. check the response
   validate(AccessAckData, data_array[0]);
@@ -282,15 +315,11 @@ initial begin
   tl_i.a_valid = 1'b1;
   tl_i.a_size = 'h3;
   tl_i.a_address = 'h4;
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
-  wait_response();
+  send_req();
   tl_i.a_valid = 1'b0;
+  wait_response();
   $display("-------first beat--------");
   validate(AccessAckData, data_array[1]);
-  //.tl_i.a_valid = 1'b0;
-  //#20
-  wait(clk_i == 1'b1);
   wait_response();
   $display("-------second beat-------");
   validate(AccessAckData, data_array[2]);
@@ -302,25 +331,14 @@ initial begin
 //. test the non-burst write request
   $display("Non-burst Write Test -------------------------------------------------");  
   tl_i.a_size = 'h2;
-  tl_i.d_ready = 1'b0;  //. TO ASK
   tl_i.a_valid = 1'b1;
   tl_i.a_opcode = PutFullData;
   tl_i.a_data = 32'd55;
   tl_i.a_address = 'h0;
-  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
+  send_req();
   tl_i.a_valid = 1'b0;
-  $display("Sending  : clk_cnt = %d", clk_cnt);
-  wait(req_o == 1'b1 && we_o == 1'b1);
-  if(wdata_o != 32'd55) begin
-    $display("Error: wdata_o should be 32'd55 but it is %d", wdata_o);
-  end
-  else begin
-    $display("Success: wdata_o = %d", wdata_o);
-  end
-  tl_i.d_ready = 1'b1;
+  wait_sram_req();
+  validate_sram_req(32'd55, '0);
   wait_response();
   validate(AccessAck, '0, 1'b1);
 
@@ -334,24 +352,11 @@ initial begin
   tl_i.a_size = 'h3;
   tl_i.a_data = 32'd66;
   //. send the first beat
-  //wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   $display("-------first beat--------");
   tl_i.a_valid = 1'b0;
-  while(~(req_o == 1 && we_o == 1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  if(wdata_o != 32'd66) begin
-    $display("Error: wdata_o should be 32'd66 but it is %d", wdata_o);
-  end
-  else begin
-    $display("Success: wdata_o = %d", wdata_o);
-  end
+  wait_sram_req();
+  validate_sram_req(32'd66, '0);
   wait_response();
   validate(AccessAck, '0, 1'b1);
   //. send the second beeat
@@ -359,24 +364,11 @@ initial begin
   wait(clk_i == 1'b1);
   tl_i.a_data = 32'd77;
   tl_i.a_valid = 1'b1;
-  while(tl_o.a_ready != 1'b1) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   $display("-------second beat--------");
-  
-  while(~(req_o == 1 && we_o == 1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
   tl_i.a_valid = 1'b0;
-  if(wdata_o != 32'd77) begin
-    $display("Error: wdata_o should be 32'd77 but it is %d", wdata_o);
-  end
-  else begin
-    $display("Success: wdata_o = %d", wdata_o);
-  end
+  wait_sram_req();
+  validate_sram_req(32'd77,'d4);
 //.
 
   
@@ -394,21 +386,10 @@ initial begin
   tl_i.a_address = 'hc;
   tl_i.a_data = 32'd5;
   tl_i.a_valid = 1'b1;
-  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   tl_i.a_valid = 1'b0;
-  while(~(req_o == 1 && we_o == 1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  if(wdata_o != 32'h3)
-    $display("Error: wdata_o should be 32'h2 but it is %d", wdata_o);
-  else begin
-    $display("Success: wdata_o = %d", wdata_o);
-  end
+  wait_sram_req();
+  validate_sram_req(32'h3,'hc);
   wait_response();
   validate(AccessAckData, data_array[3]);
 //.
@@ -425,44 +406,21 @@ initial begin
   tl_i.a_address = 'h4;
   tl_i.a_data = 32'd5;
   tl_i.a_valid = 1'b1;
-  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   $display("-------first beat--------");
   tl_i.a_valid = 1'b0;
-  while(~(req_o == 1 && we_o == 1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  //. check the wdata_o
-  if(wdata_o != 32'h5)
-    $display("Error: wdata_o should be 32'h5 but it is %d", wdata_o);
-  else begin
-    $display("Success: wdata_o = %d", wdata_o);
-  end  
+  wait_sram_req();
+  validate_sram_req(32'h5,'d4);
   wait_response();
   validate(AccessAckData, data_array[1]);
   //. send the second beat
   tl_i.a_valid = 1'b1;
   tl_i.a_data = 32'd0;
-  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   $display("-------second beat--------");
   tl_i.a_valid = 1'b0;
-  while(~(req_o == 1 && we_o == 1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  if(wdata_o != 32'h2)
-    $display("Error: wdata_o should be 32'h2 but it is %d", wdata_o);
-  else begin
-    $display("Success: wdata_o = %d", wdata_o);
-  end 
+  wait_sram_req();
+  validate_sram_req(32'h2,'d8);
   wait_response();
   validate(AccessAckData, data_array[2]);
 //.
@@ -476,11 +434,7 @@ initial begin
   tl_i.a_size = 'h2;
   tl_i.a_address = 'h2;
   tl_i.a_param = 'h0;
-  while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1)) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   tl_i.a_valid = 1'b0;
   wait_response();
   validate(HintAck, '0, 1'b1);  
