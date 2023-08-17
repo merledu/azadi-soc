@@ -200,7 +200,13 @@
       end 
       else if ((rd_req || atomic_req)) begin
         if(rspfifo_depth == 0) begin
-          d_valid <= rvalid_i;  //. TODO: change this because we want to latch this signal until it received even if rvalid_i becomes low
+          if(d_valid) begin  //. this is just to latch the d_valid signal until it is received by the host
+            if(d_ack) begin
+              d_valid <= 1'b0;
+            end
+          end
+          else 
+            d_valid <= rvalid_i;  //. DONE: change this because we want to latch this signal until it received even if rvalid_i becomes low
         end
         else
           d_valid <= rspfifo_rvalid;
@@ -340,48 +346,50 @@
   //.assign reqfifo_rready = rd_req ? remove_req : d_ack ; //. TODO: what if the req is Get and the a_size indicates that that rsp is burst? so we need to pop the req only when all beats that correspond to this req are popped from rspfifo
 
 
-  logic atomic_ack;
-  logic atomic_written;
+  logic req_served;
+  logic req_ack_sram;
+  logic req_ack_host;
   always_comb begin
-    if(a_ack && atomic_req) begin
-      atomic_ack = 1'b0;
-      atomic_written = 1'b0;
-    end
-    else if(atomic_req) begin
-      if(d_ack) begin
-        atomic_ack = 1'b1;
-      end
-      if(atomic_wr && sram_ack) begin
-        atomic_written = 1'b1;
-      end
-    end
-  end
-
-
-  always_comb begin
-    reqfifo_rready = 1'b0;
-    if(atomic_req) begin
-      //. we have to make sure that the rsp is sent to the host (d_ack) and the data is written in the sram (sram_ack after we_o is raised)
-      if(atomic_ack && atomic_written) begin
-        reqfifo_rready = 1'b1;
-      end
-    end
-    else if(rd_req) begin
-      if(d_ack && (rspfifo_depth == 0) && (beats_to_send == 1)) begin
-        reqfifo_rready = 1'b1;
-      end
+    if(a_ack) begin
+      req_ack_host = 1'b0;
+      req_ack_sram = 1'b0;
     end
     else begin
-      if(wr_req) begin
+      if(atomic_req) begin
+        if(d_ack)
+          req_ack_host = 1'b1;
+        if(atomic_wr && sram_ack)
+          req_ack_sram = 1'b1;
+      end
+      else if (intent_req) begin
+        if(sram_ack)
+          req_ack_sram = 1'b1;
+        if(d_ack)
+          req_ack_host = 1'b1;
+      end
+      else if (wr_req) begin
         if(remove_req) begin
-          reqfifo_rready = 1'b1;
+          req_ack_host = 1'b1;
+          req_ack_sram = 1'b1;
         end
       end
-      else if (d_ack && (rspfifo_depth == 0)) begin
-        reqfifo_rready = 1'b1;
+      else if (rd_req) begin
+        if(d_ack && (rspfifo_depth == 0) && (beats_to_send == 1)) begin
+          req_ack_host = 1'b1;
+          req_ack_sram = 1'b1;
+        end
+      else begin
+        req_ack_host = 1'b0;
+        req_ack_sram = 1'b0;
+      end
+
       end
     end
   end
+
+  assign req_served = req_ack_host && req_ack_sram;
+
+  assign reqfifo_rready = req_served;
 
 
   logic keep_req;
@@ -473,8 +481,6 @@
 //.End:   Rsp FIFO
 
 
-  logic intent_ack;
-
   always_comb begin
     if(sramreqfifo_rvalid) begin
       rmask = '0;
@@ -493,41 +499,20 @@
       if(tl_i.a_valid)begin
         addr_o = tl_i.a_address[0+:SramAw]; // tl_i.a_address[DataBitWidth+:SramAw]
         req_o  = 1'b1;
-        //rdata = rdata_i & rmask;
       end 
     end
     else if(update_addr) begin
       addr_o = next_addr;
       req_o  = 1'b1;
-      //rdata  = rdata_i & rmask;
     end
     else if (atomic_req) begin
       req_o = atomic_wr;
     end
     else if (intent_req) begin
-      req_o = ~intent_ack && ~reqfifo_rready;
+      req_o = ~req_ack_sram && ~reqfifo_rready;
     end
     else begin
       req_o = 1'b0;
-    end
-  end
-
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if(~rst_ni) begin
-      intent_ack <= 1'b0;
-    end
-    else begin
-      if(intent_req && ~d_ack) begin
-        if(sram_ack) begin
-          intent_ack <= 1'b1;
-        end
-        else begin
-          intent_ack <= 1'b0;
-        end
-      end
-      else begin
-        intent_ack <= 1'b0;
-      end 
     end
   end
 
@@ -607,7 +592,8 @@
             update_addr <= 1'b0;
           end
         end
-      end else if (update_addr) begin 
+      end 
+      else if (update_addr) begin 
         update_addr <= 1'b0;
       end
 
