@@ -100,6 +100,8 @@
 
   logic already_ack; // Burst already acknowledged - in case of burst put request, to make sure that the only one ack is sent for the whole burst
 
+  logic update_addr;
+
   logic rd_req, wr_req, atomic_req, intent_req;
 
   logic error_internal; // Internal protocol error checker
@@ -121,6 +123,7 @@
   logic                        atomic_rd;
   logic                        atomic_wr;
 //.
+
 
 
   // States
@@ -164,23 +167,37 @@
   always_comb begin
     atomic_req = (reqfifo_rdata.op == OpAtomic) && (reqfifo_rvalid || reqfifo_wvalid) || (a_ack && ((tl_i.a_opcode == LogicalData) || (tl_i.a_opcode == ArithmeticData)));
    
-    if(a_ack && atomic_req) begin
-      op_type     = (tl_i.a_opcode == LogicalData) ? 1'b0 : 1'b1;
-      op_function = tl_i.a_param;
-      op_cin      = 1'b0;
-      op_enable   = 1'b1;
-      op_data1    = tl_i.a_data;
-      atomic_rd   = 1'b1;
-    end
-    else if(atomic_wr) begin
-      atomic_rd = 1'b0;
+    if(atomic_req) begin
+      if(a_ack) begin
+        op_type     = (tl_i.a_opcode == LogicalData) ? 1'b0 : 1'b1;
+        op_function = tl_i.a_param;
+        op_cin      = 1'b0;
+        op_enable   = 1'b1;
+        op_data1    = tl_i.a_data;
+        if(~burst)
+          atomic_rd   = 1'b1;
+        else begin
+          if(atomic_rd) begin
+            if(rvalid_i)
+              atomic_rd = update_addr;
+          end
+          else 
+            atomic_rd = update_addr;
+        end        
+      end
+      else if(atomic_wr) begin
+        atomic_rd = 1'b0;
+      end
+      else begin
+        if(atomic_rd) begin
+          if(rvalid_i)
+            atomic_rd = update_addr;
+        end
+        else 
+          atomic_rd = update_addr;
+      end
     end
     else begin
-      // op_type     = '0;
-      // op_function = '0;
-      // op_cin      = '0;
-      // op_enable   = '0;
-      // op_data1    = '0;
       atomic_rd = 1'b0;
     end
 
@@ -268,7 +285,7 @@
 
   logic [SramAw-1:0] next_addr;
 
-  logic update_addr;
+
 
 
 
@@ -295,7 +312,6 @@
   //    Generate request only when no internal error occurs. If error occurs, the request should be
   //    dropped and returned error response to the host. So, error to be pushed to reqfifo.
   //    In this case, it is assumed the request is granted (may cause ordering issue later?)
-  logic lower_req_o;
 
 
   assign we_o = (a_ack && logic'(tl_i.a_opcode inside {PutFullData, PutPartialData})) || atomic_wr || wr_req;  //.tl_i.a_valid & logic'(tl_i.a_opcode inside {PutFullData, PutPartialData});
@@ -319,11 +335,11 @@
     wmask_int = '0;
     wdata_int = '0;
 
-    if (tl_i.a_valid || atomic_req || burst) begin  //. TODO: change the condition
+    if (tl_i.a_valid || atomic_req || burst) begin
       for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
         wmask_int[woffset][8*i +: 8] = {8{tl_i.a_mask[i]}};
-        wdata_int[woffset][8*i +: 8] = we_o ? atomic_req ? op_mask[i] ? op_result[8*i+:8] : '0 : tl_i.a_mask[i] ? tl_i.a_data[8*i+:8] : '0 : '0; //. TODO: in case of burst or atomic
-        //.wdata_int[woffset][8*i +: 8] = (tl_i.a_mask[i] && we_o) ?  tl_i.a_data[8*i+:8] : '0; //. TODO: in case of burst or atomic
+        wdata_int[woffset][8*i +: 8] = we_o ? atomic_req ? op_mask[i] ? op_result[8*i+:8] : '0 : tl_i.a_mask[i] ? tl_i.a_data[8*i+:8] : '0 : '0;
+        //.wdata_int[woffset][8*i +: 8] = (tl_i.a_mask[i] && we_o) ?  tl_i.a_data[8*i+:8] : '0; //. old code
       end
     end
   end
@@ -506,7 +522,7 @@
       req_o  = 1'b1;
     end
     else if (atomic_req) begin
-      req_o = atomic_wr;
+      req_o = atomic_rd || atomic_wr;
     end
     else if (intent_req) begin
       req_o = ~req_ack_sram && ~reqfifo_rready;
@@ -538,9 +554,7 @@
       already_ack    <= 0; 
       atomic_wr      <= 0;
       op_mask        <= '0;
-      lower_req_o    <= 0;
       update_addr    <= '0;
-      //atomic_rd      <= 0;     
     end 
 
     else begin
@@ -564,9 +578,6 @@
 
       if(sram_ack && wr_req) begin
         beats_to_write <= beats_to_write - 1;
-        // if(beats_to_write == 1 && already_ack) begin
-        //   already_ack <= 1'b0;
-        // end
       end
 
       if(a_ack && ~wr_req && already_ack) begin
@@ -598,7 +609,6 @@
       end
 
   
-
       if (a_ack || req_o) begin
         if(atomic_req) begin
           case(atomic_state)
@@ -609,17 +619,15 @@
                 beats_to_write <= $clog2(tl_i.a_size);
                 atomic_state   <= PERFORM_WRITE;
                 op_mask        <= tl_i.a_mask;
-                if(sram_ack) begin  //. if the data is already read from the sram
+                if(sram_ack)  //. if the data is already read from the sram
                   atomic_wr <= 1'b1;
-                end
                 //. check if burst
                 if(tl_i.a_size > $clog2(TL_DBW)) begin
                   burst     <= 1'b1;
                   next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
                 end
-                else begin
+                else
                   burst <= 1'b0;
-                end
               end
             end
             PERFORM_WRITE: begin
@@ -628,26 +636,22 @@
                 //. check if the data is written in the sram (sram_ack)
                 if(sram_ack) begin
                   atomic_wr <= 1'b0;
-                  
                   //. determine whether to go back to idle state or proceed to next_beat
                   if(~burst || (beats_to_send == 1 && d_ack) || (beats_to_push == 1 && rspfifo_ack))
                     atomic_state <= ATOMIC_IDLE;
-                  else begin
+                  else
                     atomic_state <= NEXT_BEAT;
-                  end
                 end
               end
-              else begin
+              else
                 if(sram_ack)
                   atomic_wr <= 1'b1;
-              end
             end
             NEXT_BEAT: begin
               //. check if the next beat is receivd
               if(a_ack) begin
-                if(sram_ack) begin  //. check if the data is already read from the sram
+                if(sram_ack)  //. check if the data is already read from the sram
                   atomic_wr <= 1'b1;
-                end
                 atomic_state <= PERFORM_WRITE;
               end
             end
@@ -666,37 +670,11 @@
                   burst     <= 1'b1;
                   next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
                 end
-                else begin
+                else
                   burst <= 1'b0;
-                end
               end
             end
             READ_NEXT_BEAT: begin
-              //. if the data is read from the sram
-              if(rvalid_i) begin
-                //. check if this read data is pushed into the rspfifo or sent to the host
-                //. if not then lower the req_o until the data is pushed or sent
-                //. if yes then check if the address is updated to the next address
-                //. if so then keep the req_o high to read the next beat
-                //. if this is the last beat to read from the sram then lower the req_o
-                if(rspfifo_ack) begin
-                  //. check if this is not the last beat to read from the sram
-                  if(beats_to_push == 1) begin
-                    lower_req_o <= 1'b1;
-                  end
-                end
-                else if (d_ack && rspfifo_depth == 0) begin
-                  if(beats_to_send == 1)
-                  lower_req_o <= 1'b1;
-                end
-                else begin
-                  //. here we need to lower the req_o until the data is pushed or sent
-                  lower_req_o <= 1'b1;
-                end
-              end
-              else begin
-                lower_req_o <= 1'b0;
-              end
               //. make sure the previous beat was either pushed into the FIFO or sent to the host
               if((beats_to_send == 1 && d_ack) || (beats_to_push == 1 && rspfifo_ack))
                 get_state <= GET_IDLE;
@@ -704,7 +682,6 @@
                 next_addr <= ((addr_o + SramByte) % (2**SramAw));
             end
           endcase
-        
         end
 
         else if (wr_req) begin
@@ -713,10 +690,10 @@
               if(a_ack) begin
                 already_ack <= 1'b0;
                 if(sram_ack)
-                  beats_to_write <= $clog2(tl_i.a_size) - 1; //. the beats here will be sent to the sram (not the host) to be written inside it
+                  beats_to_write <= $clog2(tl_i.a_size) - 1;
                 else
                   beats_to_write <= $clog2(tl_i.a_size);
-                  //. check if burst
+                //. check if burst
                 if(tl_i.a_size >  $clog2(TL_DBW)) begin
                   put_state <= WRITE_NEXT_BEAT;
                   burst     <= 1'b1;
@@ -728,17 +705,15 @@
             end
             WRITE_NEXT_BEAT: begin
               //.make sure the previous beat was written in the sram
-              if(sram_ack && beats_to_write == 1) begin
+              if(sram_ack && beats_to_write == 1)
                 put_state <= PUT_IDLE;
-              end else if (sram_ack)
+              else if (sram_ack)
                 next_addr <= ((addr_o + SramByte) % (2**SramAw));
             end
           endcase
         end
-
       end
     end
-    
   end
 
 
