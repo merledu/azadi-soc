@@ -17,7 +17,7 @@ tluh_d2h_t tl_o;
 
 
 logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o;
-logic [1:0]       intent_o;
+logic             intent_o;
 logic             ie_o;
 logic             re_o;  //. read enable
 logic             we_o;
@@ -206,11 +206,46 @@ function void validate
   end
 endfunction
 
+task send_req(); 
+  begin
+    while(~(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1 && clk_i == 1)) begin
+      wait(clk_i == 1'b0);
+      wait(clk_i == 1'b1);
+    end
+    $display("Sending  : clk_cnt = %d", clk_cnt);
+  end
+endtask
+
+task wait_reg_req();
+  begin
+    while(~(we_o == 1 && clk_i == 1)) begin
+      wait(clk_i == 1'b0);
+      wait(clk_i == 1'b1);
+    end
+  end
+endtask
+
+function void validate_reg_req
+  (input[RegDw-1:0] wdata,
+  input [RegAw-1:0] addr);
+  begin
+    if(wdata_o != wdata) begin
+      $display("Error: wdata_o should be %d but it is %d", wdata, wdata_o);
+    end
+    else begin
+      $display("Success: wdata_o = %d", wdata_o);
+    end
+    if(addr_o != addr) begin
+      $display("Error: addr_o should be %d but it is %d", addr, addr_o);
+    end
+    else begin
+      $display("Success: addr_o = %d", addr_o);
+    end
+  end
+endfunction
 
 task wait_response();
   begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
     while(tl_o.d_valid != 1'b1) begin
       wait(clk_i == 1'b0);
       wait(clk_i == 1'b1);
@@ -218,11 +253,13 @@ task wait_response();
   end
 endtask
 
+
+
 //. responses
 initial begin
   //. inital values
   tl_i = '{
-    a_valid:   1'b1,
+    a_valid:   1'b0,
     a_opcode:  Get,
     a_param:   0,
     a_size:    'h2,
@@ -237,14 +274,16 @@ initial begin
   rst_ni  = 0;
   error_i = 0;
 
+  //.tl_i.a_valid = 1'b1;
   #10
   rst_ni = 1;
+  
 //. Read Test ---------------------------------------------------------------
 //. test non-burst read request
-  #10
+  tl_i.a_valid = 1'b1;
   $display("Non-burst Read Test -------------------------------------------------");
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req(); 
+  tl_i.a_valid = 1'b0;
   wait_response();
   //. check the response
   validate(AccessAckData, data_array[0]);
@@ -255,11 +294,14 @@ initial begin
   $display("Burst Read Test -----------------------------------------------------");
   tl_i.a_size = 'h3;
   tl_i.a_address = 'h4;
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
   wait_response();
   $display("-------first beat--------");
   validate(AccessAckData, data_array[1]);
+  wait(clk_i == 1'b0);
+  wait(clk_i == 1'b1);
   wait_response();
   $display("-------second beat-------");
   validate(AccessAckData, data_array[2]);
@@ -272,13 +314,14 @@ initial begin
   tl_i.a_size = 'h2;
   tl_i.a_opcode = PutFullData;
   tl_i.a_data = 32'd55;
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_address = 'hc;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_reg_req();
+  validate_reg_req(32'd55, 'hc);
   wait_response();
   validate(AccessAck, '0, 1'b1);
-  if(wdata_o != 32'd55) begin
-    $display("Error: wdata_o should be 32'd55 but it is %d", wdata_o);
-  end
 //.
 
 
@@ -287,32 +330,30 @@ initial begin
   tl_i.a_opcode = PutFullData;
   tl_i.a_size = 'h3;
   tl_i.a_data = 32'd66;
+  tl_i.a_address = 'h4;
+  tl_i.a_valid = 1'b1;
   //. send the first beeat
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   $display("-------first beat--------");
-  if(wdata_o != 32'd66) begin
-    $display("Error: wdata_o should be 32'd66 but it is %d", wdata_o);
-  end
+  tl_i.a_valid = 1'b0;
+  wait_reg_req();
+  validate_reg_req(32'd66, 'h4);
   wait_response();
   validate(AccessAck, '0, 1'b1);
-  //. send the second beeat
-  wait(clk_i == 1'b0);
-  wait(clk_i == 1'b1);
+  //. send the second beat
+  // wait(clk_i == 1'b0);
+  // wait(clk_i == 1'b1);
   tl_i.a_data = 32'd77;
-  while(tl_o.a_ready != 1'b1) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_valid = 1'b1;
+  send_req();
   $display("-------second beat--------");
-  #1  //. TO ASK
-  if(wdata_o != 32'd77) begin
-    $display("Error: wdata_o should be 32'd77 but it is %d", wdata_o);
-  end
+  tl_i.a_valid = 1'b0;
+  //.#1  //. TO ASK
+  wait_reg_req();
+  validate_reg_req(32'd77, 'h8);
 //.
 
-
+#10
 //. Atomic Test -------------------------------------------------------------
 //. test the non-burst atomic request
   $display("Non-burst Atomic test -------------------------------------------------");
@@ -323,14 +364,15 @@ initial begin
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h0;
-  tl_i.a_address = 'hc;
-  tl_i.a_data = 32'd5;
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_address = 'h4;  //. data in this location is 1
+  tl_i.a_data = 32'd0;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_reg_req();
+  validate_reg_req(32'd0, 'h4);
   wait_response();
-  validate(AccessAckData, data_array[3]);
-  if(wdata_o != 32'h3)
-    $display("Error: wdata_o should be 32'h2 but it is %d", wdata_o);
+  validate(AccessAckData, data_array[1]);
 //.
 
 
@@ -340,30 +382,27 @@ initial begin
   $display("-------arithemetic--------");
   //. a- min
   $display("-------max--------");
+  tl_i.a_valid = 1'b1;
   tl_i.a_size = 'h3;
   tl_i.a_param = 'h1;
   tl_i.a_address = 'h4;
   tl_i.a_data = 32'd5;
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  send_req();
   $display("-------first beat--------");
-  wait(clk_i == 1'b0);
-  wait(clk_i == 1'b1);
+  tl_i.a_valid = 1'b0;
   //. check the wdata_o
-  if(wdata_o != 32'h5)
-    $display("Error: wdata_o should be 32'h5 but it is %d", wdata_o);
-  //. send the second beat
-  tl_i.a_data = 32'd0;
-  while(tl_o.a_ready != 1'b1) begin
-    wait(clk_i == 1'b0);
-    wait(clk_i == 1'b1);
-  end
-  $display("Sending  : clk_cnt = %d", clk_cnt);
-  $display("-------second beat--------");
+  wait_reg_req();
+  validate_reg_req(32'd5, 'h4);
   wait_response();
   validate(AccessAckData, data_array[1]);
-  if(wdata_o != 32'h1)
-    $display("Error: wdata_o should be 32'h1 but it is %d", wdata_o);
+  //. send the second beat
+  tl_i.a_data = 32'd1;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  $display("-------second beat--------");
+  tl_i.a_valid = 1'b0;
+  wait_reg_req();
+  validate_reg_req(32'd2, 'h8);
   wait_response();
   validate(AccessAckData, data_array[2]);
 //.
@@ -374,8 +413,9 @@ initial begin
   tl_i.a_opcode = Intent;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h0;
-  wait(tl_o.a_ready == 1'b1 && tl_i.a_valid == 1'b1);
-  $display("Sending  : clk_cnt = %d", clk_cnt);
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
   wait_response();
   validate(HintAck, '0, 1'b1);  
 //.

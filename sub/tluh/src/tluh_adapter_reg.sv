@@ -12,7 +12,7 @@
 
   // Register interface
   output logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o, //. intention blocks
-  output logic [1:0]       intent_o,  //. intent operation (prefetchRead, prefetchWrite)
+  output logic             intent_o,  //. intent operation (0:prefetchRead, 1:prefetchWrite)
   output logic             ie_o, //. intent enable
   output logic             re_o,
   output logic             we_o,
@@ -53,6 +53,8 @@
   logic                        op_cout;
   logic                        op_type;   //. 1: arithmetic, 0: logical
   logic                        op_enable;
+  logic                        atomic_rd;
+  logic                        atomic_wr;
 
 
   // States
@@ -79,7 +81,6 @@
   atomic_state_t atomic_state;
 
 
-  logic wait_till_sending_current;
   logic burst;  //. indicates if the current request is a burst request
   logic [tluh_pkg::TL_BEATSMAXW-1:0] beats_cnt;
 
@@ -87,21 +88,42 @@
 
   assign a_ack   = tl_i.a_valid & tl_o.a_ready;
   assign d_ack   = tl_o.d_valid & tl_i.d_ready;
-  // Request signal
-  //. TODO: avoid latching those signal and find when to pull them down
-  assign wr_req     = a_ack & ((tl_i.a_opcode == PutFullData) | (tl_i.a_opcode == PutPartialData));
-  assign rd_req     = a_ack ? (tl_i.a_opcode == Get) : burst ? rd_req : 1'b0; //. latch the rd_req signal for burst response of get request
-  assign atomic_req = a_ack ? ((tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData)) : ((atomic_state == PERFORM_WRITE || burst)) ? atomic_req : 1'b0; //. latch the atomic_req signal for burst response of burst atomic request or for the cycle of writing the result of atomic operation to the register
 
-  assign we_o    = (wr_req || ((atomic_state == PERFORM_WRITE) && atomic_req)) & ~err_internal;
-  assign re_o    = (rd_req || (((atomic_state == ATOMIC_IDLE) || (atomic_state == NEXT_BEAT)) && atomic_req)) & ~err_internal;
-  assign addr_o  = ~burst ? {tl_i.a_address[RegAw-1:2], 2'b00} : (re_o || (we_o && atomic_req)) ? next_addr : addr_o ; // generate always word-align
+
+  // Request signal
+  assign rd_req     = a_ack ? (tl_i.a_opcode == Get) : get_state != GET_IDLE;
+  assign wr_req     = a_ack ? ((tl_i.a_opcode == PutFullData) | (tl_i.a_opcode == PutPartialData)) : put_state != PUT_IDLE;
+  assign atomic_req = a_ack ? ((tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData)) : atomic_state != ATOMIC_IDLE;
+
+  assign atomic_rd = a_ack ? (tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData) : 0;
+
+  always_comb begin
+    if(a_ack && ~burst) begin
+      addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
+    end
+    else if (burst) begin
+      if (wr_req || atomic_req) begin
+        if(a_ack)
+          addr_o = next_addr;
+      end
+      else if(rd_req) begin
+        if(d_ack)
+          addr_o = next_addr;
+      end
+    end
+  end
+
+
+
+  assign we_o    = ((a_ack && (((tl_i.a_opcode == PutFullData) || (tl_i.a_opcode == PutPartialData)))) || atomic_wr) & ~err_internal;
+  assign re_o    = (rd_req || atomic_rd) & ~err_internal;
+  //.assign addr_o  = ~burst ? {tl_i.a_address[RegAw-1:2], 2'b00} : (re_o || (we_o && atomic_req)) ? next_addr : addr_o ; // generate always word-align
   assign wdata_o = atomic_req ? op_result : tl_i.a_data;
   assign be_o    = tl_i.a_mask;
 
   //. Intent signals
   assign intention_blocks_o = $clog2(tl_i.a_size);
-  assign intent_o           = tl_i.a_param;
+  assign intent_o           = tl_i.a_param[0];
   assign ie_o               = a_ack & (tl_i.a_opcode == Intent);
 
   //. Atomic signals
@@ -117,156 +139,148 @@
     if (!rst_ni) begin
       burst        <= 1'b0;
       rdata        <= '0;
-      //.op_data2     <= '0;
       outstanding  <= 1'b0;
       get_state    <= GET_IDLE;
       put_state    <= PUT_IDLE;
       atomic_state <= ATOMIC_IDLE;
       next_addr    <= '0;
       beats_cnt    <= '0;
-      wait_till_sending_current <= 1'b0;
+      atomic_wr    <= 1'b0;
     end 
+    else begin
 
-    else if(wait_till_sending_current) begin
-      if(d_ack) begin 
+      if(d_ack && ~burst && ~atomic_req) begin
         outstanding <= 1'b0;
-        wait_till_sending_current <= 1'b0;
-      end
-    end
-
-
-    else if (a_ack | burst | d_ack) begin
-      //. case 1: get request
-      if(rd_req) begin
-        case(get_state)
-          GET_IDLE: begin
-            rdata       <= rdata_i;
-            outstanding <= 1'b1;
-            //. check if burst
-            if(tl_i.a_size > $clog2(TL_DBW)) begin
-              get_state <= READ_NEXT_BEAT;
-              burst     <= 1'b1;
-              next_addr <= ((addr_o + RegBw) % (2**RegAw));
-              beats_cnt <= $clog2(tl_i.a_size) - 1;
-            end
-            else
-              wait_till_sending_current <= 1'b1;
-          end
-          READ_NEXT_BEAT: begin
-            if(d_ack) begin
-              rdata       <= rdata_i;
-              outstanding <= 1'b1;
-              beats_cnt   <= beats_cnt - 1;
-              if(beats_cnt == 1) begin  //. == 1 means that in this cycle it will be 0 (non-blocking assignment)
-                burst     <= 1'b0;
-                get_state <= GET_IDLE;
-                wait_till_sending_current = 1'b1;
-              end
-              else
-                next_addr <= ((addr_o + RegBw) % (2**RegAw));
-            end
-          end
-        endcase
-      end 
-      
-      //. case 2: put request  
-      else if (wr_req || (put_state != PUT_IDLE)) begin
-        case(put_state)
-          PUT_IDLE: begin
-            outstanding <= 1'b1;
-            //. check if burst
-            if(tl_i.a_size > $clog2(TL_DBW)) begin
-              put_state <= WRITE_NEXT_BEAT;
-              burst     <= 1'b1;
-              next_addr <= ((addr_o + RegBw) % (2**RegAw));
-              beats_cnt <= $clog2(tl_i.a_size) - 1;
-            end
-            else
-              wait_till_sending_current <= 1'b1;
-          end
-          WRITE_NEXT_BEAT: begin
-            //. make sure the ack signal is sent and received by the master
-            if(d_ack) begin
-              outstanding <= 1'b0;
-            end
-            //. make sure the next beat arrives
-            if(a_ack) begin
-              beats_cnt <= beats_cnt - 1;
-              if(beats_cnt == 1) begin
-                burst     <= 1'b0;
-                put_state <= PUT_IDLE;
-                if(~d_ack && outstanding)
-                  wait_till_sending_current = 1'b1;
-              end
-              else
-                next_addr <= ((addr_o + RegBw) % (2**RegAw));
-            end
-          end
-        endcase
-      end 
-
-      //. case 3: atomic request  
-      else if (atomic_req) begin
-        case(atomic_state)
-          ATOMIC_IDLE: begin
-            rdata        <= rdata_i;
-            //.op_data2     <= rdata_i;
-            outstanding  <= 1'b1;
-            op_cin       <= 1'b0;
-            op_enable    <= 1'b1;
-            atomic_state <= PERFORM_WRITE;
-            //. check if burst
-            if(tl_i.a_size > $clog2(TL_DBW)) begin
-              burst     <= 1'b1;
-              next_addr <= addr_o;  //. I have to do this to avoid incrementing addr_o twice
-              beats_cnt <= $clog2(tl_i.a_size) - 1;
-            end
-          end
-          PERFORM_WRITE: begin
-            if(d_ack) begin
-              outstanding  <= 1'b0;
-            end
-            else begin
-              wait_till_sending_current = 1'b1;
-            end
-            if(burst) begin
-              //. at this moment we are sure that the result is written in the register
-              if(beats_cnt == 0) begin
-                burst        <= 1'b0;
-                op_enable    <= 1'b0;
-                atomic_state <= ATOMIC_IDLE;
-              end
-              else begin
-                atomic_state <= NEXT_BEAT;
-                next_addr    <= ((addr_o + RegBw) % (2**RegAw));
-                op_cin       <= op_cout;
-              end              
-            end 
-            else begin
-              atomic_state <= ATOMIC_IDLE;
-            end
-          end
-          NEXT_BEAT: begin
-            if(a_ack) begin
-              rdata        <= rdata_i;
-              //.op_data2     <= rdata_i;
-              outstanding  <= 1'b1;
-              atomic_state <= PERFORM_WRITE;
-              beats_cnt    <= beats_cnt - 1;
-            end
-          end
-        endcase
-
-      end
-      
-      //. case 4: Intent request
-      else if (ie_o) begin
-        outstanding               <= 1'b1;
-        wait_till_sending_current <= 1'b1;
       end
 
-      //. TO ASK: I think no need to put else statement here case the latches will be desirable, right?
-
+      else if (a_ack | burst | d_ack) begin
+        //. case 1: get request
+        if(rd_req) begin
+          case(get_state)
+            GET_IDLE: begin
+              if(a_ack) begin
+                rdata       <= rdata_i;
+                outstanding <= 1'b1;
+                //. check if burst
+                if(tl_i.a_size > $clog2(TL_DBW)) begin
+                  get_state <= READ_NEXT_BEAT;
+                  burst     <= 1'b1;
+                  beats_cnt <= $clog2(tl_i.a_size) - 1;
+                  next_addr <= ((addr_o + RegBw) % (2**RegAw));
+                end
+              end
+            end
+            READ_NEXT_BEAT: begin
+              if(d_ack) begin
+                rdata       <= rdata_i;
+                beats_cnt <= beats_cnt - 1;
+                outstanding <= 1'b1;
+                if(beats_cnt == 1) begin  //. == 1 means that in this cycle it will be 0 (non-blocking assignment)
+                  burst     <= 1'b0;
+                  get_state <= GET_IDLE;
+                end
+                else
+                  next_addr <= ((addr_o + RegBw) % (2**RegAw));
+              end
+            end
+          endcase
+        end 
+        
+        //. case 2: put request  
+        else if (wr_req) begin
+          case(put_state)
+            PUT_IDLE: begin
+              if(a_ack) begin
+                outstanding <= 1'b1;
+                //. check if burst
+                if(tl_i.a_size > $clog2(TL_DBW)) begin
+                  put_state <= WRITE_NEXT_BEAT;
+                  burst     <= 1'b1;
+                  next_addr <= ((addr_o + RegBw) % (2**RegAw));
+                  beats_cnt <= $clog2(tl_i.a_size) - 1;
+                end
+              end
+            end
+            WRITE_NEXT_BEAT: begin
+              //. make sure the ack signal is sent and received by the master
+              if(d_ack) begin
+                outstanding <= 1'b0;
+              end
+              //. make sure the next beat arrives
+              if(a_ack) begin
+                beats_cnt <= beats_cnt - 1;
+                if(beats_cnt == 1) begin
+                  burst     <= 1'b0;
+                  put_state <= PUT_IDLE;
+                end
+                else
+                  next_addr <= ((addr_o + RegBw) % (2**RegAw));
+              end
+            end
+          endcase
+        end 
+  
+        //. case 3: atomic request  
+        else if (atomic_req) begin
+          case(atomic_state)
+            ATOMIC_IDLE: begin
+              if(a_ack) begin
+                rdata        <= rdata_i;
+                atomic_wr    <= 1'b1;
+                outstanding  <= 1'b1;
+                op_cin       <= 1'b0;
+                op_enable    <= 1'b1;
+                atomic_state <= PERFORM_WRITE;
+                //. check if burst
+                if(tl_i.a_size > $clog2(TL_DBW)) begin
+                  burst     <= 1'b1;
+                  next_addr <= addr_o;  //. I have to do this to avoid incrementing addr_o twice
+                  beats_cnt <= $clog2(tl_i.a_size);
+                end
+              end
+            end
+            PERFORM_WRITE: begin
+              atomic_wr   <= 1'b0;
+              if(d_ack) begin
+                outstanding  <= 1'b0;
+                if(burst) begin
+                  beats_cnt <= beats_cnt - 1;
+                  //. at this moment we are sure that the result is written in the register
+                  if(beats_cnt == 1) begin
+                    burst        <= 1'b0;
+                    op_enable    <= 1'b0;
+                    atomic_state <= ATOMIC_IDLE;
+                  end
+                  else begin
+                    atomic_state <= NEXT_BEAT;
+                    next_addr    <= ((addr_o + RegBw) % (2**RegAw));
+                    //.op_cin       <= op_cout;
+                  end              
+                end 
+                else begin
+                  atomic_state <= ATOMIC_IDLE;
+                end
+              end
+            end
+            NEXT_BEAT: begin
+              if(a_ack) begin
+                rdata        <= rdata_i;
+                atomic_wr    <= 1'b1;
+                //.op_data2     <= rdata_i;
+                outstanding  <= 1'b1;
+                atomic_state <= PERFORM_WRITE;
+              end
+            end
+          endcase
+  
+        end
+        
+        //. case 4: Intent request
+        else if (ie_o) begin
+          outstanding               <= 1'b1;
+        end
+    
+      end
     end
   end
 
@@ -299,8 +313,35 @@
     end
   end
 
+
+  logic ready;
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      ready <= 1'b0;
+    end else if (a_ack) begin
+      ready <= 1'b0;
+    end
+    else if (d_ack) begin
+      if(burst) begin
+        if(rd_req && ~atomic_req) begin
+          ready <= 1'b0;
+        end
+        else begin
+          ready <= 1'b1;
+        end
+      end
+      else 
+        ready <= 1'b1;
+    end
+    else begin
+      ready <= 1'b1;
+    end
+  end
+
+
+
   assign tl_o = '{
-    a_ready:  ~outstanding, //. (~a_ack || d_ack) && ~outstanding,  //. TODO: check if this is correct
+    a_ready:  ready, //. (~a_ack || d_ack) && ~outstanding,  //. TODO: check if this is correct
     d_valid:  outstanding,
     d_opcode: rspop,
     d_param:  '0,
