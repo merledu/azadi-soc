@@ -95,8 +95,16 @@
   assign wr_req     = a_ack ? ((tl_i.a_opcode == PutFullData) | (tl_i.a_opcode == PutPartialData)) : put_state != PUT_IDLE;
   assign atomic_req = a_ack ? ((tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData)) : atomic_state != ATOMIC_IDLE;
 
-  assign atomic_rd = a_ack ? (tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData) : 0;
+  assign atomic_rd  = a_ack ? (tl_i.a_opcode == ArithmeticData) | (tl_i.a_opcode == LogicalData) : 0;
 
+  assign we_o       = ((a_ack && (((tl_i.a_opcode == PutFullData) || (tl_i.a_opcode == PutPartialData)))) || atomic_wr) & ~err_internal;
+  assign re_o       = (rd_req || atomic_rd) & ~err_internal;
+  assign wdata_o    = atomic_req ? op_result : tl_i.a_data;
+  
+  assign be_o       = tl_i.a_mask;
+  
+  
+  //.assign addr_o  = ~burst ? {tl_i.a_address[RegAw-1:2], 2'b00} : (re_o || (we_o && atomic_req)) ? next_addr : addr_o ; // generate always word-align
   always_comb begin
     if(a_ack && ~burst) begin
       addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
@@ -114,12 +122,6 @@
   end
 
 
-
-  assign we_o    = ((a_ack && (((tl_i.a_opcode == PutFullData) || (tl_i.a_opcode == PutPartialData)))) || atomic_wr) & ~err_internal;
-  assign re_o    = (rd_req || atomic_rd) & ~err_internal;
-  //.assign addr_o  = ~burst ? {tl_i.a_address[RegAw-1:2], 2'b00} : (re_o || (we_o && atomic_req)) ? next_addr : addr_o ; // generate always word-align
-  assign wdata_o = atomic_req ? op_result : tl_i.a_data;
-  assign be_o    = tl_i.a_mask;
 
   //. Intent signals
   assign intention_blocks_o = $clog2(tl_i.a_size);
@@ -323,7 +325,7 @@
     end
     else if (d_ack) begin
       if(burst) begin
-        if(rd_req && ~atomic_req) begin
+        if(rd_req) begin
           ready <= 1'b0;
         end
         else begin
