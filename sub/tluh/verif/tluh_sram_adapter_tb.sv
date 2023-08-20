@@ -38,21 +38,21 @@ assign gnt_i = '1;
 // Memory Address
 // Address width within the block
   parameter int MemAw = 12;
-  parameter logic [MemAw-1:0] GPIO_INTR_STATE_OFFSET = 12'h 0;
-  parameter logic [MemAw-1:0] GPIO_INTR_ENABLE_OFFSET = 12'h 4;
-  parameter logic [MemAw-1:0] GPIO_INTR_TEST_OFFSET = 12'h 8;
-  parameter logic [MemAw-1:0] GPIO_DATA_IN_OFFSET = 12'h c;
-  parameter logic [MemAw-1:0] GPIO_DIRECT_OUT_OFFSET = 12'h 10;
-  parameter logic [MemAw-1:0] GPIO_MASKED_OUT_LOWER_OFFSET = 12'h 14;
-  parameter logic [MemAw-1:0] GPIO_MASKED_OUT_UPPER_OFFSET = 12'h 18;
-  parameter logic [MemAw-1:0] GPIO_DIRECT_OE_OFFSET = 12'h 1c;
-  parameter logic [MemAw-1:0] GPIO_MASKED_OE_LOWER_OFFSET = 12'h 20;
-  parameter logic [MemAw-1:0] GPIO_MASKED_OE_UPPER_OFFSET = 12'h 24;
-  parameter logic [MemAw-1:0] GPIO_INTR_CTRL_EN_RISING_OFFSET = 12'h 28;
-  parameter logic [MemAw-1:0] GPIO_INTR_CTRL_EN_FALLING_OFFSET = 12'h 2c;
-  parameter logic [MemAw-1:0] GPIO_INTR_CTRL_EN_LVLHIGH_OFFSET = 12'h 30;
-  parameter logic [MemAw-1:0] GPIO_INTR_CTRL_EN_LVLLOW_OFFSET = 12'h 34;
-  parameter logic [MemAw-1:0] GPIO_CTRL_EN_INPUT_FILTER_OFFSET = 12'h 38;
+  parameter logic [MemAw-1:0] LOC_0 = 12'h 0;
+  parameter logic [MemAw-1:0] LOC_1 = 12'h 4;
+  parameter logic [MemAw-1:0] LOC_2 = 12'h 8;
+  parameter logic [MemAw-1:0] LOC_3 = 12'h c;
+  parameter logic [MemAw-1:0] LOC_4 = 12'h 10;
+  parameter logic [MemAw-1:0] LOC_5 = 12'h 14;
+  parameter logic [MemAw-1:0] LOC_6 = 12'h 18;
+  parameter logic [MemAw-1:0] LOC_7 = 12'h 1c;
+  parameter logic [MemAw-1:0] LOC_8 = 12'h 20;
+  parameter logic [MemAw-1:0] LOC_9 = 12'h 24;
+  parameter logic [MemAw-1:0] LOC_A = 12'h 28;
+  parameter logic [MemAw-1:0] LOC_B = 12'h 2c;
+  parameter logic [MemAw-1:0] LOC_C = 12'h 30;
+  parameter logic [MemAw-1:0] LOC_D = 12'h 34;
+  parameter logic [MemAw-1:0] LOC_E = 12'h 38;
 //.
 
 //. data array
@@ -61,21 +61,21 @@ logic [SramDw-1:0] data_array [0:14] = '{32'd17, 32'h1, 32'h2, 32'h3, 32'h4, 32'
 logic [14:0] addr_hit;  //. assume we have only 15 locations although we have 4k locatoins each contains 2 words
 always_comb begin
   addr_hit = '0;
-  addr_hit[ 0] = (addr_o == GPIO_INTR_STATE_OFFSET);
-  addr_hit[ 1] = (addr_o == GPIO_INTR_ENABLE_OFFSET);
-  addr_hit[ 2] = (addr_o == GPIO_INTR_TEST_OFFSET);
-  addr_hit[ 3] = (addr_o == GPIO_DATA_IN_OFFSET);
-  addr_hit[ 4] = (addr_o == GPIO_DIRECT_OUT_OFFSET);
-  addr_hit[ 5] = (addr_o == GPIO_MASKED_OUT_LOWER_OFFSET);
-  addr_hit[ 6] = (addr_o == GPIO_MASKED_OUT_UPPER_OFFSET);
-  addr_hit[ 7] = (addr_o == GPIO_DIRECT_OE_OFFSET);
-  addr_hit[ 8] = (addr_o == GPIO_MASKED_OE_LOWER_OFFSET);
-  addr_hit[ 9] = (addr_o == GPIO_MASKED_OE_UPPER_OFFSET);
-  addr_hit[10] = (addr_o == GPIO_INTR_CTRL_EN_RISING_OFFSET);
-  addr_hit[11] = (addr_o == GPIO_INTR_CTRL_EN_FALLING_OFFSET);
-  addr_hit[12] = (addr_o == GPIO_INTR_CTRL_EN_LVLHIGH_OFFSET);
-  addr_hit[13] = (addr_o == GPIO_INTR_CTRL_EN_LVLLOW_OFFSET);
-  addr_hit[14] = (addr_o == GPIO_CTRL_EN_INPUT_FILTER_OFFSET);
+  addr_hit[ 0] = (addr_o == LOC_0);
+  addr_hit[ 1] = (addr_o == LOC_1);
+  addr_hit[ 2] = (addr_o == LOC_2);
+  addr_hit[ 3] = (addr_o == LOC_3);
+  addr_hit[ 4] = (addr_o == LOC_4);
+  addr_hit[ 5] = (addr_o == LOC_5);
+  addr_hit[ 6] = (addr_o == LOC_6);
+  addr_hit[ 7] = (addr_o == LOC_7);
+  addr_hit[ 8] = (addr_o == LOC_8);
+  addr_hit[ 9] = (addr_o == LOC_9);
+  addr_hit[10] = (addr_o == LOC_A);
+  addr_hit[11] = (addr_o == LOC_B);
+  addr_hit[12] = (addr_o == LOC_C);
+  addr_hit[13] = (addr_o == LOC_D);
+  addr_hit[14] = (addr_o == LOC_E);
 end
 
 
