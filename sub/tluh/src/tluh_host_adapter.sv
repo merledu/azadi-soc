@@ -22,11 +22,10 @@ module tluh_host_adapter #(
     input logic clk_i,
     input logic rst_ni,
 // interface with host agent 
-    input logic                         intent_req_i, //. 1 --> intent operation, 0 --> non-intent operation
-    input logic [tluh_pkg::TL_SZW-1:0]  data_width_i, //. in the form of Log2(DataWidth/8)
-    input logic [2:0]                   operation_i,  //. the arithmetic/logical/intent operation to be performed
-    input logic                         arithmetic_i, //. 1 --> arithmetic operation, 0 --> logical operation
-    input logic                         atomic_req_i, //. 1 --> atomic operation, 0 --> non-atomic operation
+    //.input logic                         ready_i,
+    input logic [2:0]                   param_i,   //. the parameter determines the type of atomic/intent operation needed
+    input logic [tluh_pkg::TL_SZW-1:0]  data_byte_i, //. in the form of Log2(DataWidth/8)
+    input logic [1:0]                   operation_i,  //. the 0:arithmetic/ 1:logical/ 2:intent operation to be performed
     input logic                         req_i,
     output logic                        gnt_o,
     input logic [tluh_pkg::TL_AW-1:0]   addr_i, 
@@ -42,18 +41,18 @@ module tluh_host_adapter #(
 );
 
     localparam int WordSize = $clog2(tluh_pkg::TL_DBW);
-    //localparam int BeatsMax = (2**(2**tluh_pkg::TL_SZW - 1)) / tluh_pkg::TL_DBW;
-    //localparam int BeatsMaxW = $bits(BeatsMax);
 
     logic [tluh_pkg::TL_AIW-1:0] tl_source;
     logic [tluh_pkg::TL_DBW-1:0] tl_be;
 
-    logic wait_resp = 0; //. flag to indicate whether we are waiting for a response or not
+    logic atomic_req;
+
+    logic wait_resp; //. flag to indicate whether we are waiting for a response or not
     logic new_req;       //. flag to indicate the beginning of a new request
     
     logic [tluh_pkg::TL_BEATSMAXW-1:0] beats_no_to_receive = 0; //. number of beats expected to be received from the slave agent after sending the request
     logic [tluh_pkg::TL_BEATSMAXW-1:0] sent_burst_beat_cnt = 0; //. count the number of sent beats of the request (serves in case of burst requests)
-    logic [tluh_pkg::TL_BEATSMAXW-1:0] total_burst_beats   = 0; //. total number of beats of the burst request (serves in case of burst requests)
+    logic [tluh_pkg::TL_BEATSMAXW-1:0] total_beats_to_send = 0; //. total number of beats of the burst request (used in case of burst requests)
 
     //. assign the source id of the request
     if(MAX_REQS == 1) begin
@@ -94,34 +93,28 @@ module tluh_host_adapter #(
 
         //. requests
         if(req_i && gnt_o) begin
-
             if(new_req && ~wait_resp) begin //. indicate the beginning of a request
-                
                 //. first raise the wait_resp flag to indicate that we are waiting for the response
                 wait_resp <= 1;
 
-
                 //. beats_no_to_receive handling
-                if(~we_i || atomic_req_i) //. Get or Atomic req
-                    beats_no_to_receive <= $clog2(data_width_i);
+                if(~we_i || atomic_req) //. Get or Atomic req
+                    beats_no_to_receive <= $clog2(data_byte_i);
                 else //. put or intent req
                     beats_no_to_receive <= 1;
 
-
                 //. sent_burst_beat_cnt handling
-                if(we_i && (data_width_i > $clog2(TL_DBW))) begin //. burst Put or Atomic req
+                if((we_i || atomic_req) && (data_byte_i > $clog2(tluh_pkg::TL_DBW))) begin
                     sent_burst_beat_cnt <= 1;
-                    total_burst_beats   <= $clog2(data_width_i);
+                    total_beats_to_send <= $clog2(data_byte_i);
                 end else begin //. Get or Intent req or any non-burst req
                     sent_burst_beat_cnt <= 0;
-                    total_burst_beats   <= 0;
-                end
-                    
+                    total_beats_to_send <= 0;
+                end       
             end
             else if(~new_req) begin
                 sent_burst_beat_cnt <= sent_burst_beat_cnt + 1;
             end
-
         end
 
         //. responses
@@ -140,24 +133,23 @@ module tluh_host_adapter #(
     //. TO ASK: does the following mean that atomic reqs must also have their be_i set to 1?
     // For TL-UH Get opcode all active bytes must have their mask logic set, so all reads get all tl_be
     // logics set. For writes the supplied be_i is used as the mask.
-    assign tl_be = ~we_i ? {tluh_pkg::TL_DBW{1'b1}} : be_i;
+    assign tl_be = (~we_i && (&operation_i)) ? {tluh_pkg::TL_DBW{1'b1}} : be_i;
 
-    assign new_req = (sent_burst_beat_cnt == total_burst_beats || sent_burst_beat_cnt == 0) ? 1'b1 : 0;  //. it is a new request if all beats are sent or if it is the first beat
+    assign new_req = (sent_burst_beat_cnt == total_beats_to_send || sent_burst_beat_cnt == 0) ? 1'b1 : 0;  //. it is a new request if all beats are sent or if it is the first beat
 
+    assign atomic_req = (operation_i < 'h2);
 
     assign tl_h_c_a = '{
         a_valid:    req_i,
-        a_opcode:   (arithmetic_i)          ? tluh_pkg::ArithmeticData :
-                    (atomic_req_i)          ? tluh_pkg::LogicalData :
-                    (intent_req_i)          ? tluh_pkg::Intent :
-                    (~we_i & ~atomic_req_i) ? tluh_pkg::Get :
-                    (&be_i & we_i)          ? tluh_pkg::PutFullData : tluh_pkg::PutPartialData,
+        a_opcode:   (operation_i == '0)  ? tluh_pkg::ArithmeticData :
+                    (operation_i == 'h1) ? tluh_pkg::LogicalData :
+                    (operation_i == 'h2) ? tluh_pkg::Intent :
+                    (~we_i)              ? tluh_pkg::Get :
+                    (&be_i)              ? tluh_pkg::PutFullData : tluh_pkg::PutPartialData,
 
-        a_param:    (arithmetic_i)? tluh_pkg::tluh_a_param_arith'(operation_i) :
-                    (atomic_req_i)? tluh_pkg::tluh_a_param_log'(operation_i) :
-                    (intent_req_i)? tluh_pkg::tluh_a_param_intent'(operation_i) : '0,
+        a_param:    param_i,
                     
-        a_size:     data_width_i,
+        a_size:     data_byte_i,
         a_mask:     tl_be,
         a_source:   tl_source,
         a_address:  {addr_i[31:WordSize], {WordSize{1'b0}}},
@@ -168,6 +160,6 @@ module tluh_host_adapter #(
     assign gnt_o   = tl_h_c_d.a_ready;
     assign err_o   = tl_h_c_d.d_error;
     assign valid_o = tl_h_c_d.d_valid;
-    assign rdata_o = tl_h_c_d.d_data;;
+    assign rdata_o = tl_h_c_d.d_data;
 
 endmodule
