@@ -4,6 +4,7 @@ module tluh_sram_adapter_tb import tluh_pkg::*; ();
 parameter int SramDw      = 32;
 parameter int SramAw      = 12;
 localparam int SramByte = SramDw/8;
+localparam int DataBitWidth = tluh_pkg::vbits(SramByte);
 //. the clk and rst
 reg clk_i;
 reg rst_ni;
@@ -15,9 +16,9 @@ int clk_cnt;
 tluh_h2d_t tl_i;
 tluh_d2h_t tl_o;
 
-logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o; //. intention blocks
-logic              intent_o;  //. intent operation (prefetchRead, prefetchWrite)
-logic              intent_en_o; //. intent enable
+logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o;
+logic              intent_o;
+logic              intent_en_o;
 logic              req_o;
 logic              gnt_i;
 logic              we_o;
@@ -26,7 +27,7 @@ logic [SramDw-1:0] wdata_o;
 logic [SramDw-1:0] wmask_o;
 logic [SramDw-1:0] rdata_i;
 logic              rvalid_i;
-logic [1:0]        rerror_i; // 2 bit error [1]: Uncorrectable, [0]: Correctable
+logic [1:0]        rerror_i;
 
 //. in case of read request
 logic [SramDw-1:0] data_to_read;
@@ -39,20 +40,20 @@ assign gnt_i = '1;
 // Address width within the block
   parameter int MemAw = 12;
   parameter logic [MemAw-1:0] LOC_0 = 12'h 0;
-  parameter logic [MemAw-1:0] LOC_1 = 12'h 4;
-  parameter logic [MemAw-1:0] LOC_2 = 12'h 8;
-  parameter logic [MemAw-1:0] LOC_3 = 12'h c;
-  parameter logic [MemAw-1:0] LOC_4 = 12'h 10;
-  parameter logic [MemAw-1:0] LOC_5 = 12'h 14;
-  parameter logic [MemAw-1:0] LOC_6 = 12'h 18;
-  parameter logic [MemAw-1:0] LOC_7 = 12'h 1c;
-  parameter logic [MemAw-1:0] LOC_8 = 12'h 20;
-  parameter logic [MemAw-1:0] LOC_9 = 12'h 24;
-  parameter logic [MemAw-1:0] LOC_A = 12'h 28;
-  parameter logic [MemAw-1:0] LOC_B = 12'h 2c;
-  parameter logic [MemAw-1:0] LOC_C = 12'h 30;
-  parameter logic [MemAw-1:0] LOC_D = 12'h 34;
-  parameter logic [MemAw-1:0] LOC_E = 12'h 38;
+  parameter logic [MemAw-1:0] LOC_1 = 12'h 1;
+  parameter logic [MemAw-1:0] LOC_2 = 12'h 2;
+  parameter logic [MemAw-1:0] LOC_3 = 12'h 3;
+  parameter logic [MemAw-1:0] LOC_4 = 12'h 4;
+  parameter logic [MemAw-1:0] LOC_5 = 12'h 5;
+  parameter logic [MemAw-1:0] LOC_6 = 12'h 6;
+  parameter logic [MemAw-1:0] LOC_7 = 12'h 7;
+  parameter logic [MemAw-1:0] LOC_8 = 12'h 8;
+  parameter logic [MemAw-1:0] LOC_9 = 12'h 9;
+  parameter logic [MemAw-1:0] LOC_A = 12'h A;
+  parameter logic [MemAw-1:0] LOC_B = 12'h B;
+  parameter logic [MemAw-1:0] LOC_C = 12'h C;
+  parameter logic [MemAw-1:0] LOC_D = 12'h D;
+  parameter logic [MemAw-1:0] LOC_E = 12'h E;
 //.
 
 //. data array
@@ -177,8 +178,6 @@ always #5 clk_i = ~clk_i;
 always #10 clk_cnt = clk_cnt + 1'b1;
 
 
-//.assign rdata_i = data_to_read;//. (~we_o) ? data_to_read : 32'd60;
-
 
 always_ff @(posedge clk_i or negedge rst_ni) begin
   if (!rst_ni) begin
@@ -193,7 +192,6 @@ always_ff @(posedge clk_i or negedge rst_ni) begin
   end
 end
 
-//assign rvalid_i = req_o && ~we_o;
 
 
 
@@ -216,7 +214,6 @@ function void validate
     if(ignore_data == 0) begin
       if (tl_o.d_data != expected_data) begin
         $display("Error: d_data should be %d but it is %d", $signed(expected_data), $signed(tl_o.d_data));
-        $display("d_valid = %d and the clk_cnt now is = %d ", tl_o.d_valid, clk_cnt);
       end
       else begin
         $display("Success: d_data is %d", tl_o.d_data);
@@ -274,7 +271,7 @@ task send_req();
   end
 endtask
 
-//. responses
+
 initial begin
   //. inital values
   tl_i = '{
@@ -306,9 +303,7 @@ initial begin
   validate(AccessAckData, data_array[0]);
 //.
 
-  //. TO ASK
-  // tl_i.a_valid = 0;
-  // #10
+
 
 //. test burst read request
   $display("Burst Read Test -----------------------------------------------------");
@@ -322,7 +317,7 @@ initial begin
   validate(AccessAckData, data_array[1]);
   wait_response();
   $display("-------second beat-------");
-  validate(AccessAckData, data_array[2]);
+  validate(AccessAckData, data_array[5]);
 //.
 
 
@@ -389,10 +384,11 @@ initial begin
   send_req();
   tl_i.a_valid = 1'b0;
   wait_sram_req();
-  validate_sram_req(32'h3,'hc);
+  validate_sram_req(32'h3,tl_i.a_address[DataBitWidth+:SramAw]);
   wait_response();
   validate(AccessAckData, data_array[3]);
 //.
+
 
 
 //. test the burst atomic request
@@ -410,19 +406,19 @@ initial begin
   $display("-------first beat--------");
   tl_i.a_valid = 1'b0;
   wait_sram_req();
-  validate_sram_req(32'h5,'d4);
+  validate_sram_req(32'h5,tl_i.a_address[DataBitWidth+:SramAw]);
   wait_response();
   validate(AccessAckData, data_array[1]);
   //. send the second beat
   tl_i.a_valid = 1'b1;
-  tl_i.a_data = 32'd0;
+  tl_i.a_data = 32'd4;
   send_req();
   $display("-------second beat--------");
   tl_i.a_valid = 1'b0;
   wait_sram_req();
-  validate_sram_req(32'h2,'d8);
+  validate_sram_req(32'h5, tl_i.a_address[DataBitWidth+:SramAw] + 4);
   wait_response();
-  validate(AccessAckData, data_array[2]);
+  validate(AccessAckData, data_array[5]);
 //.
 
 

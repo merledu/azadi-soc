@@ -1,8 +1,8 @@
 /**
- * Tile-Link UL adapter for SRAM-like devices
+ * Tile-Link UH adapter for SRAM-like devices
  *
  * - Intentionally omitted BaseAddr in case of multiple memory maps are used in a SoC,
- *   it means that aliasing can happen if target device size in TL-UL crossbar is bigger
+ *   it means that aliasing can happen if target device size in TL-UH crossbar is bigger
  *   than SRAM size
  */
  module tluh_sram_adapter #(
@@ -16,7 +16,7 @@
   input   logic clk_i,
   input   logic rst_ni,
 
-  // TL-UL interface
+  // TL-UH interface
   input   tluh_pkg::tluh_h2d_t  tl_i,
   output  tluh_pkg::tluh_d2h_t  tl_o,
 
@@ -44,8 +44,8 @@
                                 DataBitWidth - tluh_pkg::vbits(tluh_pkg::TL_DBW);
 
   typedef struct packed {
-    logic [tluh_pkg::TL_DBW-1:0] mask ; // Byte mask within the TL-UL word
-    logic [WoffsetWidth-1:0]    woffset ; // Offset of the TL-UL word within the SRAM word
+    logic [tluh_pkg::TL_DBW-1:0] mask ; // Byte mask within the TL-UH word
+    logic [WoffsetWidth-1:0]    woffset ; // Offset of the TL-UH word within the SRAM word
   } sram_req_t ;
 
   typedef enum logic [1:0] {
@@ -89,7 +89,6 @@
 
   logic [WidthMult-1:0][tluh_pkg::TL_DW-1:0] rdata;
   logic [WidthMult-1:0][tluh_pkg::TL_DW-1:0] rmask;
-  //logic [SramDw-1:0] rmask;
   logic [tluh_pkg::TL_DW-1:0] rdata_tlword;
 
   localparam int RspFIFODepthW = vbits((Outstanding * TL_BEATSMAX)+1);
@@ -101,6 +100,8 @@
   logic already_ack; // Burst already acknowledged - in case of burst put request, to make sure that the only one ack is sent for the whole burst
 
   logic update_addr;
+
+  logic [SramAw-1:0] next_addr;
 
   logic rd_req, wr_req, atomic_req, intent_req;
 
@@ -206,7 +207,7 @@
     intent_req = ((reqfifo_rdata.op == OpHint) && (reqfifo_rvalid || reqfifo_wvalid) ) || (a_ack && (tl_i.a_opcode == Intent));
   end
 
-// Valid handling
+//. Valid handling
   always_ff @(posedge clk_i) begin
     if (~rst_ni) begin
       d_valid <= 1'b0;
@@ -223,7 +224,7 @@
             end
           end
           else 
-            d_valid <= rvalid_i;  //. DONE: change this because we want to latch this signal until it received even if rvalid_i becomes low
+            d_valid <= rvalid_i;
         end
         else
           d_valid <= rspfifo_rvalid;
@@ -250,43 +251,41 @@
 //.
 
 
+//. Error handling
   always_comb begin
     d_error = 1'b0;
 
-    // if (reqfifo_rvalid) begin
-    //   if (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic) begin
-    //     d_error = rspfifo_rdata.error | reqfifo_rdata.error;
-    //   end else begin
-    //     d_error = reqfifo_rdata.error;
-    //   end
-    // end else begin
-    //   d_error = 1'b0;
-    // end
+    if (reqfifo_rvalid) begin
+      if (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic) begin
+        if(rspfifo_depth > 0)
+          d_error = rspfifo_rdata.error | reqfifo_rdata.error;
+        else
+          d_error = rerror_i[1] | reqfifo_rdata.error;
+      end else begin
+        d_error = reqfifo_rdata.error;
+      end
+    end else begin
+      d_error = 1'b0;
+    end
   end
+//.
 
   assign tl_o = '{
       d_valid  : d_valid ,
-      d_opcode : (reqfifo_rdata.op == OpWrite) ? AccessAck : 
-                 (reqfifo_rdata.op == OpHint)  ? HintAck   : AccessAckData,  //. TO ASK: in the TL_UL version, it checks for the d_valid as well. Is it ok to remove this check from here?
+      d_opcode : (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic) ? AccessAckData :
+                 (reqfifo_rdata.op == OpHint) ? HintAck : AccessAck,
       d_param  : '0,
-      d_size   : tl_i.a_valid ? tl_i.a_size : tl_o.d_size, //.(d_valid) ? reqfifo_rdata.size : '0,
+      d_size   : tl_i.a_valid ? tl_i.a_size : tl_o.d_size,
       d_source : (d_valid) ? reqfifo_rdata.source : '0,
       d_sink   : 1'b0,
-      d_data   : (rspfifo_rvalid) //&& (reqfifo_rdata.op == OpRead || reqfifo_rdata.op == OpAtomic))
+      d_data   : (rspfifo_rvalid)
                  ? rspfifo_rdata.data : rdata_tlword,
-      d_error  : '0, //. d_valid && d_error,
+      d_error  : d_valid && d_error,
 
       a_ready  : (gnt_i | error_internal) & reqfifo_wready & sramreqfifo_wready
   };
 // a_ready depends on the FIFO full condition and grant from SRAM (or SRAM arbiter)
 // assemble response, including read response, write response, and error for unsupported stuff
-
-
-
-  logic [SramAw-1:0] next_addr;
-
-
-
 
 
   //. Intent signals
@@ -303,22 +302,17 @@
     end
   end
 
-  // assign intention_blocks_o = $clog2(tl_i.a_size);
-  // assign intent_o           = tl_i.a_param;
-  // assign intent_en_o        = a_ack & (tl_i.a_opcode == Intent);
-
-
   // Output to SRAM:
   //    Generate request only when no internal error occurs. If error occurs, the request should be
   //    dropped and returned error response to the host. So, error to be pushed to reqfifo.
   //    In this case, it is assumed the request is granted (may cause ordering issue later?)
 
 
-  assign we_o = (a_ack && logic'(tl_i.a_opcode inside {PutFullData, PutPartialData})) || atomic_wr || wr_req;  //.tl_i.a_valid & logic'(tl_i.a_opcode inside {PutFullData, PutPartialData});
+  assign we_o = (a_ack && logic'(tl_i.a_opcode inside {PutFullData, PutPartialData})) || atomic_wr || wr_req;
 
 
-  // Support SRAMs wider than the TL-UL word width by mapping the parts of the
-  // TL-UL address which are more fine-granular than the SRAM width to the
+  // Support SRAMs wider than the TL-UH word width by mapping the parts of the
+  // TL-UH address which are more fine-granular than the SRAM width to the
   // SRAM write mask.
   logic [WoffsetWidth-1:0] woffset;
   if (tluh_pkg::TL_DW != SramDw) begin : gen_wordwidthadapt
@@ -352,14 +346,13 @@
 //. Begin: Req FIFO
   assign reqfifo_wvalid = a_ack ; // Push to FIFO only when granted
   assign reqfifo_wdata  = '{
-    op:     (tl_i.a_opcode == Get) ? OpRead :  // To return AccessAck for opcode error
+    op:     (tl_i.a_opcode == Get) ? OpRead :
             (tl_i.a_opcode == ArithmeticData || tl_i.a_opcode == LogicalData) ? OpAtomic :
-            (tl_i.a_opcode == Intent) ? OpHint : OpWrite , 
+            (tl_i.a_opcode == Intent) ? OpHint : OpWrite , // To return AccessAck for opcode error
     error:  error_internal,
     size:   tl_i.a_size,
     source: tl_i.a_source
   }; // Store the request only. Doesn't have to store data
-  //.assign reqfifo_rready = rd_req ? remove_req : d_ack ; //. TODO: what if the req is Get and the a_size indicates that that rsp is burst? so we need to pop the req only when all beats that correspond to this req are popped from rspfifo
 
 
   logic req_served;
@@ -455,7 +448,6 @@
     end
   end
 
-
 //. End: Req FIFO
   
 
@@ -466,19 +458,8 @@
     woffset : woffset
   };
   assign sramreqfifo_wvalid = sram_ack & ~we_o;
-  assign sramreqfifo_rready = reqfifo_rready;//.rspfifo_wvalid; //. TODO: what if the req is Get and the a_size indicates that that rsp is burst? so we need to pop the req only when all beats that correspond to this req are popped from rspfifo
+  assign sramreqfifo_rready = reqfifo_rready;
 //. End: srmareq FIFO
-
-
-
-  // Make sure only requested bytes are forwarded
-
-  // always_comb begin
-  //   //.rmask = '0;
-  //   for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
-  //     rmask[sramreqfifo_rdata.woffset][8*i +: 8] = {8{sramreqfifo_rdata.mask[i]}};
-  //   end
-  // end
 
   assign rdata_tlword = rdata[sramreqfifo_rdata.woffset];
   assign op_data2 = rdata_tlword;
@@ -489,15 +470,16 @@
     data : rdata_tlword,
     error: rerror_i[1] // Only care for Uncorrectable error
   };
-  // assign rspfifo_rready = (reqfifo_rdata.op == OpRead & ~reqfifo_rdata.error)
-  //                       ? reqfifo_rready : 1'b0 ;  //. TODO: in case of burst
-  assign rspfifo_rready = tl_i.d_ready && (rspfifo_depth > 0);//. && ~reqfifo_rdata.error;
+  
+  
+  assign rspfifo_rready = tl_i.d_ready && (rspfifo_depth > 0) && ~reqfifo_rdata.error;
 
   assign rspfifo_ack = rspfifo_wvalid & rspfifo_wready;
 //.End:   Rsp FIFO
 
 
   always_comb begin
+    // Make sure only requested bytes are forwarded
     if(sramreqfifo_rvalid) begin
       rmask = '0;
       for (int i = 0 ; i < tluh_pkg::TL_DW/8 ; i++) begin
@@ -513,7 +495,7 @@
     
     if(a_ack && ~burst) begin
       if(tl_i.a_valid)begin
-        addr_o = tl_i.a_address[0+:SramAw]; // tl_i.a_address[DataBitWidth+:SramAw]
+        addr_o = tl_i.a_address[DataBitWidth+:SramAw];
         req_o  = 1'b1;
       end 
     end
@@ -538,7 +520,6 @@
       rdata  = rdata_i & rmask;  
     end
   end
-
 
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -624,7 +605,7 @@
                 //. check if burst
                 if(tl_i.a_size > $clog2(TL_DBW)) begin
                   burst     <= 1'b1;
-                  next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
+                  next_addr <= ((tl_i.a_address[DataBitWidth+:SramAw] + SramByte) % (2**SramAw));
                 end
                 else
                   burst <= 1'b0;
@@ -668,7 +649,7 @@
                 if(tl_i.a_size > $clog2(TL_DBW)) begin
                   get_state <= READ_NEXT_BEAT;
                   burst     <= 1'b1;
-                  next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
+                  next_addr <= ((tl_i.a_address[DataBitWidth+:SramAw] + SramByte) % (2**SramAw));
                 end
                 else
                   burst <= 1'b0;
@@ -697,7 +678,7 @@
                 if(tl_i.a_size >  $clog2(TL_DBW)) begin
                   put_state <= WRITE_NEXT_BEAT;
                   burst     <= 1'b1;
-                  next_addr <= ((tl_i.a_address[0+:SramAw] + SramByte) % (2**SramAw));
+                  next_addr <= ((tl_i.a_address[DataBitWidth+:SramAw] + SramByte) % (2**SramAw));
                 end
                 else
                   burst <= 1'b0;
@@ -717,16 +698,13 @@
   end
 
 
-
-
-
 //Begin: Request Error Detection
   // wr_attr_error: Check if the request size,mask are permitted.
   //    Basic check of size, mask, addr align is done in tluh_err module.
   //    Here it checks any partial write if ByteAccess isn't allowed.
-  assign wr_attr_error = '0; //(tl_i.a_opcode == PutFullData || tl_i.a_opcode == PutPartialData) ?
-                             //(ByteAccess == 0) ? (tl_i.a_mask != '1 || tl_i.a_size != 2'h2) : 1'b0 :
-                             //1'b0;
+  assign wr_attr_error = (tl_i.a_opcode == PutFullData || tl_i.a_opcode == PutPartialData) ?
+                         (ByteAccess == 0) ? (tl_i.a_mask != '1 || tl_i.a_size != 2'h2) : 1'b0 :
+                         1'b0;
 
   if (ErrOnWrite == 1) begin : gen_no_writes
     assign wr_vld_error = tl_i.a_opcode != Get;
@@ -740,12 +718,12 @@
     assign rd_vld_error = 1'b0;
   end
 
-// tlul_err u_err (
-//     .tl_i   (tl_i),
-//     .err_o (tluh_error)
-//   );
+tluh_err u_err (
+    .tl_i   (tl_i),
+    .err_o (tluh_error)
+  );
 
-  assign error_internal = '0; //.wr_attr_error | wr_vld_error | rd_vld_error | tluh_error;
+  assign error_internal = wr_attr_error | wr_vld_error | rd_vld_error | tluh_error;
 //End: Request Error Detection
 
   // This module only cares about uncorrectable errors.
@@ -760,7 +738,7 @@
   //    For instance, SRAM accepts the write request but doesn't return the
   //    acknowledge. In this case, it may be hard to determine when the D
   //    response for the write data should send out if reads/writes are
-  //    interleaved. So, to make it in-order (even TL-UL allows out-of-order
+  //    interleaved. So, to make it in-order (even TL-UH allows out-of-order
   //    responses), storing the request is necessary. And if the read entry
   //    is write op, it is safe to return the response right away. If it is
   //    read reqeust, then D response is waiting until read data arrives.
