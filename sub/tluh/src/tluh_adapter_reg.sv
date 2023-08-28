@@ -348,7 +348,16 @@
   ////////////////////
   // Error Handling //
   ////////////////////
-  assign err_internal = addr_align_err | (a_ack & tl_err) ;
+
+  logic tl_error;
+
+  assign err_internal = addr_align_err | tl_error;
+
+  always_comb begin
+    if(a_ack) begin
+      tl_error = tl_err;
+    end
+  end
 
   // addr_align_err
   //    Raised if addr isn't aligned with the size
