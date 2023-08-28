@@ -89,7 +89,6 @@ function void validate_adapter_request
   (input tluh_a_m_op req_operation,
    input logic ignore_data = 0);
   begin
-    //.$display("Receiving Req: clk_cnt = %d", clk_cnt);
   
     if (tl_h_c_a.a_opcode != req_operation) begin
       $display("Error: a_opcode should be %d but it is %d", req_operation.name(), tl_h_c_a.a_opcode.name());
@@ -199,15 +198,6 @@ initial begin
     rst_ni = 1;
 
     #10
-
-// param_i,
-// data_byte_i,
-// operation_i,  the 0:arithmetic/ 1:logical/ 2:intent operation to be performed
-// req_i,
-// addr_i, 
-// we_i,
-// wdata_i,
-// be_i,
 
 
 //. Read request

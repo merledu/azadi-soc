@@ -23,9 +23,9 @@ module tluh_host_adapter #(
     input logic rst_ni,
 // interface with host agent 
     //.input logic                         ready_i,
-    input logic [2:0]                   param_i,   //. the parameter determines the type of atomic/intent operation needed
+    input logic [2:0]                   param_i,     //. the parameter determines the type of atomic/intent operation needed
     input logic [tluh_pkg::TL_SZW-1:0]  data_byte_i, //. in the form of Log2(DataWidth/8)
-    input logic [1:0]                   operation_i,  //. the 0:arithmetic/ 1:logical/ 2:intent operation to be performed
+    input logic [1:0]                   operation_i, //. the 0:arithmetic/ 1:logical/ 2:intent operation to be performed
     input logic                         req_i,
     output logic                        gnt_o,
     input logic [tluh_pkg::TL_AW-1:0]   addr_i, 
@@ -47,7 +47,7 @@ module tluh_host_adapter #(
 
     logic atomic_req;
 
-    logic wait_resp; //. flag to indicate whether we are waiting for a response or not
+    logic wait_resp;     //. flag to indicate whether we are waiting for a response or not
     logic new_req;       //. flag to indicate the beginning of a new request
     
     logic [tluh_pkg::TL_BEATSMAXW-1:0] beats_no_to_receive = 0; //. number of beats expected to be received from the slave agent after sending the request
@@ -130,7 +130,6 @@ module tluh_host_adapter #(
        
     end
 
-    //. TO ASK: does the following mean that atomic reqs must also have their be_i set to 1?
     // For TL-UH Get opcode all active bytes must have their mask logic set, so all reads get all tl_be
     // logics set. For writes the supplied be_i is used as the mask.
     assign tl_be = (~we_i && (&operation_i)) ? {tluh_pkg::TL_DBW{1'b1}} : be_i;
@@ -154,7 +153,7 @@ module tluh_host_adapter #(
         a_source:   tl_source,
         a_address:  {addr_i[31:WordSize], {WordSize{1'b0}}},
         a_data:     wdata_i,
-        d_ready:    1'b1  // always ready to accept responses --> TO ASK: so no need for a buffer
+        d_ready:    1'b1  // always ready to accept responses --> so no need to add a buffer
     };
 
     assign gnt_o   = tl_h_c_d.a_ready;
