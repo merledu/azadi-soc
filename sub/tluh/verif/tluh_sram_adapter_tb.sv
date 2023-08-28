@@ -339,6 +339,7 @@ initial begin
 
 //.
 
+
 #10
 //. test the burst write request
   $display("Burst Write Test -----------------------------------------------------");
@@ -374,7 +375,7 @@ initial begin
   //. 1- arithemetic
   $display("-------arithemetic--------");
   //. a- MIN
-  $display("-------min (= host data)--------");
+  $display("-------min (result = host data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h0;
@@ -388,7 +389,7 @@ initial begin
   wait_response();
   validate(AccessAckData, data_array[3]);
 
-  $display("-------min (= sram data)--------");
+  $display("-------min (result = sram data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h0;
@@ -403,7 +404,7 @@ initial begin
   validate(AccessAckData, data_array[1]);
 
   //. b- MAX
-  $display("-------max (= host data)--------");
+  $display("-------max (result = host data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h1;
@@ -417,7 +418,7 @@ initial begin
   wait_response();
   validate(AccessAckData, data_array[2]);
 
-  $display("-------max (= sram data)--------");
+  $display("-------max (result = sram data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h1;
@@ -432,7 +433,7 @@ initial begin
   validate(AccessAckData, data_array[3]);
 
   //. c- MINU
-  $display("-------minu (= host data)--------");
+  $display("-------minu (result = host data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h2;
@@ -444,9 +445,9 @@ initial begin
   wait_sram_req();
   validate_sram_req(32'h5,tl_i.a_address[DataBitWidth+:SramAw]);
   wait_response();
-  validate(AccessAckData, data_array[1]);
+  validate(AccessAckData, data_array[0]);
 
-  $display("-------minu (= sram data)--------");
+  $display("-------minu (result = sram data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h2;
@@ -461,7 +462,7 @@ initial begin
   validate(AccessAckData, data_array[1]);
 
   //. d- MAXU
-  $display("-------maxu (= host data)--------");
+  $display("-------maxu (result = host data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h3;
@@ -475,7 +476,7 @@ initial begin
   wait_response();
   validate(AccessAckData, data_array[0]);
 
-  $display("-------maxu (= sram data)--------");
+  $display("-------maxu (result = sram data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h3;
@@ -548,8 +549,11 @@ initial begin
   tl_i.a_param = 'h0;
   send_req();
   tl_i.a_valid = 1'b0;
+  //. Verify that the hint operation does not modify any data in the target device by checking we_o signal
+  if(we_o != 0)
+    $display("Error: Trying to modify the data although the req is an Intent operation.");
   wait_response();
-  validate(HintAck, '0, 1'b1);  
+  validate(HintAck, '0, 1'b1);
 //.
 
 
