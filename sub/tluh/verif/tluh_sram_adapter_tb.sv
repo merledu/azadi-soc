@@ -198,7 +198,8 @@ end
 function void validate
   (input tluh_d_m_op opcode,
   input [SramDw-1:0] expected_data,
-  input logic ignore_data = 0);
+  input logic ignore_data = 0,
+  input logic err = 0);
   begin
     $display("Receiving: clk_cnt = %d", clk_cnt);
   
@@ -210,6 +211,9 @@ function void validate
     end
     if (tl_o.d_source != tl_i.a_source) begin
       $display("Error: d_source should be 0");
+    end
+    if(tl_o.d_error != err) begin
+      $display("Error: d_error should be %d but it is %d", err, tl_o.d_error);
     end
     if(ignore_data == 0) begin
       if (tl_o.d_data != expected_data) begin
@@ -545,7 +549,7 @@ initial begin
   tl_i.a_valid = 1'b1;
   tl_i.a_opcode = Intent;
   tl_i.a_size = 'h2;
-  tl_i.a_address = 'h2;
+  tl_i.a_address = 'h4;
   tl_i.a_param = 'h0;
   send_req();
   tl_i.a_valid = 1'b0;
@@ -556,6 +560,19 @@ initial begin
   validate(HintAck, '0, 1'b1);
 //.
 
+//. Test Error
+  $display("error test -------------------------------------------------");
+  $display("Internal Error test ----------------------------------------");
+  $display("error in the opcode test -----------------------------------");
+  tl_i.a_valid = 1'b1;
+  tl_i.a_opcode = tluh_a_m_op'(3'h6);  //. undefined opcode
+  send_req();
+  tl_i.a_valid = 1'b0;
+  if(req_o != 0)
+    $display("Error: req_o should be 0 but it is 1.");
+  wait_response();
+  validate(AccessAck, '0, 1'b1 , 1); //. return AccessAck for opcode error
+  
 
   $display("reach end");
 end

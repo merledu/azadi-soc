@@ -496,7 +496,7 @@
     if(a_ack && ~burst) begin
       if(tl_i.a_valid)begin
         addr_o = tl_i.a_address[DataBitWidth+:SramAw];
-        req_o  = 1'b1;
+        req_o  = ~error_internal;
       end 
     end
     else if(update_addr) begin
