@@ -57,7 +57,7 @@ assign gnt_i = '1;
 //.
 
 //. data array
-logic [SramDw-1:0] data_array [0:14] = '{32'd17, 32'h1, 32'h2, 32'h3, 32'h4, 32'h5, 32'h6, 32'h7, 32'h8, 32'h9, 32'hA, 32'hB, 32'hC, 32'hD, 32'hE};
+logic [SramDw-1:0] data_array [0:14] = '{32'd17, 32'h1, 32'h2, 32'h3, 32'h4, 32'h5, 32'h6, 32'h7, 32'h8, 32'h9, 32'hA, 32'hB, 32'hC, 32'hD, 32'hF000_000E};
 
 logic [14:0] addr_hit;  //. assume we have only 15 locations although we have 4k locatoins each contains 2 words
 always_comb begin
@@ -141,7 +141,7 @@ always_comb begin
     end
 
     addr_hit[14]: begin
-      data_to_read[31:0] = 32'hE;
+      data_to_read[31:0] = 32'hF000_000E;
     end
 
     default: begin
@@ -373,13 +373,56 @@ initial begin
   $display("Non-burst Atomic test -------------------------------------------------");
   //. 1- arithemetic
   $display("-------arithemetic--------");
-  //. a- min
-  $display("-------min--------");
+  //. a- MIN
+  $display("-------min (= host data)--------");
   tl_i.a_opcode = ArithmeticData;
   tl_i.a_size = 'h2;
   tl_i.a_param = 'h0;
-  tl_i.a_address = 'hc;
-  tl_i.a_data = 32'd5;
+  tl_i.a_address = 'hc; //. LOC_3
+  tl_i.a_data = 32'hF000_5555;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'hF000_5555,tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[3]);
+
+  $display("-------min (= sram data)--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h0;
+  tl_i.a_address = 'h4; //. LOC_1
+  tl_i.a_data = 32'h55;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'h1,tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[1]);
+
+  //. b- MAX
+  $display("-------max (= host data)--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h1;
+  tl_i.a_address = 'h8; //. LOC_2
+  tl_i.a_data = 32'h100;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'h100,tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[2]);
+
+  $display("-------max (= sram data)--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h1;
+  tl_i.a_address = 'hc; //. LOC_3
+  tl_i.a_data = 32'hF000_0011;
   tl_i.a_valid = 1'b1;
   send_req();
   tl_i.a_valid = 1'b0;
@@ -387,6 +430,79 @@ initial begin
   validate_sram_req(32'h3,tl_i.a_address[DataBitWidth+:SramAw]);
   wait_response();
   validate(AccessAckData, data_array[3]);
+
+  //. c- MINU
+  $display("-------minu (= host data)--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h2;
+  tl_i.a_address = 'h0;  //. LOC_0
+  tl_i.a_data = 32'h5;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'h5,tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[1]);
+
+  $display("-------minu (= sram data)--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h2;
+  tl_i.a_address = 'h4; //. LOC_1
+  tl_i.a_data = 32'hffff_ffff;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'h1, tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[1]);
+
+  //. d- MAXU
+  $display("-------maxu (= host data)--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h3;
+  tl_i.a_address = 'h0; //. LOC_0
+  tl_i.a_data = 32'hF000_1230;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'hF000_1230, tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[0]);
+
+  $display("-------maxu (= sram data)--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h3;
+  tl_i.a_address = 'd56; //. LOC_14
+  tl_i.a_data = 32'd3;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'hF000_000E, tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[14]);
+
+  //. e- ADD
+  $display("-------add--------");
+  tl_i.a_opcode = ArithmeticData;
+  tl_i.a_size = 'h2;
+  tl_i.a_param = 'h4;
+  tl_i.a_address = 'd44;  //. LOC_11
+  tl_i.a_data = 32'd5;
+  tl_i.a_valid = 1'b1;
+  send_req();
+  tl_i.a_valid = 1'b0;
+  wait_sram_req();
+  validate_sram_req(32'd16, tl_i.a_address[DataBitWidth+:SramAw]);
+  wait_response();
+  validate(AccessAckData, data_array[11]);
 //.
 
 
