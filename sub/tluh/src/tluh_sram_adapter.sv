@@ -723,7 +723,7 @@ tluh_err u_err (
     .err_o (tluh_error)
   );
 
-  assign error_internal = wr_attr_error | wr_vld_error | rd_vld_error | tluh_error;
+  assign error_internal = wr_attr_error | wr_vld_error | rd_vld_error | (tluh_error && a_ack);
 //End: Request Error Detection
 
   // This module only cares about uncorrectable errors.
