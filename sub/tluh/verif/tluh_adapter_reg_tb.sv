@@ -152,13 +152,13 @@ tluh_adapter_reg
   .RegDw(RegDw )
   )
 tluh_adapter_reg_dut (
+  .intention_blocks_o(intention_blocks_o),
   .clk_i    (clk_i ),
   .rst_ni   (rst_ni ),
   .tl_i     (tl_i ),
   .tl_o     (tl_o ),
-  .intention_blocks_o(intention_blocks_o),
   .intent_o (intent_o ),
-  .ie_o(ie_o),
+  .ie_o     (ie_o),
   .re_o     (re_o ),
   .we_o     (we_o ),
   .addr_o   (addr_o ),
@@ -255,7 +255,6 @@ endtask
 
 
 
-//. responses
 initial begin
   //. inital values
   tl_i = '{
@@ -274,7 +273,6 @@ initial begin
   rst_ni  = 0;
   error_i = 0;
 
-  //.tl_i.a_valid = 1'b1;
   #10
   rst_ni = 1;
   
@@ -341,18 +339,16 @@ initial begin
   wait_response();
   validate(AccessAck, '0, 1'b1);
   //. send the second beat
-  // wait(clk_i == 1'b0);
-  // wait(clk_i == 1'b1);
   tl_i.a_data = 32'd77;
   tl_i.a_valid = 1'b1;
   send_req();
   $display("-------second beat--------");
   tl_i.a_valid = 1'b0;
-  //.#1  //. TO ASK
   wait_reg_req();
   validate_reg_req(32'd77, 'h8);
 //.
 
+  
 #10
 //. Atomic Test -------------------------------------------------------------
 //. test the non-burst atomic request

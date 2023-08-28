@@ -6,14 +6,14 @@
   input logic clk_i,
   input logic rst_ni,
 
-  // TL-UL interface
+  // TL-UH interface
   input  tluh_h2d_t tl_i,
   output tluh_d2h_t tl_o,
 
   // Register interface
   output logic [tluh_pkg::TL_BEATSMAXW-1:0] intention_blocks_o, //. intention blocks
   output logic             intent_o,  //. intent operation (0:prefetchRead, 1:prefetchWrite)
-  output logic             ie_o, //. intent enable
+  output logic             ie_o,      //. intent enable
   output logic             re_o,
   output logic             we_o,
   output logic [RegAw-1:0] addr_o,
@@ -33,7 +33,7 @@
   logic             error, err_internal;
 
   logic addr_align_err;     // Size and alignment
-  logic tl_err;             // Common TL-UL error checker
+  logic tl_err;             // Common TL-UH error checker
 
   logic [IW-1:0]         reqid;
   logic [SZW-1:0]        reqsz;
@@ -104,7 +104,6 @@
   assign be_o       = tl_i.a_mask;
   
   
-  //.assign addr_o  = ~burst ? {tl_i.a_address[RegAw-1:2], 2'b00} : (re_o || (we_o && atomic_req)) ? next_addr : addr_o ; // generate always word-align
   always_comb begin
     if(a_ack && ~burst) begin
       addr_o = {tl_i.a_address[RegAw-1:2], 2'b00};
@@ -161,7 +160,7 @@
           case(get_state)
             GET_IDLE: begin
               if(a_ack) begin
-                rdata       <= rdata_i;
+                rdata       <= (err_internal) ? '1 : rdata_i;
                 outstanding <= 1'b1;
                 //. check if burst
                 if(tl_i.a_size > $clog2(TL_DBW)) begin
@@ -174,7 +173,7 @@
             end
             READ_NEXT_BEAT: begin
               if(d_ack) begin
-                rdata       <= rdata_i;
+                rdata       <= (err_internal) ? '1 : rdata_i;
                 beats_cnt <= beats_cnt - 1;
                 outstanding <= 1'b1;
                 if(beats_cnt == 1) begin  //. == 1 means that in this cycle it will be 0 (non-blocking assignment)
@@ -227,7 +226,7 @@
           case(atomic_state)
             ATOMIC_IDLE: begin
               if(a_ack) begin
-                rdata        <= rdata_i;
+                rdata        <= (err_internal) ? '1 : rdata_i;
                 atomic_wr    <= 1'b1;
                 outstanding  <= 1'b1;
                 op_cin       <= 1'b0;
@@ -266,9 +265,8 @@
             end
             NEXT_BEAT: begin
               if(a_ack) begin
-                rdata        <= rdata_i;
+                rdata        <= (err_internal) ? '1 : rdata_i;
                 atomic_wr    <= 1'b1;
-                //.op_data2     <= rdata_i;
                 outstanding  <= 1'b1;
                 atomic_state <= PERFORM_WRITE;
               end
@@ -286,11 +284,6 @@
     end
   end
 
-  // always_ff @(posedge clk_i or negedge rst_ni) begin
-  //   if (!rst_ni)    outstanding <= 1'b0;
-  //   else if (a_ack) outstanding <= 1'b1;
-  //   else if (d_ack) outstanding <= 1'b0;
-  // end
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
@@ -307,10 +300,8 @@
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
-      //.rdata  <= '0;
       error <= 1'b0;
     end else if (a_ack) begin
-      //.rdata <= (err_internal) ? '1 : rdata_i;
       error <= error_i | err_internal;
     end
   end
@@ -357,7 +348,7 @@
   ////////////////////
   // Error Handling //
   ////////////////////
-  assign err_internal = 0; //.addr_align_err | tl_err ;
+  assign err_internal = addr_align_err | (a_ack & tl_err) ;
 
   // addr_align_err
   //    Raised if addr isn't aligned with the size
@@ -366,19 +357,19 @@
   always_comb begin
     if (wr_req) begin
       // Only word-align is accepted based on comportability spec
-      addr_align_err = 0; //.|tl_i.a_address[1:0];
+      addr_align_err = |tl_i.a_address[1:0];
     end else begin
       // No request
       addr_align_err = 1'b0;
     end
   end
 
-  assign tl_err = 0;
+  
   // tl_err : separate checker
-//  tlul_err u_err (
-//     .tl_i (tl_i),
-//     .err_o (tl_err)
-//   );
+  tluh_err u_err (
+    .tl_i (tl_i),
+    .err_o (tl_err)
+  );
 
 
   //. ALU 
